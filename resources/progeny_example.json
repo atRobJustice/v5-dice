@@ -1,0 +1,206 @@
+{
+  "name": "Malcolm & Marcus Carter",
+  "description": "",
+  "sire": "Mallory LaCroix",
+  "clan": "Tremere",
+  "predatorType": {
+    "name": "Trapdoor",
+    "pickedDiscipline": "obfuscate",
+    "pickedSpecialties": [
+      {
+        "skill": "persuasion",
+        "name": "Marketing"
+      }
+    ],
+    "pickedMeritsAndFlaws": [
+      {
+        "name": "Haven",
+        "level": 1,
+        "summary": "A secure aparment",
+        "type": "merit"
+      },
+      {
+        "name": "Creepy",
+        "level": 1,
+        "summary": "People are wary of your home",
+        "type": "flaw"
+      }
+    ]
+  },
+  "touchstones": [
+    {
+      "name": "Cornelius \"Cornbread\" Tate",
+      "description": "",
+      "conviction": "You don't leave your own behind, even if they're dead inside.\""
+    },
+    {
+      "name": "Eden Vale",
+      "description": "",
+      "conviction": "\"There's still something worth fighting for, even if it's not for us.\""
+    }
+  ],
+  "ambition": "Claim Baltimore",
+  "desire": "Build Their Crew",
+  "attributes": {
+    "strength": 2,
+    "charisma": 4,
+    "intelligence": 3,
+    "dexterity": 2,
+    "manipulation": 3,
+    "wits": 3,
+    "stamina": 2,
+    "composure": 1,
+    "resolve": 2
+  },
+  "skills": {
+    "athletics": 1,
+    "brawl": 1,
+    "craft": 0,
+    "drive": 1,
+    "firearms": 2,
+    "melee": 1,
+    "larceny": 2,
+    "stealth": 2,
+    "survival": 0,
+    "animal ken": 0,
+    "etiquette": 0,
+    "insight": 2,
+    "intimidation": 3,
+    "leadership": 1,
+    "performance": 0,
+    "persuasion": 1,
+    "streetwise": 2,
+    "subterfuge": 2,
+    "academics": 0,
+    "awareness": 2,
+    "finance": 1,
+    "investigation": 2,
+    "medicine": 1,
+    "occult": 1,
+    "politics": 0,
+    "science": 0,
+    "technology": 1
+  },
+  "skillSpecialties": [
+    {
+      "skill": "academics",
+      "name": ""
+    },
+    {
+      "skill": "craft",
+      "name": ""
+    },
+    {
+      "skill": "performance",
+      "name": ""
+    },
+    {
+      "skill": "science",
+      "name": ""
+    },
+    {
+      "skill": "melee",
+      "name": "knives"
+    }
+  ],
+  "availableDisciplineNames": [
+    "auspex",
+    "dominate",
+    "blood sorcery"
+  ],
+  "disciplines": [
+    {
+      "name": "Compel",
+      "description": "",
+      "rouseChecks": 0,
+      "amalgamPrerequisites": [],
+      "summary": "a single, short command with an immediate effect",
+      "dicePool": "Charisma + Dominate",
+      "level": 1,
+      "discipline": "dominate"
+    },
+    {
+      "name": "Mesmerize",
+      "description": "",
+      "rouseChecks": 1,
+      "amalgamPrerequisites": [],
+      "summary": "allow issuing more complex commands",
+      "dicePool": "Manipulation + Dominate",
+      "level": 2,
+      "discipline": "dominate"
+    },
+    {
+      "name": "Sense the Unseen",
+      "description": "",
+      "rouseChecks": 0,
+      "amalgamPrerequisites": [],
+      "summary": "sense supernatural activity",
+      "dicePool": "Wits / Resolve + Auspex",
+      "level": 1,
+      "discipline": "auspex"
+    },
+    {
+      "name": "Cloak of Shadows",
+      "description": "",
+      "rouseChecks": 0,
+      "amalgamPrerequisites": [],
+      "summary": "blend into surroundings while motionless",
+      "dicePool": "Wits + Obfuscate / Stealth",
+      "level": 1,
+      "discipline": "obfuscate"
+    }
+  ],
+  "rituals": [],
+  "bloodPotency": 0,
+  "generation": 13,
+  "maxHealth": 0,
+  "willpower": 0,
+  "experience": 0,
+  "humanity": 0,
+  "merits": [
+    {
+      "name": "Haven",
+      "level": 2,
+      "type": "merit",
+      "summary": "secure homebase, 1 - apartment, 3 - big building"
+    },
+    {
+      "name": "Watchmen",
+      "level": 1,
+      "type": "merit",
+      "summary": "mortal security guards"
+    },
+    {
+      "name": "Resources",
+      "level": 2,
+      "type": "merit",
+      "summary": "wealth & income, 1 - you can afford basics, 5 - you can afford anything money can buy"
+    },
+    {
+      "name": "Retainer",
+      "level": 1,
+      "type": "merit",
+      "summary": "loyal mortal servant, 1 - weak lowlife, 3 - skilled professional retainer"
+    },
+    {
+      "name": "Herd",
+      "level": 2,
+      "type": "merit",
+      "summary": "group of mortals who let you feed, 1 - a couple of people, 5 - large group and you can freely pick desired resonances"
+    }
+  ],
+  "flaws": [
+    {
+      "name": "Folkloric Bane",
+      "level": 1,
+      "type": "flaw",
+      "summary": "specific items damage you (eg. silver, garlic)"
+    },
+    {
+      "name": "Folkloric Block",
+      "level": 1,
+      "type": "flaw",
+      "summary": "must spend willpower to move past specific block (eg. running water, door uninvited)"
+    }
+  ]
+}

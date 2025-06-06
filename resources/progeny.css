@@ -1,0 +1,849 @@
+.progeny-settings {
+    display: inline-block;
+    margin-right: 10px;
+  }
+  
+  .progeny-toggle {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+  }
+  
+  .progeny-icon {
+    width: 24px;
+    height: 24px;
+    vertical-align: middle;
+  }
+  
+  .file-upload-container {
+    margin-bottom: 15px;
+    text-align: center;
+  }
+  
+  .file-input {
+    display: none;
+  }
+  
+  .file-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    background-color: var(--primary-color);
+    color: var(--text-color);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  
+  .file-label:hover {
+    background-color: var(--primary-hover);
+  }
+  
+  .file-icon {
+    font-size: 1.2em;
+  }
+  
+  .file-name {
+    display: block;
+    margin-top: 8px;
+    font-size: 0.9em;
+    color: #aaa;
+  }
+  
+  .progeny-buttons {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+    justify-content: center;
+  }
+  
+  .progeny-button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.2s, transform 0.1s;
+    background-color: var(--primary-color);
+    color: var(--text-color);
+  }
+  
+  .progeny-button:hover {
+    background-color: var(--primary-hover);
+    transform: translateY(-1px);
+  }
+  
+  .progeny-button:active {
+    transform: translateY(0);
+  }
+  
+  .progeny-button.clear {
+    background-color: #dc3545;
+  }
+  
+  .progeny-button.clear:hover {
+    background-color: #c82333;
+  }
+  
+  .progeny-button.export, .progeny-button.clear {
+    display: none;
+  }
+  
+  .modal-content.has-character .progeny-button.export,
+  .modal-content.has-character .progeny-button.clear {
+    display: inline-block;
+  }
+  
+  .progeny-modal, .modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.8);
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-start;
+    z-index: 1000;
+    overflow: auto;
+    padding: 20px;
+  }
+  
+  .progeny-modal-content, .modal-content {
+    background-color: var(--background-color);
+    padding: 20px;
+    border-radius: 8px;
+    width: 95%;
+    min-width: 400px;
+    max-width: 400px;
+    max-height: 90vh;
+    overflow-y: auto;
+    overflow-x: auto;
+    position: relative;
+    box-sizing: border-box;
+    white-space: nowrap;
+    margin: auto;
+    transition: all 0.3s ease;
+  }
+  
+  .progeny-modal-content.has-character, .modal-content.has-character {
+    min-width: 1450px !important;
+  }
+  
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    border-bottom: 1px solid var(--border-color);
+  }
+  
+  .modal-header h3 {
+    color: var(--text-color);
+    margin: 0;
+  }
+  
+  .modal-header .roll-button-container {
+    display: flex;
+    align-items: center;
+    margin-left: auto;
+    margin-right: 15px;
+  }
+  
+  .modal-header .paired-roll-button {
+    margin: 0;
+    padding: 8px 16px;
+    background: var(--primary-color);
+    color: var(--text-color);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: 'IM Fell English', serif;
+    font-size: 16px;
+    transition: all 0.3s ease;
+  }
+  
+  .modal-header .paired-roll-button:hover {
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+  }
+  
+  .modal-header .paired-roll-button:active {
+    transform: translateY(1px);
+  }
+  
+  .modal-body {
+    background: transparent;
+    color: var(--text-color);
+  }
+  
+  .modal-content {
+    background-color: var(--panel-bg) !important;
+    color: var(--text-color) !important;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 4px 16px var(--shadow-color);
+  }
+  
+  .character-stats {
+    background-color: var(--background-color);
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 20px;
+    width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+  
+  .character-info {
+    background-color: rgba(30,30,30,0.95);
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+    padding: 15px;
+    margin-bottom: 20px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  
+  .character-info h4 {
+    color: var(--primary-color);
+    margin: 0 0 15px 0;
+    font-size: 1.2em;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 8px;
+  }
+  
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+    margin-top: 20px;
+    width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+  
+  .attributes, .skills {
+    grid-column: 1 / -1;
+    background-color: rgba(30,30,30,0.95);
+    color: var(--text-color);
+    padding: 15px;
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 1px 3px var(--shadow-color);
+    width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+  
+  .disciplines, .merits-flaws {
+    background-color: rgba(30,30,30,0.95);
+    color: var(--text-color);
+    padding: 15px;
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 1px 3px var(--shadow-color);
+    width: 100%;
+    box-sizing: border-box;
+  }
+  
+  /* Create a container for Disciplines and Merits */
+  .disciplines-merits-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    grid-column: 1 / -1;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  
+  .attributes h5, .skills h5, .disciplines h5, .merits-flaws h5 {
+    margin: 0 0 15px 0;
+    color: var(--primary-color);
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 5px;
+  }
+  
+  #attributes-list, #skills-list, #disciplines-list, #merits-list, #flaws-list {
+    display: grid;
+    gap: 5px;
+  }
+  
+  .stat-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+  }
+  
+  .stat-name {
+    font-weight: 500;
+  }
+  
+  
+  .editable-stats {
+    width: 100%;
+    box-sizing: border-box;
+  }
+  
+  .info-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+  }
+  
+  .info-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    width: 100%;
+  }
+  
+  .info-row:last-child {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .stat-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 5px 0;
+  }
+  
+  .stat-row span:first-child {
+    min-width: 100px;
+    color: var(--text-color);
+    font-weight: 500;
+  }
+  
+  .editable-value {
+    flex: 1;
+    color: var(--text-color);
+    padding: 2px 8px;
+    background-color: rgba(40,40,40,0.95);
+    border-radius: 4px;
+    min-width: 60px;
+    text-align: center;
+  }
+  
+  .editable-value span {
+    display: inline-block;
+    padding: 4px 8px;
+    min-width: 40px;
+  }
+  
+  .edit-button {
+    background-color: var(--primary-color);
+    color: var(--text-color);
+    border: none;
+    border-radius: 4px;
+    padding: 4px 8px;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: all 0.2s ease;
+  }
+  
+  .edit-button:hover {
+    background-color: var(--primary-color-hover);
+    transform: translateY(-1px);
+  }
+  
+  .stat-input {
+    flex: 1;
+    width: 100%;
+    background-color: rgba(40,40,40,0.95);
+    border: 1px solid var(--primary-color);
+    border-radius: 4px;
+    color: var(--text-color);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    min-width: 60px;
+    text-align: center;
+    font-family: 'IM Fell English', serif;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px var(--shadow-color);
+  }
+  
+  .stat-input:focus {
+    outline: none;
+    border-color: var(--primary-hover);
+    box-shadow: 0 0 0 2px rgba(139, 0, 0, 0.2);
+  }
+  
+  .discipline-controls {
+    margin-top: 15px;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+  }
+  
+  .discipline-group, .merits-group, .flaws-group  {
+    padding: 15px;
+    background-color: rgba(20,20,20,0.95);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    position: relative;
+  }
+  
+  .discipline-group h6, .merits-group h6, .flaws-group h6 {
+    color: var(--primary-color);
+    margin: 0 0 15px 0;
+    font-size: 1.1em;
+    display: inline-block;
+  }
+  
+  .discipline-group .select-button {
+    position: absolute;
+    top: 15px;
+    right: 40px;
+    background: none;
+    border: none;
+    color: var(--text-color);
+    cursor: pointer;
+    font-size: 1.2em;
+    padding: 0 5px;
+    margin-left: 5px;
+    transition: all 0.2s ease;
+  }
+  
+  .discipline-group .select-button:hover {
+    transform: scale(1.2);
+    color: var(--primary-color);
+  }
+  
+  .discipline-group .select-button:active {
+    transform: scale(0.9);
+  }
+  
+  .discipline-group .select-button.selected {
+    color: var(--primary-color);
+    transform: scale(1.2);
+  }
+  
+  .power-item, .merit-item, .flaw-item {
+    margin: 10px 0;
+    padding: 8px;
+    background-color: rgba(30,30,30,0.95);
+    color: var(--text-color);
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 1px 2px var(--shadow-color);
+    position: relative;
+  }
+  
+  .power-level, .merit-level, .flaw-level {
+    float: none;
+    display: block;
+    background-color: var(--primary-color);
+    color: var(--text-color);
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    margin: 0 auto 4px;
+    width: fit-content;
+  }
+  
+  .power-name, .merit-name, .flaw-name {
+    font-weight: 500;
+    color: var(--primary-color);
+    display: block;
+    margin-bottom: 4px;
+  }
+  
+  .power-details, .merit-details, .flaw-details {
+    font-size: 0.9em;
+    color: var(--text-color);
+    margin-top: 4px;
+  }
+  
+  .power-summary, .merit-summary, .flaw-summary {
+    font-size: 0.85em;
+    color: var(--text-color);
+    font-style: italic;
+    opacity: 0.8;
+    margin-top: 2px;
+  }
+  
+  .power-item .remove-power, .merit-item .remove-merit, .flaw-item .remove-flaw {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: none;
+    border: none;
+    color: #dc3545;
+    cursor: pointer;
+    padding: 2px 6px;
+    font-size: 1em;
+    opacity: 0.7;
+    transition: all 0.2s ease;
+  }
+  
+  .power-item .remove-power, .merit-item .remove-merit, .flaw-item .remove-flaw:hover {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+  
+  .notification {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #4a4a4a;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 4px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      z-index: 2000;
+      opacity: 0;
+      transition: opacity 0.3s ease-in-out;
+  }
+  
+  .notification.show {
+      opacity: 1;
+  }
+  
+  .close-button {
+    color: var(--text-color);
+  }
+  
+  .close-button:hover {
+    color: #ddd;
+  }
+      
+  .merit-item, .flaw-item {
+    margin: 10px 0;
+    padding: 8px;
+    background-color: rgba(30,30,30,0.95);
+    color: var(--text-color);
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 1px 2px var(--shadow-color);
+    position: relative;
+  }
+  
+  .merit-content, .flaw-content {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .merit-level, .flaw-level {
+    float: none;
+    display: block;
+    background-color: var(--primary-color);
+    color: var(--text-color);
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    margin: 0 auto 4px;
+    width: fit-content;
+  }
+  
+  .merit-name, .flaw-name {
+    font-weight: 500;
+    color: var(--primary-color);
+    display: block;
+    margin-bottom: 4px;
+  }
+  
+  .merit-summary, .flaw-summary {
+    font-size: 0.85em;
+    color: var(--text-color);
+    font-style: italic;
+    opacity: 0.8;
+    margin-top: 2px;
+  }
+  
+  .remove-discipline, .remove-merit, .remove-flaw { 
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: none;
+    border: none;
+    color: #dc3545;
+    cursor: pointer;
+    padding: 2px 6px;
+    font-size: 1em;
+    opacity: 0.7;
+    transition: all 0.2s ease;
+  }
+  
+  .remove-discipline:hover, .remove-merit:hover, .remove-flaw:hover {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+  
+  .add-power, .add-merit, .add-flaw {
+    background-color: var(--primary-color);
+    color: var(--text-color);
+    border: none;
+    border-radius: 4px;
+    padding: 5px 10px;
+    font-size: 0.9em;
+    margin: 10px 0;
+    display: block;
+    transition: all 0.2s ease;
+    font-family: 'IM Fell English', serif;
+  }
+  
+  .add-power:hover, .add-merit:hover, .add-flaw:hover {
+    background-color: var(--primary-color-hover);
+    transform: translateY(-1px);
+  }
+  
+  .attribute-groups, .skill-groups {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin-top: 10px;
+    width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+  
+  .attribute-group, .skill-group {
+    background-color: rgba(20,20,20,0.95);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    padding: 10px;
+    width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+  
+  .attribute-group h6, .skill-group h6 {
+    color: var(--primary-color);
+    margin: 0 0 10px 0;
+    font-size: 1em;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 5px;
+  }
+  
+  #physical-attributes, #mental-attributes, #social-attributes {
+    display: grid;
+    gap: 5px;
+    width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+  
+  #physical-skills, #mental-skills, #social-skills {
+    display: grid;
+    gap: 5px;
+    width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+  
+  /* Style number input spin buttons for WebKit browsers */
+  .stat-input[type="number"]::-webkit-inner-spin-button,
+  .stat-input[type="number"]::-webkit-outer-spin-button {
+      background: var(--primary-color);
+      border-radius: 2px;
+      border: 1px solid var(--primary-color);
+      width: 18px;
+      height: 18px;
+      margin: 0 2px;
+      opacity: 0.85;
+      transition: background 0.2s;
+  }
+  
+  .stat-input[type="number"]:hover::-webkit-inner-spin-button,
+  .stat-input[type="number"]:hover::-webkit-outer-spin-button {
+      background: var(--primary-hover);
+      border-color: var(--primary-hover);
+  }
+  
+  /* For Firefox, style the input background and border (spin buttons can't be styled directly) */
+  .stat-input[type="number"] {
+      background-color: rgba(40,40,40,0.95);
+      border: 1px solid var(--primary-color);
+      color: var(--text-color);
+  }
+  
+  /* Ensure the modal container can handle horizontal scrolling */
+  .progeny-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    overflow: auto;
+  }
+  
+  /* Ensure all content inside the modal maintains its width */
+  .character-info,
+  .attributes-section,
+  .skills-section,
+  .merits-flaws-section,
+  .disciplines-section {
+    min-width: 1300px;
+    width: 100%;
+  }
+  
+  /* Force horizontal scroll on the body when modal is open */
+  body.modal-open {
+    overflow: hidden;
+    padding-right: 15px; /* Prevent content shift when scrollbar appears */
+  }
+  
+  /* Ensure the modal wrapper can scroll horizontally */
+  .progeny-modal > * {
+    min-width: 1300px;
+    width: 100%;
+  }
+  
+  /* Custom scrollbar styles */
+  .progeny-modal-content::-webkit-scrollbar,
+  .modal-content::-webkit-scrollbar {
+      width: 12px;
+      height: 12px;
+  }
+  
+  .progeny-modal-content::-webkit-scrollbar-track,
+  .modal-content::-webkit-scrollbar-track {
+      background: var(--background-color);
+      border-radius: 6px;
+  }
+  
+  .progeny-modal-content::-webkit-scrollbar-thumb,
+  .modal-content::-webkit-scrollbar-thumb {
+      background: var(--primary-color);
+      border-radius: 6px;
+      border: 2px solid var(--background-color);
+  }
+  
+  .progeny-modal-content::-webkit-scrollbar-thumb:hover,
+  .modal-content::-webkit-scrollbar-thumb:hover {
+      background: var(--primary-hover);
+  }
+  
+  /* Firefox scrollbar styles */
+  .progeny-modal-content,
+  .modal-content {
+      scrollbar-width: thin;
+      scrollbar-color: var(--primary-color) var(--background-color);
+  }
+  
+  .roll-button {
+    background: none;
+    border: none;
+    color: var(--text-color);
+    cursor: pointer;
+    font-size: 1.2em;
+    padding: 0 5px;
+    margin-left: 5px;
+    transition: transform 0.2s ease;
+  }
+  
+  .roll-button:hover {
+    transform: scale(1.2);
+    color: var(--primary-color);
+  }
+  
+  .roll-button:active {
+    transform: scale(0.9);
+  }
+  
+  .select-button {
+    background: none;
+    border: none;
+    color: var(--text-color);
+    cursor: pointer;
+    font-size: 1.2em;
+    padding: 0 5px;
+    margin-left: 5px;
+    transition: all 0.2s ease;
+  }
+  
+  .select-button:hover {
+    transform: scale(1.2);
+    color: var(--primary-color);
+  }
+  
+  .select-button:active {
+    transform: scale(0.9);
+  }
+
+  .select-button.selected {
+    color: var(--primary-color);
+    transform: scale(1.2);
+  }
+
+  .paired-roll-button {
+    margin-left: 10px;
+    padding: 8px 16px;
+    background: var(--border-color) !important;
+    color: var(--text-color);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: 'IM Fell English', serif;
+    font-size: 16px;
+    transition: all 0.3s ease;
+  }
+
+  .paired-roll-button:hover {
+    background: var(--primary-active) !important;
+    transform: translateY(-1px);
+  }
+
+  .paired-roll-button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none !important;
+    background: var(--border-color) !important;
+  }
+
+  .discipline-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+    padding: 5px;
+    background: var(--background-color);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+  }
+  
+  .discipline-name {
+    flex: 1;
+    font-weight: bold;
+    color: var(--text-color);
+  }
+  
+  .discipline-level {
+    margin: 0 10px;
+    color: var(--text-color);
+  }
+  
+  .discipline-item .select-button {
+    background: var(--border-color);
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+    cursor: pointer;
+    font-size: 12px;
+    padding: 2px 8px;
+    margin-left: 10px;
+    transition: all 0.2s ease;
+  }
+  
+  .discipline-item .select-button:hover {
+    background: var(--primary-hover);
+  }
+  
+  .discipline-item .select-button:active {
+    background: var(--primary-active);
+  }
+  
+  .discipline-item .select-button.selected {
+    background: var(--primary-active);
+    border-color: var(--primary-active);
+  }

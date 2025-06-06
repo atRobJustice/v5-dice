@@ -1,0 +1,148 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xml:lang="en" lang="en" xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="keywords" content="Vampire Dice Roller">
+<meta name="description" content="Vampire Dice Roller">
+
+<link rel='icon' href='./resources/favicon.ico' type='image/x-icon'/ >
+<title>Vampire Dice Roller</title>
+
+<style type="text/css">@import "./resources/main.css";</style>
+<style type="text/css">@import "./resources/dice.css";</style>
+<style type="text/css">@import "./resources/progeny.css";</style>
+
+</head>
+
+<body id="body" style="margin: 0">
+    <div id="loading_text">Loading...</div>
+    <div id="control_panel" class="control_panel">
+      <div class="control-block dice-controls">
+        <div>
+          <span>
+            <span id="regular-info">
+              3 Regular Dice
+            </span>
+            <input class="slider slider-regular" type="range" min="0" max="20" value="3" id="regular_pool">
+          </span>
+        </div>
+        <div>
+          <span id="blood-info">
+            1 Hunger Die
+          </span>
+          <span>
+            <input class="slider slider-blood" type="range" min="0" max="5" value="1" id="blood_pool">
+          </span>
+        </div>
+      </div>
+      <div class="control-block results-block">
+        <div class="roll-result">
+          Result: <span id="latest-roll"></span>
+          <button id="clear-roll" class="clear-button" title="Clear roll result">×</button>
+        </div>
+      </div>
+      <div class="icon-buttons">
+        <div class="discord-settings">
+          <button id="toggle-discord" class="discord-toggle">
+            <img src="./resources/Discord-Symbol-Blurple.png" alt="Discord Settings" class="discord-icon">
+          </button>
+        </div>
+        <div class="progeny-settings">
+          <button id="toggle-progeny" class="progeny-toggle" title="Progeny Character">
+            <img src="./resources/progeny-icon.svg" alt="Progeny Import" class="progeny-icon">
+          </button>
+        </div>
+        <button id="toggle-legend" class="legend-toggle">🛈</button>
+      </div>
+      <div class="control-block roll-button-container">
+        <button id="throw" title="You can also drag with your mouse below...">Roll</button>
+      </div>
+    </div>
+    <div id="canvas-cover">
+      <div id="canvas"></div>
+    </div>
+
+    <!-- Legend Modal -->
+    <div id="legend-modal" class="modal hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Dice Symbols</h3>
+          <button id="close-legend" class="close-button">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="dice-legend-grid">
+            <p><span class="regular">⏺ or ✪</span> - Success (+1)</p>
+            <p><span class="regular">✪ + ✪</span> - Critical Success (+4)</p>
+            <p><span class="hunger">🕱</span> - Bestial Failure (no successes)</p>
+            <p><span class="hunger">✪</span> + <span class="regular">✪</span> or <span class="hunger">✪</span> - Messy Critical (+4)</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Discord Modal -->
+    <div id="discord-modal" class="modal hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Discord Settings</h3>
+          <button id="close-discord" class="close-button">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="discord-webhook">
+            <input type="text" id="discord-webhook" placeholder="Discord Webhook URL" class="webhook-input">
+            <input type="text" id="character-name" placeholder="Character Name" class="webhook-input">
+            <div class="webhook-buttons">
+              <button id="save-webhook" class="webhook-button">Save</button>
+              <button id="clear-webhook" class="webhook-button clear">Clear</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Progeny Modal -->
+    <div id="progeny-modal" class="modal hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Progeny Character</h3>
+          <button id="close-progeny" class="close-button">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="progeny-import">
+            <div class="file-upload-container">
+              <input type="file" id="progeny-file" accept=".json" class="file-input">
+              <label for="progeny-file" class="file-label">
+                <span class="file-icon">📁</span>
+                <span class="file-text">Import Progeny JSON</span>
+              </label>
+              <div id="file-name" class="file-name"></div>
+            </div>
+            <div class="progeny-buttons">
+              <button id="export-progeny" class="progeny-button export">Export</button>
+              <button id="clear-progeny" class="progeny-button clear">Clear</button>
+            </div>
+          </div>
+          <div id="character-stats" class="character-stats hidden">
+        </div>
+      </div>
+    </div>
+
+    <script src="./resources/three.min.js"></script>
+    <script src="./resources/cannon.min.js"></script>
+    <script type="text/javascript" src="./resources/teal.js"></script>
+    <script type="text/javascript" src="./resources/dice.js"></script>
+    <script type="text/javascript" src="./resources/progeny.js"></script>
+    <script type="text/javascript" src="./resources/main.js"></script>
+    <script type="text/javascript">
+        // Initialize the dice roller when the DOM is fully loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            if (document.readyState === 'complete') {
+                dice_initialize(document.getElementById('body'));
+            } else {
+                window.addEventListener('load', function() {
+                    dice_initialize(document.getElementById('body'));
+                });
+            }
+        });
+    </script>
+</body></html>
