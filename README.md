@@ -12,8 +12,6 @@ A dice roller for the Vampire the Masquerade tabletop role-playing game.
 - Offline-first functionality
 - Beautiful visual effects for critical successes and failures
 
-## Usage
-
 ### Basic Rolling
 - Select the number of regular dice (up to 20) using the slider in the upper left corner
 - Select the number of hunger dice (up to 5) using the second slider
