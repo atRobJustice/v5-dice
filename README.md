@@ -1,6 +1,6 @@
 # :vampire: vampire-dice-roller :vampire:
 
-A dice roller for the [Vampire the Masquerade](https://www.modiphius.net/collections/vampire-the-masquerade) tabletop role-playing game.
+A dice roller for the Vampire the Masquerade tabletop role-playing game.
 
 ## Features
 
@@ -11,10 +11,6 @@ A dice roller for the [Vampire the Masquerade](https://www.modiphius.net/collect
 - Mobile-friendly design with touch support
 - Offline-first functionality
 - Beautiful visual effects for critical successes and failures
-
-## Installation
-
-To use the roller, download [the latest release zip](https://github.com/prncc/vampire-dice-roller/archive/v1.0.zip), extract it anywhere, and double click on `vampire-dice-roller.html` to open the app.
 
 ## Usage
 
