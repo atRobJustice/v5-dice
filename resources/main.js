@@ -363,6 +363,7 @@ function dice_initialize(container) {
         if (!localStorage.getItem('progenyCharacter')) {
             localStorage.setItem('characterName', characterNameInput.value);
         }
+        showError('Discord settings saved successfully!', 3000);
     });
 
     // Clear webhook
