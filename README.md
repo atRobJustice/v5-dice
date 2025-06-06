@@ -2,8 +2,6 @@
 
 A dice roller for the [Vampire the Masquerade](https://www.modiphius.net/collections/vampire-the-masquerade) tabletop role-playing game.
 
-![An animation showing this app in action](./demo.gif)
-
 ## Features
 
 - 3D dice rolling with realistic physics
