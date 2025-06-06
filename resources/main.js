@@ -363,7 +363,28 @@ function dice_initialize(container) {
         if (!localStorage.getItem('progenyCharacter')) {
             localStorage.setItem('characterName', characterNameInput.value);
         }
-        showError('Discord settings saved successfully!', 3000);
+        
+        // Show success message
+        const successDiv = document.createElement('div');
+        successDiv.className = 'notification';
+        successDiv.textContent = 'Discord settings saved successfully!';
+        document.body.appendChild(successDiv);
+        
+        // Add show class after a small delay to trigger animation
+        setTimeout(() => {
+            successDiv.classList.add('show');
+        }, 10);
+        
+        setTimeout(() => {
+            successDiv.classList.remove('show');
+            // Remove element after animation completes
+            setTimeout(() => {
+                successDiv.remove();
+            }, 300);
+        }, 2000);
+
+        // Close the Discord modal
+        discordModal.classList.add('hidden');
     });
 
     // Clear webhook
