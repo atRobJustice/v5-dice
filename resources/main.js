@@ -19,6 +19,16 @@ function dice_initialize(container) {
         }
     }
 
+    // Add vibration patterns for different events
+    const vibrationPatterns = {
+        rollStart: [100, 50, 100],  // Stronger initial feedback
+        rollComplete: [50, 100, 50],  // Standard completion
+        criticalSuccess: [100, 50, 100, 50, 100],  // More intense pattern for critical
+        messyCritical: [150, 50, 150, 50, 150],  // Strongest pattern for messy critical
+        bestialFailure: [200, 100, 200],  // Distinct pattern for bestial failure
+        sliderChange: 30  // Subtle feedback for slider changes
+    };
+
     // Add error display function
     function showError(message, duration = 5000) {
         const errorDiv = document.createElement('div');
@@ -104,7 +114,18 @@ function dice_initialize(container) {
             const isMobile = window.innerWidth <= 768;
             const controlPanelHeight = getControlPanelHeight();
             const MIN_CANVAS_HEIGHT = 500; // Minimum height in pixels
-            const canvasHeight = Math.max(MIN_CANVAS_HEIGHT, window.innerHeight - controlPanelHeight);
+            
+            // Use a fixed height for mobile devices to prevent keyboard-triggered reloads
+            let canvasHeight;
+            if (isMobile) {
+                // Store the initial height when the page loads
+                if (!window.initialMobileHeight) {
+                    window.initialMobileHeight = window.innerHeight;
+                }
+                canvasHeight = Math.max(MIN_CANVAS_HEIGHT, window.initialMobileHeight - controlPanelHeight);
+            } else {
+                canvasHeight = Math.max(MIN_CANVAS_HEIGHT, window.innerHeight - controlPanelHeight);
+            }
             
             if (canvasHeight <= 0) {
                 console.warn('Canvas height would be negative, skipping update');
@@ -153,6 +174,36 @@ function dice_initialize(container) {
     if (controlPanel) {
         resizeObserver.observe(controlPanel);
     }
+
+    // Add mobile-specific viewport meta tag handling
+    function setupMobileViewport() {
+        const isMobile = window.innerWidth <= 768;
+        if (isMobile) {
+            // Store initial height
+            window.initialMobileHeight = window.innerHeight;
+            
+            // Add viewport meta tag if it doesn't exist
+            let viewportMeta = document.querySelector('meta[name="viewport"]');
+            if (!viewportMeta) {
+                viewportMeta = document.createElement('meta');
+                viewportMeta.name = 'viewport';
+                document.head.appendChild(viewportMeta);
+            }
+            
+            // Set viewport to prevent zoom and maintain height
+            viewportMeta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, height=device-height';
+            
+            // Handle orientation changes
+            window.addEventListener('orientationchange', () => {
+                // Update initial height on orientation change
+                window.initialMobileHeight = window.innerHeight;
+                updateCanvasSize();
+            });
+        }
+    }
+
+    // Initialize mobile viewport handling
+    setupMobileViewport();
 
     // Also handle window resize events
     window.addEventListener('resize', () => {
@@ -207,6 +258,7 @@ function dice_initialize(container) {
         sliders.forEach(slider => {
             slider.addEventListener('touchstart', function(e) {
                 e.preventDefault();
+                vibrateDevice(vibrationPatterns.sliderChange);
             }, { passive: false });
             
             slider.addEventListener('touchmove', function(e) {
@@ -430,7 +482,7 @@ function dice_initialize(container) {
             latestElement.innerHTML = 'rolling...';
             latestElement.classList.add('rolling');
             throwButton.disabled = true;
-            vibrateDevice(50);
+            vibrateDevice(vibrationPatterns.rollStart);
             callback();
         } catch (error) {
             console.error('Error during roll preparation:', error);
@@ -447,8 +499,6 @@ function dice_initialize(container) {
         try {
             latestElement.classList.remove('rolling');
             throwButton.disabled = false;
-            
-            vibrateDevice([50, 100, 50]);
             
             if (!Array.isArray(result)) {
                 throw new Error('Invalid roll result format');
@@ -484,6 +534,17 @@ function dice_initialize(container) {
             const critical = parseInt(doubleAnkhs / 2);
             const messyCritical = critical && (hungerDoubleAnkhs > 0);
             const bestialFailure = bestialFailureCandidate && successes === 0;
+
+            // Apply appropriate vibration pattern based on result
+            if (bestialFailure) {
+                vibrateDevice(vibrationPatterns.bestialFailure);
+            } else if (messyCritical) {
+                vibrateDevice(vibrationPatterns.messyCritical);
+            } else if (critical) {
+                vibrateDevice(vibrationPatterns.criticalSuccess);
+            } else {
+                vibrateDevice(vibrationPatterns.rollComplete);
+            }
 
             // Update interface with animation
             let newHtml = '';
