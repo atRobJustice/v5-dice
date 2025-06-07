@@ -116,13 +116,29 @@ function dice_initialize(container) {
 
     // Improved resize handling with debounce
     let resizeTimeout;
+    let lastHeight = window.innerHeight;
+    let isKeyboardVisible = false;
+    
     window.addEventListener('resize', function() {
-        console.log('Resize event triggered');
-        clearTimeout(resizeTimeout);
-        resizeTimeout = setTimeout(function() {
-            console.log('Reloading page...');
-            location.reload();
-        }, 250);
+        const currentHeight = window.innerHeight;
+        const heightDifference = Math.abs(currentHeight - lastHeight);
+        
+        // If the height change is small (likely keyboard), ignore it
+        if (heightDifference < 100) {
+            isKeyboardVisible = currentHeight < lastHeight;
+            return;
+        }
+        
+        // Only reload on significant height changes (orientation change)
+        if (heightDifference >= 100) {
+            console.log('Significant height change detected, reloading page...');
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(function() {
+                location.reload();
+            }, 250);
+        }
+        
+        lastHeight = currentHeight;
     });
 
     function updateCanvasSize() {
@@ -138,7 +154,8 @@ function dice_initialize(container) {
                 if (!window.initialMobileHeight) {
                     window.initialMobileHeight = window.innerHeight;
                 }
-                canvasHeight = Math.max(MIN_CANVAS_HEIGHT, window.initialMobileHeight - controlPanelHeight);
+                // Use the initial height if keyboard is visible
+                canvasHeight = Math.max(MIN_CANVAS_HEIGHT, (isKeyboardVisible ? window.initialMobileHeight : window.innerHeight) - controlPanelHeight);
                 // Update the CSS variable
                 document.documentElement.style.setProperty('--control-panel-height', controlPanelHeight + 'px');
             } else {
