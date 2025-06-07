@@ -21,12 +21,32 @@ function dice_initialize(container) {
 
     // Add vibration patterns for different events
     const vibrationPatterns = {
-        rollStart: [100, 50, 100],  // Stronger initial feedback
-        rollComplete: [50, 100, 50],  // Standard completion
-        criticalSuccess: [100, 50, 100, 50, 100],  // More intense pattern for critical
-        messyCritical: [150, 50, 150, 50, 150],  // Strongest pattern for messy critical
-        bestialFailure: [200, 100, 200],  // Distinct pattern for bestial failure
-        sliderChange: 30  // Subtle feedback for slider changes
+        // Heartbeat-like pattern for starting a roll
+        rollStart: [100, 50, 100, 50, 100],
+        
+        // Quick double-tap for standard completion
+        rollComplete: [50, 50, 50],
+        
+        // Triumphant ascending pattern for critical success
+        criticalSuccess: [50, 100, 150, 200, 150, 100, 50],
+        
+        // Intense, erratic pattern for messy critical (like losing control)
+        messyCritical: [200, 50, 200, 50, 200, 50, 200, 50, 200],
+        
+        // Deep, ominous pattern for bestial failure (like a predator's growl)
+        bestialFailure: [300, 100, 300, 100, 300],
+        
+        // Dramatic pattern for hunger dice (like a vampire's thirst)
+        hungerDiceRoll: [150, 50, 150, 50, 150],
+        
+        // Subtle warning pattern for when hunger dice are added
+        hungerDiceAdded: [100, 50, 100],
+        
+        // Celebration pattern for multiple successes
+        multipleSuccesses: [50, 100, 50, 100, 50, 100, 50],
+        
+        // Dramatic pattern for a close call (just enough successes)
+        closeCall: [100, 200, 100, 200, 100]
     };
 
     // Add error display function
@@ -123,6 +143,8 @@ function dice_initialize(container) {
                     window.initialMobileHeight = window.innerHeight;
                 }
                 canvasHeight = Math.max(MIN_CANVAS_HEIGHT, window.initialMobileHeight - controlPanelHeight);
+                // Update the CSS variable
+                document.documentElement.style.setProperty('--control-panel-height', controlPanelHeight + 'px');
             } else {
                 canvasHeight = Math.max(MIN_CANVAS_HEIGHT, window.innerHeight - controlPanelHeight);
             }
@@ -179,8 +201,9 @@ function dice_initialize(container) {
     function setupMobileViewport() {
         const isMobile = window.innerWidth <= 768;
         if (isMobile) {
-            // Store initial height
+            // Store initial height and set it as a CSS variable
             window.initialMobileHeight = window.innerHeight;
+            document.documentElement.style.setProperty('--control-panel-height', getControlPanelHeight() + 'px');
             
             // Add viewport meta tag if it doesn't exist
             let viewportMeta = document.querySelector('meta[name="viewport"]');
@@ -191,18 +214,20 @@ function dice_initialize(container) {
             }
             
             // Set viewport to prevent zoom and maintain height
-            viewportMeta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, height=device-height';
+            viewportMeta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover';
             
             // Handle orientation changes
             window.addEventListener('orientationchange', () => {
                 // Update initial height on orientation change
                 window.initialMobileHeight = window.innerHeight;
+                document.documentElement.style.setProperty('--control-panel-height', getControlPanelHeight() + 'px');
                 updateCanvasSize();
             });
 
             // Prevent resize events when keyboard appears
             let resizeTimeout;
             let lastHeight = window.innerHeight;
+            let isKeyboardVisible = false;
             
             window.addEventListener('resize', () => {
                 if (resizeTimeout) {
@@ -215,12 +240,14 @@ function dice_initialize(container) {
                     
                     // If the height change is small (likely keyboard), ignore it
                     if (heightDifference < 100) {
+                        isKeyboardVisible = currentHeight < lastHeight;
                         return;
                     }
                     
                     // If it's a significant height change (orientation change or real resize)
                     lastHeight = currentHeight;
                     window.initialMobileHeight = currentHeight;
+                    document.documentElement.style.setProperty('--control-panel-height', getControlPanelHeight() + 'px');
                     updateCanvasSize();
                 }, 100);
             });
@@ -230,6 +257,8 @@ function dice_initialize(container) {
                 if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
                     // Store the current scroll position
                     window.scrollPosition = window.scrollY;
+                    // Prevent the default scroll behavior
+                    e.target.scrollIntoView({ behavior: 'auto', block: 'center' });
                 }
             });
 
@@ -245,6 +274,14 @@ function dice_initialize(container) {
                 if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
                     e.preventDefault();
                     e.target.focus();
+                }
+            }, { passive: false });
+
+            // Prevent scrolling when keyboard is visible
+            document.addEventListener('scroll', (e) => {
+                if (isKeyboardVisible) {
+                    e.preventDefault();
+                    window.scrollTo(0, window.scrollPosition);
                 }
             }, { passive: false });
         }
@@ -308,7 +345,6 @@ function dice_initialize(container) {
         sliders.forEach(slider => {
             slider.addEventListener('touchstart', function(e) {
                 e.preventDefault();
-                vibrateDevice(vibrationPatterns.sliderChange);
             }, { passive: false });
             
             slider.addEventListener('touchmove', function(e) {
@@ -592,8 +628,19 @@ function dice_initialize(container) {
                 vibrateDevice(vibrationPatterns.messyCritical);
             } else if (critical) {
                 vibrateDevice(vibrationPatterns.criticalSuccess);
+            } else if (successes >= 3) {
+                vibrateDevice(vibrationPatterns.multipleSuccesses);
+            } else if (successes === 1) {
+                vibrateDevice(vibrationPatterns.closeCall);
             } else {
                 vibrateDevice(vibrationPatterns.rollComplete);
+            }
+
+            // If hunger dice were used, add a subtle hunger vibration
+            if (notation.set.length < result.length) {
+                setTimeout(() => {
+                    vibrateDevice(vibrationPatterns.hungerDiceRoll);
+                }, 500);
             }
 
             // Update interface with animation

@@ -1356,3 +1356,27 @@ html {
         padding: 2px 6px;
     }
 }
+
+/* Add at the top of the file, after any existing CSS variables */
+html, body {
+    height: 100%;
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+}
+
+/* Mobile-specific viewport locking */
+@media (max-width: 768px) {
+    html, body {
+        height: 100vh;
+        height: -webkit-fill-available;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    #canvas-cover {
+        height: calc(100vh - var(--control-panel-height));
+        height: calc(-webkit-fill-available - var(--control-panel-height));
+        overflow: hidden;
+    }
+}
