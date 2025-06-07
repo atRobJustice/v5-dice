@@ -103,12 +103,18 @@ function dice_initialize(container) {
         try {
             const isMobile = window.innerWidth <= 768;
             const controlPanelHeight = getControlPanelHeight();
-            const canvasHeight = window.innerHeight - controlPanelHeight;
+            const MIN_CANVAS_HEIGHT = 500; // Minimum height in pixels
+            const canvasHeight = Math.max(MIN_CANVAS_HEIGHT, window.innerHeight - controlPanelHeight);
+            
+            if (canvasHeight <= 0) {
+                console.warn('Canvas height would be negative, skipping update');
+                return;
+            }
             
             canvas.style.width = window.innerWidth + 'px';
             canvas.style.height = canvasHeight + 'px';
             canvas.style.top = controlPanelHeight + 'px';
-            canvas.style.position = 'absolute';
+            canvas.style.position = 'fixed';
             canvas.style.left = '0';
             canvas.style.right = '0';
             canvas.style.bottom = '0';
@@ -122,16 +128,36 @@ function dice_initialize(container) {
             }
         } catch (error) {
             console.error('Failed to update canvas size:', error);
-            showError('Failed to update display. Please refresh the page.');
+            // Only show error if it's not a resize-related issue
+            if (!error.message?.includes('ResizeObserver') && !error.message?.includes('resize')) {
+                showError('Failed to update display. Please refresh the page.');
+            }
         }
     }
 
     function getControlPanelHeight() {
-        if (window.innerWidth <= 768) {
-            return 180;
-        }
-        return 140;
+        const controlPanel = document.querySelector('.control_panel');
+        if (!controlPanel) return window.innerWidth <= 768 ? 180 : 140;
+        
+        // Get the actual height of the control panel including padding and margins
+        const height = controlPanel.getBoundingClientRect().height;
+        return height;
     }
+
+    // Add resize observer to watch for control panel size changes
+    const resizeObserver = new ResizeObserver(() => {
+        updateCanvasSize();
+    });
+
+    const controlPanel = document.querySelector('.control_panel');
+    if (controlPanel) {
+        resizeObserver.observe(controlPanel);
+    }
+
+    // Also handle window resize events
+    window.addEventListener('resize', () => {
+        updateCanvasSize();
+    });
 
     $t.dice.use_true_random = false;
 
@@ -214,6 +240,9 @@ function dice_initialize(container) {
     
     // Store the dice box instance globally
     window.box = box;
+
+    // Now that box is initialized, we can safely call updateCanvasSize
+    updateCanvasSize();
 
     // Clear roll result
     const clearRollButton = document.getElementById('clear-roll');

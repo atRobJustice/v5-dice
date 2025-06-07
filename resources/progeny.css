@@ -1,13 +1,12 @@
-.progeny-settings {
-    display: inline-block;
-    margin-right: 10px;
-  }
-  
   .progeny-toggle {
     background: none;
     border: none;
     cursor: pointer;
     padding: 5px;
+  }
+
+  .progeny-toggle:hover {
+    transform: scale(1.3);
   }
   
   .progeny-icon {
@@ -17,7 +16,7 @@
   }
   
   .file-upload-container {
-    margin-bottom: 15px;
+    margin-bottom: 10px;
     text-align: center;
   }
   
@@ -28,8 +27,8 @@
   .file-label {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    padding: 12px 24px;
+    gap: 6px;
+    padding: 8px 16px;
     background-color: var(--primary-color);
     color: var(--text-color);
     border-radius: 4px;
@@ -47,20 +46,20 @@
   
   .file-name {
     display: block;
-    margin-top: 8px;
+    margin-top: 4px;
     font-size: 0.9em;
     color: #aaa;
   }
   
   .progeny-buttons {
     display: flex;
-    gap: 10px;
-    margin-bottom: 15px;
+    gap: 8px;
+    margin-bottom: 10px;
     justify-content: center;
   }
   
   .progeny-button {
-    padding: 8px 16px;
+    padding: 6px 12px;
     border: none;
     border-radius: 4px;
     cursor: pointer;
@@ -112,8 +111,7 @@
   }
   
   .progeny-modal-content, .modal-content {
-    background-color: var(--background-color);
-    padding: 20px;
+    padding: 0px;
     border-radius: 8px;
     width: 95%;
     min-width: 400px;
@@ -123,20 +121,19 @@
     overflow-x: auto;
     position: relative;
     box-sizing: border-box;
-    white-space: nowrap;
     margin: auto;
     transition: all 0.3s ease;
   }
   
   .progeny-modal-content.has-character, .modal-content.has-character {
-    min-width: 1450px !important;
+    min-width: 900px !important;
   }
   
   .modal-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 15px;
+    padding: 10px;
     border-bottom: 1px solid var(--border-color);
   }
   
@@ -149,12 +146,12 @@
     display: flex;
     align-items: center;
     margin-left: auto;
-    margin-right: 15px;
+    margin-right: 10px;
   }
   
   .modal-header .paired-roll-button {
     margin: 0;
-    padding: 8px 16px;
+    padding: 6px 12px;
     background: var(--primary-color);
     color: var(--text-color);
     border: none;
@@ -173,27 +170,14 @@
   .modal-header .paired-roll-button:active {
     transform: translateY(1px);
   }
-  
-  .modal-body {
-    background: transparent;
-    color: var(--text-color);
-  }
-  
-  .modal-content {
-    background-color: var(--panel-bg) !important;
-    color: var(--text-color) !important;
-    border: 1px solid var(--border-color);
-    box-shadow: 0 4px 16px var(--shadow-color);
-  }
-  
+    
   .character-stats {
     background-color: var(--background-color);
     border-radius: 8px;
-    padding: 20px;
-    margin-top: 20px;
+    padding: 8px;
+    margin-top: 15px;
     width: 100%;
     box-sizing: border-box;
-    overflow: hidden;
   }
   
   .character-info {
@@ -202,7 +186,6 @@
     border: 1px solid var(--border-color);
     padding: 15px;
     margin-bottom: 20px;
-    width: 100%;
     box-sizing: border-box;
   }
   
@@ -221,7 +204,6 @@
     margin-top: 20px;
     width: 100%;
     box-sizing: border-box;
-    overflow: hidden;
   }
   
   .attributes, .skills {
@@ -232,9 +214,8 @@
     border-radius: 4px;
     border: 1px solid var(--border-color);
     box-shadow: 0 1px 3px var(--shadow-color);
-    width: 100%;
+    width: 850px;
     box-sizing: border-box;
-    overflow: hidden;
   }
   
   .disciplines, .merits-flaws {
@@ -244,7 +225,7 @@
     border-radius: 4px;
     border: 1px solid var(--border-color);
     box-shadow: 0 1px 3px var(--shadow-color);
-    width: 100%;
+    width: 415px;
     box-sizing: border-box;
   }
   
@@ -254,7 +235,7 @@
     grid-template-columns: 1fr 1fr;
     gap: 20px;
     grid-column: 1 / -1;
-    width: 100%;
+    width: fit-content;
     box-sizing: border-box;
   }
   
@@ -279,6 +260,7 @@
   
   .stat-name {
     font-weight: 500;
+    width: 110px;
   }
   
   
@@ -288,84 +270,172 @@
   }
   
   .info-grid {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
     gap: 10px;
     width: 100%;
   }
   
   .info-row {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 15px;
-    width: 100%;
+    display: contents;
   }
   
-  .info-row:last-child {
-    grid-template-columns: repeat(2, 1fr);
+  .info-row:nth-child(1) .info-stat-row,
+  .info-row:nth-child(2) .info-stat-row,
+  .info-row:nth-child(3) .info-stat-row {
+    grid-column: span 2;
   }
   
+  .info-row:nth-child(4) .info-stat-row {
+    grid-column: span 1;
+  }
+  
+  .info-row:nth-child(5) .info-stat-row {
+    grid-column: 1 / span 4;
+    max-width: 200px;
+    margin: 0 auto;
+  }
+  
+  .info-stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    background-color: rgba(40,40,40,0.95);
+    padding: 4px 8px;
+    border-radius: 4px;
+  }
+    
+  /* Keep the stat-row styles for skills with specialties */
   .stat-row {
     display: flex;
+    flex-direction: column;
+    padding: 4px 0;
+    position: relative;
+  }
+  
+  .stat-main {
+    display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 10px;
-    padding: 5px 0;
+    gap: 8px;
   }
   
-  .stat-row span:first-child {
-    min-width: 100px;
+  .skill-specialties {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    align-items: center;
+    margin-left: 110px; /* Match the width of stat-name */
+    margin-top: 2px;
+    max-width: 90%; /* Prevent overflow beyond the stat name */
+  }
+  
+  .specialty-tag {
+    background-color: var(--primary-color-hover);
     color: var(--text-color);
-    font-weight: 500;
-  }
-  
-  .editable-value {
-    flex: 1;
-    color: var(--text-color);
-    padding: 2px 8px;
-    background-color: rgba(40,40,40,0.95);
-    border-radius: 4px;
-    min-width: 60px;
-    text-align: center;
-  }
-  
-  .editable-value span {
-    display: inline-block;
-    padding: 4px 8px;
-    min-width: 40px;
-  }
-  
-  .edit-button {
-    background-color: var(--primary-color);
-    color: var(--text-color);
-    border: none;
-    border-radius: 4px;
-    padding: 4px 8px;
+    padding: 2px 6px;
+    border-radius: 12px;
+    font-size: 0.8em;
     cursor: pointer;
-    font-size: 0.9em;
+    transition: all 0.2s ease;
+    white-space: nowrap; 
+  }
+  
+  .specialty-tag:hover {
+    background-color: var(--primary-color-hover);
+    transform: translateY(-1px);
+    border: 1px solid var(--primary-color);
+  }
+  
+  .specialty-tag.selected {
+    background-color: var(--primary-color);
+    box-shadow: 0 0 0 2px var(--primary-color);
+  }
+  
+  .specialty-tag.selected:hover {
+    background-color: var(--primary-color);
+    box-shadow: 0 0 0 2px var(--primary-color);
+    border: 1px solid var(--primary-color);
+  }
+  .specialty-tag:active {
+    transform: translateY(0);
+  }
+
+  .add-specialty {
+    background: none;
+    border: none;
+    color: var(--text-color);
+    cursor: pointer;
+    font-size: 1em;
+    padding: 0 4px;
     transition: all 0.2s ease;
   }
   
+  .add-specialty:hover {
+    color: var(--primary-color);
+    transform: scale(1.2);
+  }
+  
+  .add-specialty:active {
+    transform: scale(0.9);
+  }
+  
+  .editable-value {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px 4px;
+    background-color: rgba(0, 0, 0, 0.2);
+    padding: 5px 10px 5px 10px;
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+  }
+
+  .info-value {
+    width: 100%;
+  }
+  
+  .editable-value span {
+    min-width: 16px;
+    text-align: center;
+  }
+  
+  .edit-button {
+    flex-shrink: 0;
+    padding: 2px 6px;
+    background: var(--primary-color);
+    border: 1px solid var(--primary-color);
+    color: var(--text-color);
+    cursor: pointer;
+    opacity: 0.8;
+    transition: all 0.2s ease;
+    border-radius: 3px;
+    font-size: 0.9em;
+  }
+  
   .edit-button:hover {
-    background-color: var(--primary-color-hover);
-    transform: translateY(-1px);
+    background: rgba(139, 0, 0, 0.3);
+    opacity: 1;
+    transform: scale(1.1);
+  }
+  
+  .edit-button:active {
+    transform: scale(0.95);
   }
   
   .stat-input {
     flex: 1;
-    width: 100%;
     background-color: rgba(40,40,40,0.95);
     border: 1px solid var(--primary-color);
     border-radius: 4px;
     color: var(--text-color);
-    padding: 2px 8px;
-    border-radius: 4px;
     font-size: 0.9em;
-    min-width: 60px;
     text-align: center;
     font-family: 'IM Fell English', serif;
-    font-size: 16px;
     transition: all 0.3s ease;
     box-shadow: 0 2px 4px var(--shadow-color);
+    width: 100%;
   }
   
   .stat-input:focus {
@@ -378,7 +448,7 @@
     margin-top: 15px;
     display: flex;
     justify-content: center;
-    gap: 10px;
+    gap: 4px;
   }
   
   .discipline-group, .merits-group, .flaws-group  {
@@ -425,8 +495,8 @@
   }
   
   .power-item, .merit-item, .flaw-item {
-    margin: 10px 0;
-    padding: 8px;
+    margin: 2px 0;
+    padding: 4px;
     background-color: rgba(30,30,30,0.95);
     color: var(--text-color);
     border-radius: 4px;
@@ -466,6 +536,7 @@
     font-style: italic;
     opacity: 0.8;
     margin-top: 2px;
+    word-wrap: break-word;
   }
   
   .power-item .remove-power, .merit-item .remove-merit, .flaw-item .remove-flaw {
@@ -513,50 +584,12 @@
   .close-button:hover {
     color: #ddd;
   }
-      
-  .merit-item, .flaw-item {
-    margin: 10px 0;
-    padding: 8px;
-    background-color: rgba(30,30,30,0.95);
-    color: var(--text-color);
-    border-radius: 4px;
-    border: 1px solid var(--border-color);
-    box-shadow: 0 1px 2px var(--shadow-color);
-    position: relative;
-  }
-  
+       
   .merit-content, .flaw-content {
     display: flex;
     flex-direction: column;
   }
-  
-  .merit-level, .flaw-level {
-    float: none;
-    display: block;
-    background-color: var(--primary-color);
-    color: var(--text-color);
-    padding: 2px 8px;
-    border-radius: 12px;
-    font-size: 0.8em;
-    margin: 0 auto 4px;
-    width: fit-content;
-  }
-  
-  .merit-name, .flaw-name {
-    font-weight: 500;
-    color: var(--primary-color);
-    display: block;
-    margin-bottom: 4px;
-  }
-  
-  .merit-summary, .flaw-summary {
-    font-size: 0.85em;
-    color: var(--text-color);
-    font-style: italic;
-    opacity: 0.8;
-    margin-top: 2px;
-  }
-  
+     
   .remove-discipline, .remove-merit, .remove-flaw { 
     position: absolute;
     top: 8px;
@@ -596,30 +629,26 @@
   
   .attribute-groups, .skill-groups {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 15px;
-    margin-top: 10px;
-    width: 100%;
-    box-sizing: border-box;
-    overflow: hidden;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    width: fit-content;
+    margin: 0 auto;
   }
   
   .attribute-group, .skill-group {
-    background-color: rgba(20,20,20,0.95);
-    border-radius: 8px;
+    background-color: rgba(35,35,35,0.95);
     border: 1px solid var(--border-color);
+    border-radius: 4px;
     padding: 10px;
-    width: 100%;
-    box-sizing: border-box;
-    overflow: hidden;
+    min-width: 0;
   }
   
   .attribute-group h6, .skill-group h6 {
     color: var(--primary-color);
-    margin: 0 0 10px 0;
-    font-size: 1em;
+    margin: 0 0 8px 0;
+    font-size: 0.9em;
     border-bottom: 1px solid var(--border-color);
-    padding-bottom: 5px;
+    padding-bottom: 4px;
   }
   
   #physical-attributes, #mental-attributes, #social-attributes {
@@ -627,7 +656,6 @@
     gap: 5px;
     width: 100%;
     box-sizing: border-box;
-    overflow: hidden;
   }
   
   #physical-skills, #mental-skills, #social-skills {
@@ -635,7 +663,6 @@
     gap: 5px;
     width: 100%;
     box-sizing: border-box;
-    overflow: hidden;
   }
   
   /* Style number input spin buttons for WebKit browsers */
@@ -685,19 +712,17 @@
   .skills-section,
   .merits-flaws-section,
   .disciplines-section {
-    min-width: 1300px;
-    width: 100%;
+    width: 850px;
   }
   
   /* Force horizontal scroll on the body when modal is open */
   body.modal-open {
-    overflow: hidden;
     padding-right: 15px; /* Prevent content shift when scrollbar appears */
   }
   
   /* Ensure the modal wrapper can scroll horizontally */
   .progeny-modal > * {
-    min-width: 1300px;
+    min-width: 900px;
     width: 100%;
   }
   
@@ -846,4 +871,42 @@
   .discipline-item .select-button.selected {
     background: var(--primary-active);
     border-color: var(--primary-active);
+  }
+
+  .skill-specialties {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    align-items: center;
+    margin-left: 8px;
+  }
+
+  .add-specialty {
+    background: none;
+    border: none;
+    color: var(--text-color);
+    cursor: pointer;
+    font-size: 1em;
+    padding: 0 4px;
+    transition: all 0.2s ease;
+  }
+
+  .add-specialty:hover {
+    color: var(--primary-color);
+    transform: scale(1.2);
+  }
+
+  .add-specialty:active {
+    transform: scale(0.9);
+  }
+
+  .info-stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .info-value {
+    min-width: 100px;
   }

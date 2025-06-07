@@ -226,6 +226,39 @@ class ProgenyManager {
                 });
             }
 
+            // Process specialties
+            let skillSpecialties = [];
+            
+            // Add specialties from skillSpecialties
+            if (character.skillSpecialties) {
+                skillSpecialties = character.skillSpecialties
+                    .filter(specialty => specialty.name && specialty.name.trim() !== '') // Filter out empty names
+                    .map(specialty => ({
+                        skill: formatName(specialty.skill),
+                        name: formatName(specialty.name)
+                    }));
+            }
+
+            // Add specialties from pickedSpecialties in predatorType
+            if (character.predatorType && character.predatorType.pickedSpecialties) {
+                character.predatorType.pickedSpecialties
+                    .filter(specialty => specialty.name && specialty.name.trim() !== '') // Filter out empty names
+                    .forEach(specialty => {
+                        // Check if this specialty already exists
+                        const existingSpecialty = skillSpecialties.find(s => 
+                            s.skill.toLowerCase() === specialty.skill.toLowerCase() && 
+                            s.name.toLowerCase() === specialty.name.toLowerCase()
+                        );
+                        
+                        if (!existingSpecialty) {
+                            skillSpecialties.push({
+                                skill: formatName(specialty.skill),
+                                name: formatName(specialty.name)
+                            });
+                        }
+                    });
+            }
+
             // Calculate derived stats based on rules
             const generation = character.generation;
             
@@ -272,7 +305,8 @@ class ProgenyManager {
                 willpower,
                 humanity,
                 health,
-                hunger: character.hunger || 1
+                hunger: character.hunger || 1,
+                skillSpecialties // Add the processed specialties to the character object
             };
 
             // Update character name in Discord settings
@@ -367,114 +401,92 @@ class ProgenyManager {
         characterInfo.className = 'character-info';
         characterInfo.innerHTML = `
             <h4>${this.character.name}</h4>
-            <div class="editable-stats">
-                <div class="info-grid">
-                    <div class="info-row">
-                        <div class="info-column">
-                            <div class="stat-row">
-                                <span class="stat-label">Clan</span>
-                                <div class="editable-value">
-                                    <span>${this.character.clan || ''}</span>
-                                </div>
-                                <button class="edit-button" data-field="clan" data-type="text">✎</button>
-                            </div>
+            <div class="info-grid">
+                <div class="info-row">
+                    <div class="info-stat-row">
+                        <span class="stat-label">Clan</span>
+                        <div class="editable-value info-value">
+                            <span>${this.character.clan || ''}</span>
                         </div>
-                        <div class="info-column">
-                            <div class="stat-row">
-                                <span class="stat-label">Ambition</span>
-                                <div class="editable-value">
-                                    <span>${this.character.ambition || ''}</span>
-                                </div>
-                                <button class="edit-button" data-field="ambition" data-type="text">✎</button>
-                            </div>
-                        </div>
-                        <div class="info-column">
-                            <div class="stat-row">
-                                <span class="stat-label">Health</span>
-                                <div class="editable-value">
-                                    <span>${this.character.health || 0}</span>
-                                </div>
-                                <button class="edit-button" data-field="health" data-type="number">✎</button>
-                            </div>
-                        </div>
+                        <button class="edit-button" data-field="clan" data-type="text">✎</button>
                     </div>
-                    <div class="info-row">
-                        <div class="info-column">
-                            <div class="stat-row">
-                                <span class="stat-label">Generation</span>
-                                <div class="editable-value">
-                                    <span>${this.character.generation || 0}</span>
-                                </div>
-                                <button class="edit-button" data-field="generation" data-type="number" data-min="1" data-max="15">✎</button>
-                            </div>
+                    <div class="info-stat-row">
+                        <span class="stat-label">Ambition</span>
+                        <div class="editable-value info-value">
+                            <span>${this.character.ambition || ''}</span>
                         </div>
-                        <div class="info-column">
-                            <div class="stat-row">
-                                <span class="stat-label">Desire</span>
-                                <div class="editable-value">
-                                    <span>${this.character.desire || ''}</span>
-                                </div>
-                                <button class="edit-button" data-field="desire" data-type="text">✎</button>
-                            </div>
-                        </div>
-                        <div class="info-column">
-                            <div class="stat-row">
-                                <span class="stat-label">Willpower</span>
-                                <div class="editable-value">
-                                    <span>${this.character.willpower || 0}</span>
-                                </div>
-                                <button class="edit-button" data-field="willpower" data-type="number">✎</button>
-                            </div>
-                        </div>
+                        <button class="edit-button" data-field="ambition" data-type="text">✎</button>
                     </div>
-                    <div class="info-row">
-                        <div class="info-column">
-                            <div class="stat-row">
-                                <span class="stat-label">Sire</span>
-                                <div class="editable-value">
-                                    <span>${this.character.sire || ''}</span>
-                                </div>
-                                <button class="edit-button" data-field="sire" data-type="text">✎</button>
-                            </div>
+                </div>
+                <div class="info-row">
+                    <div class="info-stat-row">
+                        <span class="stat-label">Sire</span>
+                        <div class="editable-value info-value">
+                            <span>${this.character.sire || ''}</span>
                         </div>
-                        <div class="info-column">
-                            <div class="stat-row">
-                                <span class="stat-label">Predator</span>
-                                <div class="editable-value">
-                                    <span>${this.character.predatorType?.name || ''}</span>
-                                </div>
-                                <button class="edit-button" data-field="predatorType" data-type="text">✎</button>
-                            </div>
-                        </div>
-                        <div class="info-column">
-                            <div class="stat-row">
-                                <span class="stat-label">Humanity</span>
-                                <div class="editable-value">
-                                    <span>${this.character.humanity || 0}</span>
-                                </div>
-                                <button class="edit-button" data-field="humanity" data-type="number">✎</button>
-                            </div>
-                        </div>
+                        <button class="edit-button" data-field="sire" data-type="text">✎</button>
                     </div>
-                    <div class="info-row">
-                        <div class="info-column">
-                            <div class="stat-row">
-                                <span class="stat-label">Blood Potency</span>
-                                <div class="editable-value">
-                                    <span>${this.character.bloodPotency || 0}</span>
-                                </div>
-                                <button class="edit-button" data-field="bloodPotency" data-type="number">✎</button>
-                            </div>
+                    <div class="info-stat-row">
+                        <span class="stat-label">Desire</span>
+                        <div class="editable-value info-value">
+                            <span>${this.character.desire || ''}</span>
                         </div>
-                        <div class="info-column">
-                            <div class="stat-row">
-                                <span class="stat-label">Hunger</span>
-                                <div class="editable-value">
-                                    <span>${this.character.hunger || 1}</span>
-                                </div>
-                                <button class="edit-button" data-field="hunger" data-type="number" data-min="0" data-max="5">✎</button>
-                            </div>
+                        <button class="edit-button" data-field="desire" data-type="text">✎</button>
+                    </div>
+                </div>
+                <div class="info-row">
+                    <div class="info-stat-row">
+                        <span class="stat-label">Generation</span>
+                        <div class="editable-value info-value">
+                            <span>${this.character.generation || 0}</span>
                         </div>
+                        <button class="edit-button" data-field="generation" data-type="number" data-min="1" data-max="15">✎</button>
+                    </div>
+                    <div class="info-stat-row">
+                        <span class="stat-label">Predator</span>
+                        <div class="editable-value info-value">
+                            <span>${this.character.predatorType?.name || ''}</span>
+                        </div>
+                        <button class="edit-button" data-field="predatorType" data-type="text">✎</button>
+                    </div>
+                </div>
+                <div class="info-row">
+                    <div class="info-stat-row">
+                        <span class="stat-label">Health</span>
+                        <div class="editable-value">
+                            <span>${this.character.health || 0}</span>
+                        </div>
+                        <button class="edit-button" data-field="health" data-type="number">✎</button>
+                    </div>
+                    <div class="info-stat-row">
+                        <span class="stat-label">Willpower</span>
+                        <div class="editable-value">
+                            <span>${this.character.willpower || 0}</span>
+                        </div>
+                        <button class="edit-button" data-field="willpower" data-type="number">✎</button>
+                    </div>
+                    <div class="info-stat-row">
+                        <span class="stat-label">Humanity</span>
+                        <div class="editable-value">
+                            <span>${this.character.humanity || 0}</span>
+                        </div>
+                        <button class="edit-button" data-field="humanity" data-type="number">✎</button>
+                    </div>
+                    <div class="info-stat-row">
+                        <span class="stat-label">Blood Potency</span>
+                        <div class="editable-value">
+                            <span>${this.character.bloodPotency || 0}</span>
+                        </div>
+                        <button class="edit-button" data-field="bloodPotency" data-type="number">✎</button>
+                    </div>
+                </div>
+                <div class="info-row">
+                    <div class="info-stat-row">
+                        <span class="stat-label">Hunger</span>
+                        <div class="editable-value">
+                            <span>${this.character.hunger || 1}</span>
+                        </div>
+                        <button class="edit-button" data-field="hunger" data-type="number" data-min="0" data-max="5">✎</button>
                     </div>
                 </div>
             </div>
@@ -782,13 +794,31 @@ class ProgenyManager {
     createStatItem(name, value) {
         const div = document.createElement('div');
         div.className = 'stat-row';
+        
+        // Check if this is a skill and has specialties
+        let specialtyHtml = '';
+        if (this.character.skills[name] !== undefined) {
+            const specialties = this.character.skillSpecialties ? 
+                this.character.skillSpecialties.filter(s => s.skill.toLowerCase() === name.toLowerCase()) : [];
+            
+            specialtyHtml = `<div class="skill-specialties">
+                ${specialties.map(s => `
+                    <span class="specialty-tag" title="Specialty: ${s.name}" data-skill="${name}" data-specialty="${s.name}">${s.name || '...'}</span>
+                `).join('')}
+                <button class="add-specialty" data-skill="${name}" title="Add Specialty">+</button>
+            </div>`;
+        }
+
         div.innerHTML = `
-            <span class="stat-name">${this.formatName(name)}</span>
-            <div class="editable-value">
-                <span class="stat-value">${value}</span>
+            <div class="stat-main">
+                <span class="stat-name">${this.formatName(name)}</span>
+                <div class="editable-value">
+                    <span class="stat-value">${value}</span>
+                </div>
+                <button class="edit-button" data-stat="${name}">✎</button>
+                <button class="select-button" data-stat="${name}" title="Select ${this.formatName(name)}">✓</button>
             </div>
-            <button class="edit-button" data-stat="${name}">✎</button>
-            <button class="select-button" data-stat="${name}" title="Select ${this.formatName(name)}">✓</button>
+            ${specialtyHtml}
         `;
 
         // Add edit functionality
@@ -810,7 +840,7 @@ class ProgenyManager {
             input.className = 'stat-input';
             
             // Replace value span with input
-            valueSpan.style.display = 'none';
+            editableValue.innerHTML = '';
             editableValue.appendChild(input);
             input.focus();
             
@@ -823,10 +853,10 @@ class ProgenyManager {
                     } else if (this.character.skills[stat] !== undefined) {
                         this.character.skills[stat] = newValue;
                     }
-                    valueSpan.textContent = newValue;
+                    editableValue.innerHTML = `<span class="stat-value">${newValue}</span>`;
+                } else {
+                    editableValue.innerHTML = `<span class="stat-value">${currentValue}</span>`;
                 }
-                input.remove();
-                valueSpan.style.display = '';
             };
             
             input.addEventListener('blur', finishEdit);
@@ -842,6 +872,45 @@ class ProgenyManager {
         selectButton.addEventListener('click', (e) => {
             const stat = e.target.dataset.stat;
             this.selectStat(stat);
+        });
+
+        // Add specialty functionality
+        const addSpecialtyButton = div.querySelector('.add-specialty');
+        if (addSpecialtyButton) {
+            addSpecialtyButton.addEventListener('click', (e) => {
+                const skill = e.target.dataset.skill;
+                this.addSpecialty(skill);
+            });
+        }
+
+        // Add edit specialty functionality
+        const specialtyTags = div.querySelectorAll('.specialty-tag');
+        specialtyTags.forEach(tag => {
+            // Add click handler for toggling selection
+            tag.addEventListener('click', (e) => {
+                // If right-click or ctrl+click, edit the specialty
+                if (e.ctrlKey || e.button === 2) {
+                    const skill = e.target.dataset.skill;
+                    const specialtyName = e.target.dataset.specialty;
+                    this.editSpecialty(skill, specialtyName);
+                } else {
+                    // Remove selected class from all specialty tags
+                    document.querySelectorAll('.specialty-tag').forEach(t => {
+                        t.classList.remove('selected');
+                    });
+                    // Add selected class to clicked tag
+                    tag.classList.add('selected');
+                    this.updateRollButton();
+                }
+            });
+
+            // Add context menu handler
+            tag.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                const skill = e.target.dataset.skill;
+                const specialtyName = e.target.dataset.specialty;
+                this.editSpecialty(skill, specialtyName);
+            });
         });
 
         return div;
@@ -1023,16 +1092,32 @@ class ProgenyManager {
     getDicePool(stat) {
         let regularDice = 0;
         let hungerDice = 0;
+        let specialtyBonus = 0;
+
+        console.log('Getting dice pool for stat:', stat);
+        console.log('Stat type:', {
+            isAttribute: this.character.attributes[stat] !== undefined,
+            isSkill: this.character.skills[stat] !== undefined,
+            isDiscipline: this.character.disciplines[stat] !== undefined
+        });
 
         // Check if the stat exists in attributes
-        if (this.character.attributes[stat]) {
+        if (this.character.attributes[stat] !== undefined) {
             regularDice += this.character.attributes[stat];
             hungerDice = this.character.hunger || 1;
         }
 
         // Check if the stat exists in skills
-        if (this.character.skills[stat]) {
+        if (this.character.skills[stat] !== undefined) {
             regularDice += this.character.skills[stat];
+            
+            // Only check for specialties if this is a skill roll
+            const selectedSpecialty = document.querySelector(`.specialty-tag.selected[data-skill="${stat}"]`);
+            console.log('Selected specialty for', stat, ':', selectedSpecialty);
+            if (selectedSpecialty) {
+                console.log('Adding specialty bonus for', stat);
+                specialtyBonus = 1; // Add +1 for the selected specialty
+            }
         }
 
         // Check if the stat exists in disciplines
@@ -1044,6 +1129,10 @@ class ProgenyManager {
                 regularDice += highestLevel;
             }
         }
+
+        // Add specialty bonus to regular dice
+        regularDice += specialtyBonus;
+        console.log('Final dice pool:', { regular: regularDice, hunger: hungerDice, specialtyBonus });
 
         return regularDice > 0 ? { regular: regularDice, hunger: hungerDice } : null;
     }
@@ -1429,6 +1518,129 @@ class ProgenyManager {
             this.saveCharacter(); // Save after removing flaw
             this.showNotification(`Removed ${flawName} flaw`);
         }
+    }
+
+    addSpecialty(skill) {
+        if (!this.character) return;
+        
+        // Initialize skillSpecialties array if it doesn't exist
+        if (!this.character.skillSpecialties) {
+            this.character.skillSpecialties = [];
+        }
+
+        // Check if skill already has 3 specialties
+        const existingSpecialties = this.character.skillSpecialties.filter(s => s.skill.toLowerCase() === skill.toLowerCase());
+        if (existingSpecialties.length >= 3) {
+            this.showNotification('A skill can have at most 3 specialties');
+            return;
+        }
+
+        // Create a modal for entering the specialty name
+        const modal = document.createElement('div');
+        modal.className = 'progeny-modal';
+        modal.innerHTML = `
+            <div class="progeny-modal-content">
+                <h3>Add Specialty for ${this.formatName(skill)}</h3>
+                <input type="text" id="specialty-name" placeholder="Enter specialty name" />
+                <div class="modal-buttons">
+                    <button class="progeny-button" id="save-specialty">Save</button>
+                    <button class="progeny-button" id="cancel-specialty">Cancel</button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        const input = modal.querySelector('#specialty-name');
+        input.focus();
+
+        const saveButton = modal.querySelector('#save-specialty');
+        const cancelButton = modal.querySelector('#cancel-specialty');
+
+        const saveSpecialty = () => {
+            const name = input.value.trim();
+            if (name) {
+                this.character.skillSpecialties.push({
+                    skill: skill.toLowerCase(),
+                    name: name
+                });
+                this.displayCharacterStats();
+                this.saveCharacter();
+                modal.remove();
+            }
+        };
+
+        saveButton.addEventListener('click', saveSpecialty);
+        cancelButton.addEventListener('click', () => modal.remove());
+        input.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                saveSpecialty();
+            }
+        });
+    }
+
+    editSpecialty(skill, currentName) {
+        if (!this.character || !this.character.skillSpecialties) return;
+
+        const specialty = this.character.skillSpecialties.find(s => 
+            s.skill.toLowerCase() === skill.toLowerCase() && s.name === currentName
+        );
+
+        if (!specialty) return;
+
+        // Create a modal for editing the specialty name
+        const modal = document.createElement('div');
+        modal.className = 'progeny-modal';
+        modal.innerHTML = `
+            <div class="progeny-modal-content">
+                <h3>Edit Specialty for ${this.formatName(skill)}</h3>
+                <input type="text" id="specialty-name" value="${currentName}" />
+                <div class="modal-buttons">
+                    <button class="progeny-button" id="save-specialty">Save</button>
+                    <button class="progeny-button" id="delete-specialty">Delete</button>
+                    <button class="progeny-button" id="cancel-specialty">Cancel</button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        const input = modal.querySelector('#specialty-name');
+        input.focus();
+        input.select();
+
+        const saveButton = modal.querySelector('#save-specialty');
+        const deleteButton = modal.querySelector('#delete-specialty');
+        const cancelButton = modal.querySelector('#cancel-specialty');
+
+        const saveSpecialty = () => {
+            const name = input.value.trim();
+            if (name) {
+                specialty.name = name;
+                this.displayCharacterStats();
+                this.saveCharacter();
+                modal.remove();
+            }
+        };
+
+        const deleteSpecialty = () => {
+            const index = this.character.skillSpecialties.indexOf(specialty);
+            if (index > -1) {
+                this.character.skillSpecialties.splice(index, 1);
+                this.displayCharacterStats();
+                this.saveCharacter();
+                modal.remove();
+            }
+        };
+
+        saveButton.addEventListener('click', saveSpecialty);
+        deleteButton.addEventListener('click', deleteSpecialty);
+        cancelButton.addEventListener('click', () => modal.remove());
+        input.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                saveSpecialty();
+            }
+        });
     }
 }
 

@@ -147,9 +147,9 @@
         return geom;
     }
 
-    self.standart_d10_dice_face_labels = [' ', '✪', ' ', ' ', ' ', ' ', ' ', '⏺', '⏺', '⏺', '⏺',
+    self.standart_d10_dice_face_labels = [' ', '✪', ' ', ' ', ' ', ' ', ' ', '●', '●', '●', '●',
       '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20'];
-    self.blood_d10_dice_face_labels = [' ', '✪', '🕱', ' ', ' ', ' ', ' ', '⏺', '⏺', '⏺', '⏺',
+    self.blood_d10_dice_face_labels = [' ', '✪', '⚠', ' ', ' ', ' ', ' ', '●', '●', '●', '●',
       '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20'];
     
     function calc_texture_size(approx) {
@@ -169,6 +169,11 @@
             context.textAlign = "center";
             context.textBaseline = "middle";
             context.fillStyle = '#FFFFFF'; 
+            
+            // Make circle symbol larger
+            if (text === '●') {
+                context.font = (ts / (1 + 2 * margin) * 1.7) + "pt Arial";
+            }
             
             context.fillText(text, canvas.width / 2, canvas.height / 2);
             if (text == '6' || text == '9') {

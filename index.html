@@ -11,7 +11,6 @@
 <style type="text/css">@import "./resources/main.css";</style>
 <style type="text/css">@import "./resources/dice.css";</style>
 <style type="text/css">@import "./resources/progeny.css";</style>
-
 </head>
 
 <body id="body" style="margin: 0">
@@ -52,7 +51,11 @@
             <img src="./resources/progeny-icon.svg" alt="Progeny Import" class="progeny-icon">
           </button>
         </div>
-        <button id="toggle-legend" class="legend-toggle">🛈</button>
+        <div class="help-settings">
+          <button id="toggle-legend" class="legend-toggle">
+            <img src="./resources/help.png" alt="Help Import" class="help-icon">
+          </button>
+        </div>
       </div>
       <div class="control-block roll-button-container">
         <button id="throw" title="You can also drag with your mouse below...">Roll</button>
@@ -71,9 +74,9 @@
         </div>
         <div class="modal-body">
           <div class="dice-legend-grid">
-            <p><span class="regular">⏺ or ✪</span> - Success (+1)</p>
+            <p><span class="regular"><span class="regular-circle">●</span> or ✪</span> - Success (+1)</p>
             <p><span class="regular">✪ + ✪</span> - Critical Success (+4)</p>
-            <p><span class="hunger">🕱</span> - Bestial Failure (no successes)</p>
+            <p><span class="hunger">⚠</span> - Bestial Failure (no successes)</p>
             <p><span class="hunger">✪</span> + <span class="regular">✪</span> or <span class="hunger">✪</span> - Messy Critical (+4)</p>
           </div>
         </div>
