@@ -11,6 +11,7 @@ A dice roller for the Vampire the Masquerade tabletop role-playing game.
 - Mobile-friendly design with touch support
 - Offline-first functionality
 - Beautiful visual effects for critical successes and failures
+- Progeny character sheet integration
 
 ### Basic Rolling
 - Select the number of regular dice (up to 20) using the slider in the upper left corner
@@ -25,6 +26,18 @@ A dice roller for the Vampire the Masquerade tabletop role-playing game.
   - Messy criticals (when applicable)
   - Bestial failures (when applicable)
 
+### Progeny Character Sheet
+- Import character data from [Progeny](https://progeny.odin-matthias.de/) JSON files
+- Automatic dice pool calculation based on attributes and skills
+- Support for skill specialties:
+  - Import specialties from both skillSpecialties and predatorType.pickedSpecialties
+  - Toggle specialties to add +1 bonus die to rolls
+  - Edit and manage specialties directly in the interface
+- Manage disciplines and powers
+- Track merits, flaws, and other character details
+- Automatic calculation of derived stats (Health, Willpower, etc.)
+- Export character data for backup or sharing
+
 ### Discord Integration
 1. Click the "Discord Settings" button
 2. Enter your Discord webhook URL
@@ -38,11 +51,14 @@ A dice roller for the Vampire the Masquerade tabletop role-playing game.
 - Touch-friendly controls for dice selection
 - Smooth animations optimized for mobile devices
 - Haptic feedback on supported devices
+- Progeny character sheet is hidden on screens narrower than 950px for better mobile experience
 
 ## Development
 
 This is a modification of Andre Perunicic's [Vampire Dice Roller](https://github.com/prncc/vampire-dice-roller) based on Anton Natarov's [teal 3d dice roller](http://a.teall.info/dice/).
 Thanks to Andre and Anton for sharing their code!
+
+Special thanks to Odin94 for creating the [Progeny character creator](https://github.com/Odin94/Progeny-vtm-v5-character-creator), which this project integrates with for character sheet functionality.
 
 ### Key Improvements
 - Added support for Vampire: The Masquerade's dice system
@@ -51,3 +67,5 @@ Thanks to Andre and Anton for sharing their code!
 - Enhanced visual feedback for roll results
 - Optimized for mobile devices
 - Added touch support and haptic feedback
+- Integrated Progeny character sheet functionality
+- Added support for skill specialties and automatic dice pool calculation
