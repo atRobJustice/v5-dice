@@ -110,32 +110,73 @@ class ProgenyManager {
         }
     }
 
-    async importCharacter() {
-        const fileInput = document.getElementById('progeny-file');
-        const file = fileInput.files[0];
-        
-        if (!file) {
-            alert('Please select a Progeny JSON file');
-            return;
-        }
+    async importCharacter(file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const data = JSON.parse(e.target.result);
+                this.originalJson = data; // Store the original JSON for export
 
-        try {
-            const data = await this.readFile(file);
-            this.character = this.parseProgenyData(data);
-            
-            // Make sure modal is visible and has the right class
-            const modal = document.getElementById('progeny-modal');
-            const modalContent = modal.querySelector('.modal-content');
-            if (modal && modalContent) {
-                modal.classList.remove('hidden');
-                modalContent.classList.add('has-character');
+                // Basic character info
+                this.character.name = data.name || '';
+                this.character.clan = data.clan || '';
+                this.character.sire = data.sire || '';
+                this.character.ambition = data.ambition || '';
+                this.character.desire = data.desire || '';
+                this.character.generation = data.generation || 13;
+                this.character.bloodPotency = data.bloodPotency || 1;
+                this.character.hunger = data.hunger || 0;
+
+                // Attributes and Skills
+                this.character.attributes = this.convertToCapitalized(data.attributes || this.getDefaultAttributes());
+                this.character.skills = this.convertToCapitalized(data.skills || this.getDefaultSkills());
+
+                // Disciplines
+                this.character.disciplines = this.convertDisciplinesToObject(data.disciplines || []);
+
+                // Merits and Flaws
+                this.character.merits = (data.merits || []).map(merit => ({
+                    name: merit.name,
+                    level: merit.level,
+                    summary: merit.summary || ""
+                }));
+                this.character.flaws = (data.flaws || []).map(flaw => ({
+                    name: flaw.name,
+                    level: flaw.level,
+                    summary: flaw.summary || ""
+                }));
+
+                // Skill Specialties
+                this.character.skillSpecialties = (data.skillSpecialties || []).map(specialty => ({
+                    skill: this.capitalizeFirstLetter(specialty.skill),
+                    name: specialty.name
+                }));
+
+                // Health and Willpower
+                this.character.health = data.health || 5;
+                this.character.willpower = data.willpower || 5;
+                this.character.humanity = data.humanity || 7;
+
+                // Damage Trackers
+                this.character.healthDamage = data.healthDamage || { superficial: 0, aggravated: 0 };
+                this.character.willpowerDamage = data.willpowerDamage || { superficial: 0, aggravated: 0 };
+                this.character.humanityStains = data.humanityStains || 0;
+
+                // Resonance and Temperament
+                this.character.resonance = data.resonance || 'None';
+                this.character.temperament = data.temperament || 'None';
+
+                // Update all displays
+                this.displayCharacterStats();
+                this.displayAttributes();
+                this.displaySkills();
+                this.displayDisciplines();
+            } catch (error) {
+                console.error('Error importing character:', error);
+                alert('Error importing character file. Please make sure it\'s a valid character file.');
             }
-            
-            this.displayCharacterStats();
-            this.showNotification(`Character "${this.character.name}" loaded successfully!`);
-        } catch (error) {
-            alert('Error importing character: ' + error.message);
-        }
+        };
+        reader.readAsText(file);
     }
 
     readFile(file) {
@@ -288,6 +329,11 @@ class ProgenyManager {
             // Willpower is Resolve + Composure
             const willpower = (attributes['Resolve'] || 0) + (attributes['Composure'] || 0);
 
+            // Initialize damage tracking if not present
+            const healthDamage = character.healthDamage || { superficial: 0, aggravated: 0 };
+            const willpowerDamage = character.willpowerDamage || { superficial: 0, aggravated: 0 };
+            const humanityStains = character.humanityStains || 0;
+
             const processedCharacter = {
                 name: character.name,
                 clan: character.clan,
@@ -306,7 +352,12 @@ class ProgenyManager {
                 humanity,
                 health,
                 hunger: character.hunger || 1,
-                skillSpecialties // Add the processed specialties to the character object
+                skillSpecialties: character.skillSpecialties || [],
+                healthDamage,
+                willpowerDamage,
+                humanityStains,
+                resonance: character.resonance,
+                temperament: character.temperament
             };
 
             // Update character name in Discord settings
@@ -452,38 +503,15 @@ class ProgenyManager {
                 </div>
                 <div class="info-row">
                     <div class="info-stat-row">
-                        <span class="stat-label">Health</span>
-                        <div class="editable-value">
-                            <span>${this.character.health || 0}</span>
-                        </div>
-                        <button class="edit-button" data-field="health" data-type="number">✎</button>
-                    </div>
-                    <div class="info-stat-row">
-                        <span class="stat-label">Willpower</span>
-                        <div class="editable-value">
-                            <span>${this.character.willpower || 0}</span>
-                        </div>
-                        <button class="edit-button" data-field="willpower" data-type="number">✎</button>
-                    </div>
-                    <div class="info-stat-row">
-                        <span class="stat-label">Humanity</span>
-                        <div class="editable-value">
-                            <span>${this.character.humanity || 0}</span>
-                        </div>
-                        <button class="edit-button" data-field="humanity" data-type="number">✎</button>
-                    </div>
-                    <div class="info-stat-row">
                         <span class="stat-label">Blood Potency</span>
-                        <div class="editable-value">
+                        <div class="editable-value info-value">
                             <span>${this.character.bloodPotency || 0}</span>
                         </div>
                         <button class="edit-button" data-field="bloodPotency" data-type="number">✎</button>
                     </div>
-                </div>
-                <div class="info-row">
                     <div class="info-stat-row">
                         <span class="stat-label">Hunger</span>
-                        <div class="editable-value">
+                        <div class="editable-value info-value">
                             <span>${this.character.hunger || 1}</span>
                         </div>
                         <button class="edit-button" data-field="hunger" data-type="number" data-min="0" data-max="5">✎</button>
@@ -491,6 +519,18 @@ class ProgenyManager {
                 </div>
             </div>
         `;
+
+        // Create trackers container
+        const trackersContainer = document.createElement('div');
+        trackersContainer.className = 'trackers-container';
+        
+        // Add all trackers in the correct order
+        trackersContainer.appendChild(this.createDamageTracker('Health', this.character.health, this.character.healthDamage));
+        trackersContainer.appendChild(this.createDamageTracker('Willpower', this.character.willpower, this.character.willpowerDamage));
+        trackersContainer.appendChild(this.createHumanityTracker(this.character.humanity, this.character.humanityStains));
+        trackersContainer.appendChild(this.createResonanceTracker());
+        
+        characterInfo.appendChild(trackersContainer);
 
         // Add edit functionality to character info
         characterInfo.querySelectorAll('.edit-button').forEach(button => {
@@ -1299,6 +1339,14 @@ class ProgenyManager {
         exportData.humanity = this.character.humanity;
         exportData.hunger = this.character.hunger;
 
+        // Add tracker data
+        exportData.health = this.character.health;
+        exportData.healthDamage = this.character.healthDamage;
+        exportData.willpowerDamage = this.character.willpowerDamage;
+        exportData.humanityStains = this.character.humanityStains;
+        exportData.resonance = this.character.resonance || 'None';
+        exportData.temperament = this.character.temperament || 'None';
+
         // Add specialties to the export data
         if (this.character.skillSpecialties && this.character.skillSpecialties.length > 0) {
             exportData.skillSpecialties = this.character.skillSpecialties.map(specialty => ({
@@ -1649,6 +1697,195 @@ class ProgenyManager {
                 saveSpecialty();
             }
         });
+    }
+
+    createDamageTracker(type, maxValue, damage) {
+        const div = document.createElement('div');
+        div.className = 'damage-tracker';
+        
+        const currentValue = maxValue - (damage.superficial + damage.aggravated);
+        const isImpaired = currentValue <= 0;
+        const isMaxAggravated = damage.aggravated >= maxValue;
+        
+        let statusText = '';
+        if (isMaxAggravated) {
+            statusText = type === 'Health' ? 'Torpor' : 'Defeated';
+        } else if (isImpaired) {
+            statusText = 'Impaired';
+        }
+        
+        div.innerHTML = `
+            <div class="damage-header">
+                <span class="damage-label">${type}</span>
+                <div class="damage-values">
+                    <span class="current-value">${currentValue}</span>
+                    <span class="separator">/</span>
+                    <span class="max-value">${maxValue}</span>
+                </div>
+            </div>
+            <div class="damage-controls">
+                <div class="damage-type">
+                    <span class="damage-label">Superficial</span>
+                    <div class="damage-buttons">
+                        <button class="damage-btn minus" data-type="superficial">-</button>
+                        <span class="damage-value">${damage.superficial}</span>
+                        <button class="damage-btn plus" data-type="superficial">+</button>
+                    </div>
+                </div>
+                <div class="damage-type">
+                    <span class="damage-label">Aggravated</span>
+                    <div class="damage-buttons">
+                        <button class="damage-btn minus" data-type="aggravated">-</button>
+                        <span class="damage-value">${damage.aggravated}</span>
+                        <button class="damage-btn plus" data-type="aggravated">+</button>
+                    </div>
+                </div>
+            </div>
+            ${statusText ? `<div class="status-warning impaired">${statusText}</div>` : ''}
+        `;
+
+        // Add event listeners for damage buttons
+        div.querySelectorAll('.damage-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                const damageType = button.dataset.type;
+                const isPlus = button.classList.contains('plus');
+                
+                // Get current damage values
+                const currentDamage = this.character[`${type.toLowerCase()}Damage`];
+                
+                // Calculate new value
+                let newValue = currentDamage[damageType] + (isPlus ? 1 : -1);
+                newValue = Math.max(0, Math.min(maxValue, newValue));
+                
+                // If impaired and adding damage, convert superficial to aggravated
+                if (isImpaired && isPlus && damageType === 'superficial') {
+                    currentDamage.aggravated = Math.min(maxValue, currentDamage.aggravated + 1);
+                    currentDamage.superficial = Math.max(0, currentDamage.superficial - 1);
+                } else {
+                    currentDamage[damageType] = newValue;
+                }
+                
+                // Update display
+                this.displayCharacterStats();
+            });
+        });
+
+        return div;
+    }
+
+    createHumanityTracker(humanity, stains) {
+        const div = document.createElement('div');
+        div.className = 'humanity-tracker';
+        
+        const maxStains = 10 - humanity; // Maximum possible stains
+        const isImpaired = stains > maxStains;
+        const excessStains = Math.max(0, stains - maxStains);
+        
+        div.innerHTML = `
+            <div class="humanity-header">
+                <span class="humanity-label">Humanity</span>
+                <div class="humanity-values">
+                    <span class="current-value">${humanity}</span>
+                    <span class="separator">/</span>
+                    <span class="max-value">10</span>
+                </div>
+            </div>
+            <div class="stains-controls">
+                <div class="stains-type">
+                    <span class="stains-label">Stains</span>
+                    <div class="stains-buttons">
+                        <button class="stains-btn minus">-</button>
+                        <span class="stains-value">${stains}</span>
+                        <button class="stains-btn plus">+</button>
+                    </div>
+                </div>
+            </div>
+            ${isImpaired ? `<div class="status-warning impaired">Impaired (${excessStains} excess)</div>` : ''}
+        `;
+
+        // Add event listeners for stains buttons
+        div.querySelectorAll('.stains-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                const isPlus = button.classList.contains('plus');
+                let newStains = this.character.humanityStains + (isPlus ? 1 : -1);
+                
+                // Ensure stains stay between 0 and 10
+                newStains = Math.max(0, Math.min(10, newStains));
+                
+                if (newStains !== this.character.humanityStains) {
+                    this.character.humanityStains = newStains;
+                    
+                    // If adding stains and exceeding max, add aggravated willpower damage
+                    if (isPlus && newStains > maxStains) {
+                        const excess = newStains - maxStains;
+                        // Calculate how much aggravated damage we can add without exceeding max
+                        const currentAggravated = this.character.willpowerDamage.aggravated;
+                        const maxAggravated = this.character.willpower;
+                        const availableSpace = maxAggravated - currentAggravated;
+                        
+                        // Only add as much aggravated damage as we have space for
+                        if (availableSpace > 0) {
+                            this.character.willpowerDamage.aggravated = Math.min(maxAggravated, currentAggravated + 1);
+                        }
+                    }
+                    
+                    // Update display
+                    this.displayCharacterStats();
+                }
+            });
+        });
+
+        return div;
+    }
+
+    createResonanceTracker() {
+        const div = document.createElement('div');
+        div.className = 'resonance-tracker';
+        
+        const resonanceTypes = ['Sanguine', 'Choleric', 'Phlegmatic', 'Melancholic', '"Empty"'];
+        const temperamentTypes = ['Negligible', 'Fleeting', 'Intense', 'Accute'];
+        const currentResonance = this.character.resonance || 'None';
+        const currentTemperament = this.character.temperament || 'None';
+        
+        div.innerHTML = `
+            <div class="resonance-header">
+                <span class="resonance-label">Resonance</span>
+            </div>
+            <div class="resonance-controls">
+                <div class="resonance-type">
+                    <span class="resonance-sub-label">Type</span>
+                    <select class="resonance-select">
+                        <option value="None" ${currentResonance === 'None' ? 'selected' : ''}>None</option>
+                        ${resonanceTypes.map(type => 
+                            `<option value="${type}" ${currentResonance === type ? 'selected' : ''}>${type}</option>`
+                        ).join('')}
+                    </select>
+                </div>
+                <div class="resonance-temperament">
+                    <span class="resonance-sub-label">Temperament</span>
+                    <select class="resonance-select">
+                        <option value="None" ${currentTemperament === 'None' ? 'selected' : ''}>None</option>
+                        ${temperamentTypes.map(type => 
+                            `<option value="${type}" ${currentTemperament === type ? 'selected' : ''}>${type}</option>`
+                        ).join('')}
+                    </select>
+                </div>
+            </div>
+        `;
+
+        // Add event listeners for resonance and temperament selection
+        div.querySelectorAll('.resonance-select').forEach(select => {
+            select.addEventListener('change', (e) => {
+                if (e.target.parentElement.classList.contains('resonance-type')) {
+                    this.character.resonance = e.target.value;
+                } else {
+                    this.character.temperament = e.target.value;
+                }
+                this.displayCharacterStats();
+            });
+        });
+
+        return div;
     }
 }
 

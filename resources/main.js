@@ -24,7 +24,7 @@ function dice_initialize(container) {
         // Heartbeat pattern at 60 BPM (1 second per beat)
         // lub (strong beat) - pause - dub (soft beat) - pause
         // Each complete cycle is 2 seconds (1200ms)
-        rollStart: [300, 200, 150, 550, 300, 200, 150, 550, 300, 200, 150, 550],
+        rollStart: [300, 200, 150, 550, 300, 200, 150, 550],
         
         // Quick double-tap for standard completion
         rollComplete: [50, 50, 50],

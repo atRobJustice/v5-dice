@@ -1,6 +1,26 @@
 # Changelog
 All notable changes to the Vampire Dice Roller will be documented in this file.
 
+## [0.5.3]
+### Added
+- Resonance and Temperament tracking system
+  - Added dropdown selectors for Resonance Type and Temperament
+  - Implemented proper import/export of Resonance data
+  - Added visual styling for Resonance tracker
+  - Added support for "Empty" Resonance type
+
+- Health, Willpower, and Humanity trackers
+  - Reorganized trackers into a single row layout
+  - Added proper damage tracking for all stats
+  - Implemented Humanity Stains limit (max 10)
+  - Added visual indicators for impairment states
+  - Improved compactness of tracker layout
+
+### Fixed
+- Fixed Willpower damage calculation when exceeding Humanity Stains limit
+- Fixed Resonance data persistence in character exports
+- Fixed tracker layout and alignment issues
+
 ## [0.5.2]
 
 ### Fixed
