@@ -1299,6 +1299,14 @@ class ProgenyManager {
         exportData.humanity = this.character.humanity;
         exportData.hunger = this.character.hunger;
 
+        // Add specialties to the export data
+        if (this.character.skillSpecialties && this.character.skillSpecialties.length > 0) {
+            exportData.skillSpecialties = this.character.skillSpecialties.map(specialty => ({
+                skill: specialty.skill.toLowerCase(),
+                name: specialty.name
+            }));
+        }
+
         // Convert to JSON string with proper formatting
         const jsonString = JSON.stringify(exportData, null, 2);
 

@@ -21,9 +21,10 @@ function dice_initialize(container) {
 
     // Add vibration patterns for different events
     const vibrationPatterns = {
-        // Heartbeat pattern: lub-dub, pause, lub-dub
-        // First beat (lub) is stronger, second beat (dub) is softer
-        rollStart: [150, 50, 100, 200, 150, 50, 100, 200, 150, 50, 100, 200],
+        // Heartbeat pattern at 60 BPM (1 second per beat)
+        // lub (strong beat) - pause - dub (soft beat) - pause
+        // Each complete cycle is 2 seconds (1200ms)
+        rollStart: [300, 200, 150, 550, 300, 200, 150, 550, 300, 200, 150, 550],
         
         // Quick double-tap for standard completion
         rollComplete: [50, 50, 50],
