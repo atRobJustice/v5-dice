@@ -16,6 +16,28 @@ class ProgenyManager {
         const toggleButton = document.getElementById('toggle-progeny');
         const closeButton = document.getElementById('close-progeny');
         const exportButton = document.getElementById('export-progeny');
+        const saveButton = document.getElementById('save-progeny');
+        const menuTrigger = document.getElementById('menu-trigger');
+
+        // Close menu when clicking outside
+        document.addEventListener('click', (e) => {
+            const menu = document.querySelector('.context-menu');
+            if (!menu.contains(e.target)) {
+                menu.classList.remove('active');
+            }
+        });
+
+        menuTrigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const menu = document.querySelector('.context-menu');
+            menu.classList.toggle('active');
+        });
+
+        importButton.addEventListener('click', () => {
+            fileInput.click();
+            const menu = document.querySelector('.context-menu');
+            menu.classList.remove('active');
+        });
 
         fileInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
@@ -53,16 +75,23 @@ class ProgenyManager {
         });
 
         clearButton.addEventListener('click', () => {
-            this.clearCharacter();
-            this.showNotification('Character cleared');
+            if (confirm('Are you sure you want to clear the character sheet?')) {
+                this.clearCharacter();
+                const menu = document.querySelector('.context-menu');
+                menu.classList.remove('active');
+            }
         });
 
         exportButton.addEventListener('click', () => {
-            if (!this.character) {
-                this.showNotification('No character to export');
-                return;
-            }
             this.exportCharacter();
+            const menu = document.querySelector('.context-menu');
+            menu.classList.remove('active');
+        });
+
+        saveButton.addEventListener('click', () => {
+            this.saveCharacter();
+            const menu = document.querySelector('.context-menu');
+            menu.classList.remove('active');
         });
 
         toggleButton.addEventListener('click', () => {
@@ -72,6 +101,13 @@ class ProgenyManager {
         closeButton.addEventListener('click', () => {
             const modal = document.getElementById('progeny-modal');
             modal.classList.add('hidden');
+        });
+
+        document.getElementById('close-progeny-menu').addEventListener('click', () => {
+            const modal = document.getElementById('progeny-modal');
+            modal.classList.add('hidden');
+            const menu = document.querySelector('.context-menu');
+            menu.classList.remove('active');
         });
 
         // Close modal when clicking outside
@@ -147,10 +183,12 @@ class ProgenyManager {
                 }));
 
                 // Skill Specialties
-                this.character.skillSpecialties = (data.skillSpecialties || []).map(specialty => ({
-                    skill: this.capitalizeFirstLetter(specialty.skill),
-                    name: specialty.name
-                }));
+                this.character.skillSpecialties = (data.skillSpecialties || [])
+                    .filter(specialty => specialty.name && specialty.name.trim() !== '')
+                    .map(specialty => ({
+                        skill: this.capitalizeFirstLetter(specialty.skill),
+                        name: this.capitalizeFirstLetter(specialty.name)
+                    }));
 
                 // Health and Willpower
                 this.character.health = data.health || 5;

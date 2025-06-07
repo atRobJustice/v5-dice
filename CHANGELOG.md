@@ -1,6 +1,17 @@
 # Changelog
 All notable changes to the Vampire Dice Roller will be documented in this file.
 
+## [0.5.4]
+### Added
+- Added context menu with modern styling for character actions
+- Added close button to context menu for improved usability
+- Added menu divider for better visual organization
+
+### Changed
+- Improved button styling with modern design elements
+- Repositioned context menu to top right of modal
+- Enhanced menu interactions with hover effects and transitions
+
 ## [0.5.3]
 ### Added
 - Resonance and Temperament tracking system

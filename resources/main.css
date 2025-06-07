@@ -10,6 +10,7 @@
     --border-color: #2a2a2a;
     --shadow-color: rgba(0, 0, 0, 0.4);
     --success-color: #4CAF50;
+    --success-hover: #219a52;
     --critical-color: #FFD700;
     --failure-color: #f44336;
 }

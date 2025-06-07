@@ -2,11 +2,11 @@
 <html xml:lang="en" lang="en" xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="keywords" content="Vampire: The Masquerade 5th Edition Dice Roller">
-<meta name="description" content="Vampire: The Masquerade 5th Edition Dice Roller">
+<meta name="keywords" content="v5, vampire, masquerade, dice, roller, character sheet, vtm, wod, world of darkness">
+<meta name="description" content="A digital dice roller and character sheet for Vampire: The Masquerade 5th Edition">
 
 <link rel='icon' href='./resources/favicon.ico' type='image/x-icon'/ >
-<title>Vampire: The Masquerade 5th Edition Dice Roller</title>
+<title>V5 Dice Roller</title>
 
 <style type="text/css">@import "./resources/main.css";</style>
 <style type="text/css">@import "./resources/dice.css";</style>
@@ -80,7 +80,7 @@
             <p><span class="hunger">✪</span> + <span class="regular">✪</span> or <span class="hunger">✪</span> - Messy Critical (+4)</p>
           </div>
           <div class="version-info">
-            <span>Version 0.5.3</span>
+            <span>Version 0.5.4</span>
           </div>
         </div>
       </div>
@@ -115,7 +115,7 @@
         </div>
         <div class="modal-body">
           <div class="progeny-import">
-            <div class="file-upload-container">
+            <div class="file-upload-container empty-state">
               <input type="file" id="progeny-file" accept=".json" class="file-input">
               <label for="progeny-file" class="file-label">
                 <span class="file-icon">📁</span>
@@ -123,9 +123,35 @@
               </label>
               <div id="file-name" class="file-name"></div>
             </div>
-            <div class="progeny-buttons">
-              <button id="export-progeny" class="progeny-button export">Export</button>
-              <button id="clear-progeny" class="progeny-button clear">Clear</button>
+            <div class="progeny-buttons loaded-state">
+              <div class="context-menu">
+                <button id="menu-trigger" class="menu-trigger" title="Character Actions">
+                  <span class="menu-icon">⋮</span>
+                </button>
+                <div class="menu-content">
+                  <button id="save-progeny" class="menu-item save">
+                    <span class="menu-icon">💾</span>
+                    <span class="menu-text">Save</span>
+                  </button>
+                  <button id="export-progeny" class="menu-item export">
+                    <span class="menu-icon">📤</span>
+                    <span class="menu-text">Export</span>
+                  </button>
+                  <button id="import-progeny" class="menu-item import">
+                    <span class="menu-icon">📥</span>
+                    <span class="menu-text">Import</span>
+                  </button>
+                  <button id="clear-progeny" class="menu-item clear">
+                    <span class="menu-icon">🗑️</span>
+                    <span class="menu-text">Clear</span>
+                  </button>
+                  <div class="menu-divider"></div>
+                  <button id="close-progeny-menu" class="menu-item close">
+                    <span class="menu-icon">✕</span>
+                    <span class="menu-text">Close</span>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
           <div id="character-stats" class="character-stats hidden">
