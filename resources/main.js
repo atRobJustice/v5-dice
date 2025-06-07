@@ -22,7 +22,7 @@ function dice_initialize(container) {
     // Add vibration patterns for different events
     const vibrationPatterns = {
         // Heartbeat-like pattern for starting a roll
-        rollStart: [500, 500, 500, 500, 500, 500, 500, 500, 500, 500],
+        rollStart: [250, 0, 100, 100, 250, 0, 100, 100, 250, 0, 100, 100],
         
         // Quick double-tap for standard completion
         rollComplete: [50, 50, 50],
