@@ -22,7 +22,7 @@ function dice_initialize(container) {
     // Add vibration patterns for different events
     const vibrationPatterns = {
         // Heartbeat-like pattern for starting a roll
-        rollStart: [100, 50, 100, 50, 100],
+        rollStart: [500, 500, 500, 500, 500, 500, 500, 500, 500, 500],
         
         // Quick double-tap for standard completion
         rollComplete: [50, 50, 50],
@@ -35,12 +35,6 @@ function dice_initialize(container) {
         
         // Deep, ominous pattern for bestial failure (like a predator's growl)
         bestialFailure: [300, 100, 300, 100, 300],
-        
-        // Dramatic pattern for hunger dice (like a vampire's thirst)
-        hungerDiceRoll: [150, 50, 150, 50, 150],
-        
-        // Subtle warning pattern for when hunger dice are added
-        hungerDiceAdded: [100, 50, 100],
         
         // Celebration pattern for multiple successes
         multipleSuccesses: [50, 100, 50, 100, 50, 100, 50],
@@ -634,13 +628,6 @@ function dice_initialize(container) {
                 vibrateDevice(vibrationPatterns.closeCall);
             } else {
                 vibrateDevice(vibrationPatterns.rollComplete);
-            }
-
-            // If hunger dice were used, add a subtle hunger vibration
-            if (notation.set.length < result.length) {
-                setTimeout(() => {
-                    vibrateDevice(vibrationPatterns.hungerDiceRoll);
-                }, 500);
             }
 
             // Update interface with animation
