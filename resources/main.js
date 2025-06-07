@@ -199,15 +199,65 @@ function dice_initialize(container) {
                 window.initialMobileHeight = window.innerHeight;
                 updateCanvasSize();
             });
+
+            // Prevent resize events when keyboard appears
+            let resizeTimeout;
+            let lastHeight = window.innerHeight;
+            
+            window.addEventListener('resize', () => {
+                if (resizeTimeout) {
+                    clearTimeout(resizeTimeout);
+                }
+                
+                resizeTimeout = setTimeout(() => {
+                    const currentHeight = window.innerHeight;
+                    const heightDifference = Math.abs(currentHeight - lastHeight);
+                    
+                    // If the height change is small (likely keyboard), ignore it
+                    if (heightDifference < 100) {
+                        return;
+                    }
+                    
+                    // If it's a significant height change (orientation change or real resize)
+                    lastHeight = currentHeight;
+                    window.initialMobileHeight = currentHeight;
+                    updateCanvasSize();
+                }, 100);
+            });
+
+            // Handle input focus to prevent resize
+            document.addEventListener('focusin', (e) => {
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+                    // Store the current scroll position
+                    window.scrollPosition = window.scrollY;
+                }
+            });
+
+            document.addEventListener('focusout', (e) => {
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+                    // Restore scroll position
+                    window.scrollTo(0, window.scrollPosition);
+                }
+            });
+
+            // Prevent default behavior on input focus
+            document.addEventListener('touchstart', (e) => {
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+                    e.preventDefault();
+                    e.target.focus();
+                }
+            }, { passive: false });
         }
     }
 
     // Initialize mobile viewport handling
     setupMobileViewport();
 
-    // Also handle window resize events
+    // Also handle window resize events, but only for non-mobile devices
     window.addEventListener('resize', () => {
-        updateCanvasSize();
+        if (window.innerWidth > 768) {
+            updateCanvasSize();
+        }
     });
 
     $t.dice.use_true_random = false;
