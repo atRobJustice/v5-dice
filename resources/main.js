@@ -237,6 +237,23 @@ function dice_initialize(container) {
                 updateCanvasSize();
             });
 
+            // Handle text input focus on mobile
+            document.addEventListener('focusin', (e) => {
+                if (e.target.tagName === 'INPUT' && e.target.type === 'text') {
+                    e.preventDefault();
+                    const input = e.target;
+                    const currentValue = input.value;
+                    const placeholder = input.placeholder;
+                    
+                    // Use a simple prompt for text input
+                    const newValue = prompt(placeholder || 'Enter text:', currentValue);
+                    if (newValue !== null) {
+                        input.value = newValue;
+                        input.dispatchEvent(new Event('input', { bubbles: true }));
+                    }
+                }
+            }, { passive: false });
+
             // Prevent resize events when keyboard appears
             let resizeTimeout;
             let lastHeight = window.innerHeight;
