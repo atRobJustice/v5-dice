@@ -910,3 +910,10 @@
   .info-value {
     min-width: 100px;
   }
+
+  /* Hide Progeny toggle on small screens */
+  @media screen and (max-width: 950px) {
+    #toggle-progeny {
+        display: none !important;
+    }
+  }
