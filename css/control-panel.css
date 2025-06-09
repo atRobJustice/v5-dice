@@ -1,0 +1,509 @@
+/* Control Panel */
+.control_panel {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: var(--panel-bg);
+    padding: var(--spacing-md);
+    display: grid;
+    grid-template-columns: 35% 50% 15%;
+    align-items: center;
+    gap: var(--spacing-md);
+    z-index: 1000;
+    box-shadow: var(--shadow-md);
+    border-bottom: 2px solid var(--primary-color);
+    font-family: 'IM Fell English', serif;
+}
+
+/* Dice Controls */
+.dice-controls {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    padding-right: var(--spacing-md);
+}
+
+.dice-control {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-sm);
+    justify-content: flex-start;
+    width: 100%;
+    position: relative;
+}
+
+.dice-info {
+    min-width: 120px;
+    text-align: right;
+    position: absolute;
+    left: 0;
+    color: var(--text-color);
+    font-size: 14px;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.dice-control > span:last-child {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+/* Results Block */
+.results-block {
+    text-align: center;
+    padding: 0 var(--spacing-md);
+    position: relative;
+}
+
+.roll-result {
+    font-size: 1.2em;
+    font-weight: 500;
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    min-height: 60px;
+    word-break: break-word;
+    position: relative;
+}
+
+.roll-result::before {
+    content: "Result:";
+    position: absolute;
+    left: var(--spacing-md);
+    color: var(--text-color);
+    font-weight: 500;
+}
+
+/* Close button for result panel */
+.close-button {
+    background: none;
+    border: none;
+    color: var(--text-color);
+    font-size: 1.5rem;
+    line-height: 0.75;
+    padding: var(--spacing-xs);
+    cursor: pointer;
+    transition: color var(--transition-fast);
+    position: absolute;
+    top: var(--spacing-xs);
+    right: var(--spacing-xs);
+}
+
+.close-button:hover {
+    color: var(--bg-color);
+}
+
+
+.roll-result::before {
+    content: "Result:";
+    position: absolute;
+    left: var(--spacing-md);
+    color: var(--text-color);
+    font-weight: 500;
+}
+
+/* Right Section */
+.right-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-xs);
+    padding-left: var(--spacing-md);
+}
+
+/* Roll Button */
+.roll-button-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-bottom: var(--spacing-sm);
+}
+
+.roll-button, #throw {
+    width: 100%;
+    max-width: 150px;
+    padding: 12px 24px;
+    font-size: 1.2rem;
+    font-weight: 600;
+    font-family: 'IM Fell English', serif;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    background: var(--primary-color);
+    color: var(--text-color);
+    border: none;
+    cursor: pointer;
+    border-radius: var(--border-radius-sm);
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 8px var(--shadow-color);
+    position: relative;
+    overflow: hidden;
+}
+
+.roll-button:hover, #throw:hover {
+    background: var(--primary-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px var(--shadow-color);
+}
+
+.roll-button:active, #throw:active {
+    background: var(--primary-active);
+    transform: translateY(1px);
+    box-shadow: 0 2px 4px var(--shadow-color);
+}
+
+/* Icon Buttons */
+.icon-buttons {
+    display: flex;
+    justify-content: center;
+    gap: var(--spacing-lg);
+    width: 100%;
+}
+
+.discord-toggle, .progeny-toggle, .legend-toggle {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 4px;
+    transition: all var(--transition-fast);
+}
+
+.discord-toggle:hover, .progeny-toggle:hover, .legend-toggle:hover {
+    transform: scale(1.1);
+}
+
+.progeny-icon, .help-icon {
+    width: 24px;
+    height: 24px;
+    opacity: 0.7;
+    transition: opacity var(--transition-fast);
+}
+
+.discord-icon {
+    width: 31px;
+    height: 24px;
+    opacity: 0.7;
+    transition: opacity var(--transition-fast);
+}
+
+.discord-toggle:hover .discord-icon,
+.progeny-toggle:hover .progeny-icon,
+.legend-toggle:hover .help-icon {
+    opacity: 1;
+}
+
+/* Special Dice Controls */
+.special-dice-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    justify-content: flex-start;
+    margin-top: var(--spacing-sm);  
+    margin-bottom: var(--spacing-sm);  
+}
+
+.dice-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    background: var(--bg-color);
+    color: var(--text-color);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    font-size: 0.9rem;
+    min-width: 60px;
+    flex: 1;
+    margin: 0 2px;
+}
+
+.dice-toggle:hover {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.dice-toggle.active {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.toggle-label {
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Hidden Controls */
+.hidden-controls {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+/* Hide elements with .hidden class */
+.hidden {
+    display: none !important;
+}
+
+/* Sliders */
+.slider {
+    -webkit-appearance: none;
+    height: 4px;
+    border-radius: var(--border-radius-sm);
+    background: var(--border-color);
+    outline: none;
+    opacity: 0.8;
+    transition: all var(--transition-fast);
+    box-shadow: inset 0 1px 3px var(--shadow-color);
+    margin: 0;
+    padding: 0;
+    display: block;
+    margin-left: 120px; /* Match the label width */
+    position: relative;
+    z-index: 10000;
+}
+
+.slider {
+    --slider-value: 0;
+    background: linear-gradient(
+        to right,
+        var(--primary-color) 0%,
+        var(--primary-color) calc(var(--slider-value) * 100% / 20),
+        var(--border-color) calc(var(--slider-value) * 100% / 20),
+        var(--border-color) 100%
+    );
+}
+
+.slider-regular {
+    width: 420px;
+    max-width: 420px;
+}
+
+.slider-hunger {
+    width: 120px;
+    max-width: 120px;
+}
+
+.slider-rouse,
+.slider-remorse,
+.slider-frenzy {
+    width: 220px;
+    max-width: 220px;	
+}
+
+.slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    box-shadow: 0 2px 4px var(--shadow-color);
+    border: 2px solid var(--text-color);
+    margin-top: -8px;
+    z-index: 10000;
+    position: relative;
+}
+
+.slider::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    border: none;
+    box-shadow: 0 2px 4px var(--shadow-color);
+	border: 2px solid var(--text-color);
+    z-index: 10000;
+    position: relative;
+}
+
+.slider:hover::-webkit-slider-thumb {
+    transform: scale(1.2);
+    box-shadow: 0 0 12px var(--primary-color);
+}
+
+.slider:hover::-moz-range-thumb {
+    transform: scale(1.2);
+}
+
+.slider::-ms-thumb {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px var(--shadow-color);
+    background: var(--primary-color);
+    border: 2px solid var(--text-color);
+    z-index: 10000;
+    position: relative;
+}
+
+.slider::-webkit-slider-runnable-track {
+    height: 6px;
+    background: var(--border-color);
+    border-radius: 3px;
+    box-shadow: inset 0 1px 3px var(--shadow-color);
+}
+
+.slider::-moz-range-track {
+    height: 6px;
+    background: var(--border-color);
+    border-radius: 3px;
+    box-shadow: inset 0 1px 3px var(--shadow-color);
+}
+
+.slider::-ms-track {
+    height: 6px;
+    background: var(--border-color);
+    border-radius: 3px;
+    box-shadow: inset 0 1px 3px var(--shadow-color);
+}
+
+.slider-regular::-webkit-slider-thumb {
+    background: var(--text-color);
+    border: 2px solid var(--text-color);
+}
+
+.slider-hunger::-webkit-slider-thumb {
+    background: var(--hunger-color);
+    border: 2px solid var(--text-color);
+}
+
+.slider-rouse::-webkit-slider-thumb {
+    background: var(--rouse-color);
+    border: 2px solid var(--text-color);
+}
+
+.slider-remorse::-webkit-slider-thumb {
+    background: var(--remorse-color);
+    border: 2px solid var(--text-color);
+}
+
+.slider-frenzy::-webkit-slider-thumb {
+    background: var(--frenzy-color);
+    border: 2px solid var(--text-color);
+}
+
+.slider-regular::-moz-range-thumb {
+    background: var(--text-color);
+    border: 2px solid var(--text-color);
+}
+
+.slider-hunger::-moz-range-thumb {
+    background: var(--hunger-color);
+    border: 2px solid var(--text-color);
+}
+
+.slider-rouse::-moz-range-thumb {
+    background: var(--rouse-color);
+    border: 2px solid var(--text-color);
+}
+
+.slider-remorse::-moz-range-thumb {
+    background: var(--remorse-color);
+    border: 2px solid var(--text-color);
+}
+
+.slider-frenzy::-moz-range-thumb {
+    background: var(--frenzy-color);
+    border: 2px solid var(--text-color);
+}
+
+.slider-regular::-ms-thumb {
+    background: var(--text-color);
+    border: 2px solid var(--text-color);
+}
+
+.slider-hunger::-ms-thumb {
+    background: var(--hunger-color);
+    border: 2px solid var(--text-color);
+}
+
+.slider-rouse::-ms-thumb {
+    background: var(--rouse-color);
+    border: 2px solid var(--text-color);
+}
+
+.slider-remorse::-ms-thumb {
+    background: var(--remorse-color);
+    border: 2px solid var(--text-color);
+}
+
+.slider-frenzy::-ms-thumb {
+    background: var(--frenzy-color);
+    border: 2px solid var(--text-color);
+}
+
+.slider.error {
+    border-color: var(--failure-color);
+    box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.2);
+}
+
+/* Checkbox style for Rouse check */
+.dice-checkbox {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--text-color);
+    border-radius: 4px;
+    background: var(--background-color);
+    cursor: pointer;
+    position: relative;
+    margin-left: 130px;
+    transition: all 0.2s ease;
+}
+
+.dice-checkbox:checked {
+    background: var(--rouse-color);
+    border-color: var(--rouse-color);
+}
+
+.dice-checkbox:checked::after {
+    content: '';
+    position: absolute;
+    left: 6px;
+    top: 2px;
+    width: 4px;
+    height: 8px;
+    border: solid var(--text-color);
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.dice-checkbox:hover {
+    border-color: var(--rouse-color);
+}
+
+
+/* Dice Type Specific Styling */
+.dice-toggle[data-target="hunger"].active {
+    background: var(--hunger-color);
+}
+
+.dice-toggle[data-target="rouse"].active {
+    background: var(--rouse-color);
+}
+
+.dice-toggle[data-target="remorse"].active {
+    background: var(--remorse-color);
+}
+
+.dice-toggle[data-target="frenzy"].active {
+    background: var(--frenzy-color);
+}
