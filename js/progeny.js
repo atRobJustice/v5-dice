@@ -1134,14 +1134,14 @@ class ProgenyManager {
 
         // Update the display values
         document.getElementById('regular_pool').value = finalRegularDice;
-        document.getElementById('blood_pool').value = hungerDice;
+        document.getElementById('hunger_pool').value = hungerDice;
 
         // Update the display text
         const regularInfo = document.getElementById('regular-info');
-        const bloodInfo = document.getElementById('blood-info');
-        if (regularInfo && bloodInfo) {
+        const hungerInfo = document.getElementById('hunger-info');
+        if (regularInfo && hungerInfo) {
             regularInfo.textContent = `${finalRegularDice} Regular Dice`;
-            bloodInfo.textContent = `${hungerDice} Hunger Dice`;
+            hungerInfo.textContent = `${hungerDice} Hunger Dice`;
         }
 
         // Close the modal
@@ -1158,7 +1158,7 @@ class ProgenyManager {
                 function() {
                     return $t.dice.parse_notation(
                         document.getElementById('regular_pool').value,
-                        document.getElementById('blood_pool').value
+                        document.getElementById('hunger_pool').value
                     );
                 },
                 window.before_roll,

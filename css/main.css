@@ -1,6 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&family=IM+Fell+English:ital@0;1&family=Montserrat:wght@400;500;600;700&display=swap');
 
 :root {
+    /* Colors */
     --primary-color: #8b0000;
     --primary-hover: #a00000;
     --primary-active: #600000;
@@ -13,6 +14,32 @@
     --success-hover: #219a52;
     --critical-color: #FFD700;
     --failure-color: #f44336;
+    --hunger-color: #A41B2E;
+    --rouse-color: #331D43;
+    --remorse-color: #19305B;
+    --frenzy-color: #B83B1A;
+
+    /* Spacing */
+    --spacing-xs: 0.25rem;
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 2rem;
+
+    /* Border Radius */
+    --border-radius-sm: 4px;
+    --border-radius-md: 8px;
+    --border-radius-lg: 12px;
+
+    /* Transitions */
+    --transition-fast: 0.15s ease;
+    --transition-normal: 0.3s ease;
+    --transition-slow: 0.5s ease;
+
+    /* Shadows */
+    --shadow-sm: 0 2px 4px var(--shadow-color);
+    --shadow-md: 0 4px 8px var(--shadow-color);
+    --shadow-lg: 0 8px 16px var(--shadow-color);
 }
 
 #svg *, .svg * {
@@ -63,42 +90,6 @@ p {
     margin-bottom: 0px;
 }
 
-.control_panel {
-    background: var(--panel-bg);
-    padding: 20px;
-    position: fixed;
-    z-index: 100;
-    height: auto;
-    min-height: 100px;
-    top: 0;
-    left: 0;
-    right: 0;
-    box-shadow: 0 4px 20px var(--shadow-color);
-    border-bottom: 2px solid var(--primary-color);
-    font-family: 'IM Fell English', serif;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-}
-
-.dice-controls {
-    flex: 1;
-    margin-right: 20px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 15px;
-}
-
-.dice-controls > div {
-    display: flex;
-    align-items: center;
-    position: relative;
-    height: 30px;
-}
-
 #regular-info,
 #blood-info {
     position: absolute;
@@ -112,205 +103,6 @@ p {
     text-shadow: 0 2px 4px var(--shadow-color);
     line-height: 30px;
 }
-
-.dice-controls > div > span:last-child {
-    margin-left: 135px;
-    flex: 1;
-    display: flex;
-    align-items: center;
-}
-
-.results-container {
-    position: absolute;
-    top: 120px;
-    left: 0;
-    right: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 10;
-    pointer-events: none;
-}
-
-.results-block {
-    padding: 12px 24px;
-    background: var(--panel-bg);
-    border: 2px solid var(--primary-color);
-    border-radius: 8px;
-    min-width: 250px;
-    text-align: center;
-    box-shadow: 0 4px 12px var(--shadow-color);
-    margin: 0 20px;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-}
-
-.roll-result {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    font-size: 18px;
-    color: var(--text-color);
-    text-shadow: 0 2px 4px var(--shadow-color);
-    padding: 0 4px;
-}
-
-.clear-button {
-    background: none;
-    border: none;
-    color: var(--text-color);
-    font-size: 20px;
-    cursor: pointer;
-    padding: 0;
-    width: 24px;
-    height: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s ease;
-    opacity: 0.6;
-    margin-left: auto;
-}
-
-.clear-button:hover {
-    color: var(--primary-color);
-    opacity: 1;
-    transform: scale(1.1);
-}
-
-.slider {
-    -webkit-appearance: none;
-    height: 6px;
-    border-radius: 3px;
-    background: var(--border-color);
-    outline: none;
-    opacity: 0.8;
-    transition: all 0.3s ease;
-    box-shadow: inset 0 1px 3px var(--shadow-color);
-    margin: 0;
-    padding: 0;
-    position: relative;
-    z-index: 10000;
-}
-
-.slider-regular {
-    width: 420px;
-    max-width: 100%;
-}
-
-.slider-blood {
-    width: 120px;
-    max-width: 100%;
-}
-
-.slider:hover {
-    opacity: 1;
-}
-
-.slider::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 4px var(--shadow-color);
-    background: var(--primary-color);
-    border: 2px solid var(--text-color);
-    margin-top: -8px; /* Center the thumb vertically */
-    z-index: 10000;
-    position: relative;
-}
-
-/* Firefox styles */
-.slider::-moz-range-thumb {
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 4px var(--shadow-color);
-    background: var(--primary-color);
-    border: 2px solid var(--text-color);
-    z-index: 10000;
-    position: relative;
-}
-
-/* Edge styles */
-.slider::-ms-thumb {
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 4px var(--shadow-color);
-    background: var(--primary-color);
-    border: 2px solid var(--text-color);
-    z-index: 10000;
-    position: relative;
-}
-
-/* Track styles for different browsers */
-.slider::-webkit-slider-runnable-track {
-    height: 6px;
-    background: var(--border-color);
-    border-radius: 3px;
-    box-shadow: inset 0 1px 3px var(--shadow-color);
-}
-
-.slider::-moz-range-track {
-    height: 6px;
-    background: var(--border-color);
-    border-radius: 3px;
-    box-shadow: inset 0 1px 3px var(--shadow-color);
-}
-
-.slider::-ms-track {
-    height: 6px;
-    background: var(--border-color);
-    border-radius: 3px;
-    box-shadow: inset 0 1px 3px var(--shadow-color);
-}
-
-.roll-button-container {
-    margin-left: 20px;
-    display: flex;
-    align-items: center;
-}
-
-#throw {
-    padding: 12px 24px;
-    background: var(--primary-color);
-    color: var(--text-color);
-    border: none;
-    cursor: pointer;
-    width: 150px;
-    font-weight: 600;
-    font-family: 'IM Fell English', serif;
-    font-size: 25px;
-    letter-spacing: 2px;
-    transition: all 0.3s ease;
-    text-transform: uppercase;
-    position: relative;
-    overflow: hidden;
-    border-radius: 4px;
-    box-shadow: 0 4px 12px var(--shadow-color);
-}
-
-#throw:hover {
-    background: var(--primary-hover);
-    transform: translateY(-1px);
-    box-shadow: 0 6px 16px var(--shadow-color);
-}
-
-#throw:active {
-    background: var(--primary-active);
-    transform: translateY(1px);
-    box-shadow: 0 2px 4px var(--shadow-color);
-}
-
 #blood-info {
     color: var(--primary-color);
     font-weight: 600;
@@ -433,37 +225,6 @@ p {
     width: fit-content;
 }
 
-.legend-toggle {
-    padding: 2px 4px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 20px;
-    color: var(--text-color);
-    transition: transform 0.2s ease;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    outline: none;
-    line-height: 1;
-    vertical-align: middle;
-}
-
-.legend-toggle:hover {
-    transform: scale(1.1);
-}
-
-.legend-icon {
-    font-size: 32px;
-    color: var(--text-color);
-    line-height: 1;
-    transition: opacity 0.2s ease;
-}
-
-.legend-toggle:hover .legend-icon {
-    opacity: 0.8;
-}
-
 .dice-legend-grid {
     display: grid;
     gap: 12px;
@@ -483,279 +244,6 @@ p {
 
 .dice-legend-grid .hunger {
     color: var(--primary-color);
-}
-
-/* Mobile Optimizations */
-@media (max-width: 768px) {
-    .control_panel {
-        height: auto;
-        padding: 15px;
-        flex-direction: column;
-        align-items: stretch;
-        gap: 15px;
-        overflow-x: hidden; /* Prevent horizontal scroll */
-    }
-
-    .dice-controls {
-        margin-right: 0;
-        margin-bottom: 0;
-        width: 100%;
-        min-width: 0; /* Prevent overflow */
-    }
-
-    .dice-controls > div {
-        height: 40px;
-        margin-bottom: 10px;
-        min-width: 0; /* Prevent overflow */
-    }
-
-    #regular-info,
-    #blood-info {
-        position: static;
-        width: auto;
-        text-align: left;
-        margin-right: 10px;
-        font-size: 14px;
-        line-height: 40px;
-        min-width: 100px;
-        flex-shrink: 0; /* Prevent label from shrinking */
-    }
-
-    .dice-controls > div > span:last-child {
-        margin-left: 10px;
-        flex: 1;
-        min-width: 0; /* Allow flex item to shrink below content size */
-    }
-
-    .slider-regular {
-        width: 100%;
-        min-width: 0; /* Allow slider to shrink */
-        max-width: 100%; /* Prevent overflow */
-    }
-
-    .slider-blood {
-        width: 100%;
-        min-width: 0; /* Allow slider to shrink */
-        max-width: 100%; /* Prevent overflow */
-    }
-
-    .results-block {
-        padding: 8px 15px;
-        min-width: 0; /* Allow results block to shrink */
-        width: 100%;
-        margin: 0;
-        order: 2; /* Move results below controls */
-        box-sizing: border-box; /* Include padding in width calculation */
-        overflow: hidden; /* Prevent text overflow */
-        white-space: normal; /* Allow text to wrap */
-    }
-
-    .roll-button-container {
-        margin: 0;
-        width: 100%;
-        order: 3; /* Move button to bottom */
-        min-width: 0; /* Prevent overflow */
-    }
-
-    #throw {
-        width: 100%;
-        max-width: none;
-        padding: 10px 20px;
-        font-size: 20px;
-        box-sizing: border-box; /* Include padding in width calculation */
-    }
-
-    .roll-result {
-        font-size: 20px;
-        word-wrap: break-word; /* Allow long words to break */
-        overflow-wrap: break-word; /* Modern browsers */
-    }
-
-    /* Hide legend on mobile */
-    .dice-legend {
-        display: none;
-    }
-}
-
-/* Add a breakpoint for very small screens */
-@media (max-width: 480px) {
-    .control_panel {
-        padding: 10px;
-    }
-
-    .dice-controls > div {
-        height: 35px;
-    }
-
-    #regular-info,
-    #blood-info {
-        font-size: 13px;
-        line-height: 35px;
-        min-width: 90px;
-    }
-
-    .slider::-webkit-slider-thumb {
-        width: 20px;
-        height: 20px;
-    }
-
-    .slider::-moz-range-thumb {
-        width: 20px;
-        height: 20px;
-    }
-
-    .slider::-ms-thumb {
-        width: 20px;
-        height: 20px;
-    }
-
-    #throw {
-        font-size: 18px;
-        padding: 8px 16px;
-    }
-
-    .roll-result {
-        font-size: 18px;
-    }
-}
-
-/* Add a breakpoint for medium sizes */
-@media (min-width: 769px) and (max-width: 1024px) {
-    .control_panel {
-        padding: 15px;
-        height: auto;
-        min-height: 100px;
-        flex-wrap: wrap;
-        gap: 15px;
-    }
-
-    .dice-controls {
-        flex: 1;
-        min-width: 0;
-        order: 1;
-        margin-right: 15px;
-    }
-
-    .slider-regular {
-        width: 100%;
-        max-width: 300px;
-    }
-
-    .slider-blood {
-        width: 100%;
-        max-width: 120px;
-    }
-
-    .dice-legend {
-        order: 2;
-        width: 100%;
-        margin: 0;
-        display: block;
-    }
-
-    .dice-legend-grid {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 10px;
-    }
-
-    .results-block {
-        order: 3;
-        width: 100%;
-        margin: 0;
-    }
-
-    .roll-button-container {
-        order: 4;
-        width: 100%;
-        margin: 0;
-        display: flex;
-        justify-content: center;
-    }
-
-    #throw {
-        width: 200px;
-        min-width: 200px;
-    }
-}
-
-/* Add a breakpoint for larger medium sizes */
-@media (min-width: 1025px) and (max-width: 1200px) {
-    .control_panel {
-        padding: 20px;
-        height: auto;
-        min-height: 100px;
-        flex-wrap: nowrap;
-    }
-
-    .dice-controls {
-        flex: 1;
-        min-width: 0;
-        margin-right: 20px;
-    }
-
-    .slider-regular {
-        width: 100%;
-        max-width: 350px;
-    }
-
-    .slider-blood {
-        width: 100%;
-        max-width: 150px;
-    }
-
-    .dice-legend {
-        margin: 0 20px;
-        min-width: 200px;
-    }
-
-    .results-block {
-        margin: 0 20px;
-        min-width: 200px;
-    }
-
-    .roll-button-container {
-        margin-left: 20px;
-        flex-shrink: 0;
-    }
-
-    #throw {
-        width: 150px;
-        min-width: 150px;
-    }
-}
-
-/* Ensure the canvas container adjusts properly */
-@media (max-width: 1024px) {
-    #canvas-cover {
-        top: 180px; /* Adjusted for taller control panel in medium sizes */
-    }
-}
-
-/* Add touch-specific styles */
-@media (hover: none) {
-    .slider:hover {
-        opacity: 0.8;
-    }
-
-    .slider-regular::-webkit-slider-thumb:hover,
-    .slider-blood::-webkit-slider-thumb:hover {
-        transform: none;
-    }
-
-    #throw:hover {
-        transform: none;
-    }
-}
-
-/* Prevent text selection on mobile */
-@media (max-width: 768px) {
-    * {
-        -webkit-tap-highlight-color: transparent;
-        -webkit-touch-callout: none;
-        -webkit-user-select: none;
-        user-select: none;
-    }
 }
 
 /* Add smooth scrolling and better touch handling */
@@ -820,18 +308,6 @@ html {
     }
 }
 
-/* Slider value indicator */
-.slider {
-    --slider-value: 0;
-    background: linear-gradient(
-        to right,
-        var(--primary-color) 0%,
-        var(--primary-color) calc(var(--slider-value) * 100% / 20),
-        var(--border-color) calc(var(--slider-value) * 100% / 20),
-        var(--border-color) 100%
-    );
-}
-
 /* Disabled state for button */
 #throw:disabled {
     opacity: 0.7;
@@ -847,11 +323,6 @@ html {
     box-shadow: 0 0 0 4px rgba(139, 0, 0, 0.2);
 }
 
-/* Improved hover states */
-.slider:hover::-webkit-slider-thumb {
-    transform: scale(1.1);
-    box-shadow: 0 0 12px var(--primary-color);
-}
 
 /* Add subtle hover effect to legend items */
 .dice-legend p {
@@ -876,14 +347,6 @@ html {
 .roll-result,
 .dice-legend h4 {
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-}
-
-/* Improve slider track appearance */
-.slider::-webkit-slider-runnable-track {
-    height: 6px;
-    background: var(--border-color);
-    border-radius: 3px;
-    box-shadow: inset 0 1px 3px var(--shadow-color);
 }
 
 /* Add subtle gradient to button */
@@ -1003,43 +466,6 @@ html {
     justify-content: center;
     align-items: center;
     width: fit-content;
-}
-
-.discord-toggle {
-    padding: 4px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    transition: transform 0.2s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    outline: none;
-}
-
-.discord-toggle:focus {
-    outline: none;
-}
-
-.discord-toggle:hover {
-    transform: scale(1.3);
-}
-
-.discord-icon {
-    width: 31px;
-    height: 24px;
-    transition: opacity 0.2s ease;
-}
-
-
-.help-icon {
-    width: 24px;
-    height: 24px;
-    vertical-align: middle;
-  }
-
-.discord-toggle:hover .discord-icon {
-    opacity: 0.8;
 }
 
 .discord-content {
@@ -1170,11 +596,6 @@ html {
 }
 
 /* Add error state styles for inputs */
-.slider.error {
-    border-color: var(--failure-color);
-    box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.2);
-}
-
 .webhook-input.error {
     border-color: var(--failure-color);
     box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.2);
@@ -1205,32 +626,6 @@ html {
     line-height: 1;
 }
 
-.legend-toggle {
-    padding: 2px 4px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 20px;
-    color: var(--text-color);
-    transition: transform 0.2s ease;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    outline: none;
-    line-height: 1;
-    vertical-align: middle;
-}
-
-.legend-toggle:hover {
-    transform: scale(1.3);
-}
-
-.legend-icon {
-    transition: transform 0.3s ease, color 0.3s ease;
-    font-size: 12px;
-    color: var(--primary-active);
-}
-
 .legend-fields {
     transition: all 0.3s ease;
     overflow: hidden;
@@ -1239,11 +634,6 @@ html {
 
 .legend-fields.hidden {
     display: none;
-}
-
-.legend-toggle.collapsed .legend-icon {
-    transform: rotate(-90deg);
-    color: var(--primary-color);
 }
 
 .regular-circle {
@@ -1322,13 +712,6 @@ html {
     color: #ddd;
 }
 
-.icon-buttons {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 8px;
-    margin: 4px 0;
-}
 
 /* Version Info Styling */
 .version-info {
@@ -1355,57 +738,12 @@ html {
     opacity: 1;
 }
 
-/* Mobile optimization for version info */
-@media (max-width: 768px) {
-    .version-info {
-        font-size: 10px;
-        bottom: 4px;
-        right: 4px;
-        padding: 2px 6px;
-    }
-}
-
 /* Add at the top of the file, after any existing CSS variables */
 html, body {
     height: 100%;
     overflow: hidden;
     position: fixed;
     width: 100%;
-}
-
-/* Mobile-specific viewport locking */
-@media (max-width: 768px) {
-    html, body {
-        height: 100vh;
-        height: -webkit-fill-available;
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
-        position: fixed;
-        width: 100%;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-    }
-
-    #canvas-cover {
-        height: calc(100vh - var(--control-panel-height));
-        height: calc(-webkit-fill-available - var(--control-panel-height));
-        overflow: hidden;
-        position: fixed;
-        top: var(--control-panel-height);
-        left: 0;
-        right: 0;
-        bottom: 0;
-    }
-
-    .control_panel {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        z-index: 1000;
-    }
 }
 
 /* Notification styling */
@@ -1430,27 +768,4 @@ html, body {
 
 .notification.show {
     opacity: 1;
-}
-
-/* Mobile-specific slider adjustments */
-@media (max-width: 768px) {
-    .slider {
-        z-index: 10000;
-        position: relative;
-    }
-
-    .slider::-webkit-slider-thumb {
-        z-index: 10000;
-        position: relative;
-    }
-
-    .slider::-moz-range-thumb {
-        z-index: 10000;
-        position: relative;
-    }
-
-    .slider::-ms-thumb {
-        z-index: 10000;
-        position: relative;
-    }
 }
