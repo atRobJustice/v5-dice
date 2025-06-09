@@ -1,6 +1,38 @@
 # Changelog
 All notable changes to the Vampire Dice Roller will be documented in this file.
 
+## [0.5.6]
+### Added
+- Added control panel styles with new CSS variables for consistent theming
+- Added special dice controls for Rouse, Remorse, and Frenzy dice types
+- Added improved dice toggle functionality for showing/hiding specific dice types
+
+### Changed
+- Reorganized file structure with resources moved to assets and css directories
+- Refactored window resize handling to improve mobile keyboard experience
+- Updated CSS structure with modern variables for colors, spacing, and shadows
+- Enhanced dice notation parsing to support additional dice types
+
+### Fixed
+- Fixed page reload issues when mobile keyboard appears/disappears
+- Fixed inconsistent naming between hunger/blood dice in various components
+
+### Technical Changes
+- Improved dice settings persistence with enhanced localStorage handling
+- Refactored control panel styling into separate CSS file
+- Enhanced mobile viewport handling with improved meta tags
+
+## [0.5.5]
+### Fixed
+- Fixed mobile keyboard causing unwanted page reloads
+- Improved handling of viewport height changes on mobile devices
+- Added text input focus handling to prevent keyboard issues
+
+### Technical Changes
+- Enhanced mobile viewport meta tags with additional properties
+- Improved CSS positioning for mobile interface elements
+- Added debounce mechanism for resize events to prevent unnecessary reloads
+
 ## [0.5.4]
 ### Added
 - Added context menu with modern styling for character actions
