@@ -135,20 +135,18 @@ function dice_initialize(container) {
         const currentHeight = window.innerHeight;
         const heightDifference = Math.abs(currentHeight - lastHeight);
         
-        // If the height change is small (likely keyboard), ignore it
-        if (heightDifference < 100) {
+        // If the height change is very small (likely keyboard), ignore it
+        if (heightDifference < 50) {
             isKeyboardVisible = currentHeight < lastHeight;
             return;
         }
         
-        // Only reload on significant height changes (orientation change)
-        if (heightDifference >= 100) {
-            console.log('Significant height change detected, reloading page...');
-            clearTimeout(resizeTimeout);
-            resizeTimeout = setTimeout(function() {
-                location.reload();
-            }, 250);
-        }
+        // Reload on all significant changes
+        console.log('Window resize detected, reloading page...');
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(function() {
+            location.reload();
+        }, 250);
         
         lastHeight = currentHeight;
     });
@@ -332,11 +330,9 @@ function dice_initialize(container) {
     // Initialize mobile viewport handling
     setupMobileViewport();
 
-    // Also handle window resize events, but only for non-mobile devices
+    // Handle window resize events for all devices
     window.addEventListener('resize', () => {
-        if (window.innerWidth > 768) {
-            updateCanvasSize();
-        }
+        updateCanvasSize();
     });
 
     $t.dice.use_true_random = false;
