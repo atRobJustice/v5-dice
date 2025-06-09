@@ -1,6 +1,28 @@
 # Changelog
 All notable changes to the Vampire Dice Roller will be documented in this file.
 
+## [0.5.7]
+### Added
+- Added Remorse Check system for Humanity testing
+  - Dice pool calculated from spaces between Humanity and Stains (minimum 1 die)
+  - Failed checks reduce Humanity by 1
+  - All Stains removed after check, regardless of success/failure
+- Added Rouse Check system
+  - Single die roll to test Blood activation
+  - Failed checks increase Hunger by 1
+  - Successful checks leave Hunger unchanged
+- Increased Frenzy dice maximum from 10 to 15
+
+### Fixed
+- Fixed bug where Frenzy dice pools over 10 would incorrectly add extra dice
+- Simplified roll button labels for special dice types
+- Reorganized check buttons in character sheet for better usability
+
+### Technical Changes
+- Added event-based handling for special dice roll outcomes
+- Enhanced character sheet integration with dice system
+- Improved dice pool validation and handling
+
 ## [0.5.6]
 ### Added
 - Added control panel styles with new CSS variables for consistent theming

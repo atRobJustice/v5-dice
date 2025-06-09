@@ -315,7 +315,7 @@
         if (hungerCount > 5) hungerCount = 5;
         if (rouseCount > 1) rouseCount = 1;
         if (remorseCount > 10) remorseCount = 10;
-        if (frenzyCount > 10) frenzyCount = 10;
+        if (frenzyCount > 15) frenzyCount = 15;
 
         var ret = { 
             set: [], 

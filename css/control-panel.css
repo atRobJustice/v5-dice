@@ -120,7 +120,6 @@
 
 /* Roll Button */
 .roll-button-container {
-    width: 100%;
     display: flex;
     justify-content: center;
     margin-bottom: var(--spacing-sm);
@@ -295,10 +294,14 @@
 }
 
 .slider-rouse,
-.slider-remorse,
-.slider-frenzy {
+.slider-remorse{
     width: 220px;
     max-width: 220px;	
+}
+
+.slider-frenzy {
+    width: 320px;
+    max-width: 320px;	
 }
 
 .slider::-webkit-slider-thumb {

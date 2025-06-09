@@ -54,6 +54,9 @@ class ProgenyManager {
                         this.character = this.parseProgenyData(event.target.result);
                         this.originalJson = JSON.parse(event.target.result);
                         
+                        // Update health and willpower based on current attributes
+                        this.updateDerivedStats();
+                        
                         // Make sure modal is visible and has the right class
                         const modal = document.getElementById('progeny-modal');
                         const modalContent = modal.querySelector('.modal-content');
@@ -356,8 +359,8 @@ class ProgenyManager {
             if (generation >= 10 && generation <= 11) {
                 humanity -= 1; // Apply generation penalty
             }
-            // Only override with stored value if it's a valid number greater than 0
-            if (typeof character.humanity === 'number' && !isNaN(character.humanity) && character.humanity > 0) {
+            // Only override with stored value if it's a valid number (0 or greater)
+            if (typeof character.humanity === 'number' && !isNaN(character.humanity) && character.humanity >= 0) {
                 humanity = character.humanity;
             }
 
@@ -567,6 +570,9 @@ class ProgenyManager {
         trackersContainer.appendChild(this.createDamageTracker('Willpower', this.character.willpower, this.character.willpowerDamage));
         trackersContainer.appendChild(this.createHumanityTracker(this.character.humanity, this.character.humanityStains));
         trackersContainer.appendChild(this.createResonanceTracker());
+        trackersContainer.appendChild(this.createRemorseCheckButton());
+        trackersContainer.appendChild(this.createFrenzyCheckButton());
+        trackersContainer.appendChild(this.createRouseCheckButton());
         
         characterInfo.appendChild(trackersContainer);
 
@@ -928,6 +934,13 @@ class ProgenyManager {
                 if (!isNaN(newValue) && newValue >= 0 && newValue <= 5) {
                     if (this.character.attributes[stat] !== undefined) {
                         this.character.attributes[stat] = newValue;
+                        
+                        // Update derived stats if Stamina, Resolve, or Composure changed
+                        if (stat === 'Stamina' || stat === 'Resolve' || stat === 'Composure') {
+                            this.updateDerivedStats();
+                            // Refresh display to show updated health/willpower
+                            this.displayCharacterStats();
+                        }
                     } else if (this.character.skills[stat] !== undefined) {
                         this.character.skills[stat] = newValue;
                     }
@@ -1810,7 +1823,328 @@ class ProgenyManager {
 
         return div;
     }
+    
+    createRouseCheckButton() {
+        const div = document.createElement('div');
+        div.className = 'rouse-check-container';
+        
+        div.innerHTML = `
+            <div class="rouse-header">
+                <span class="rouse-label">Rouse Check</span>
+            </div>
+            <button class="rouse-roll-btn">Roll</button>
+        `;
+        
+        // Add event listener for the Rouse roll button
+        div.querySelector('.rouse-roll-btn').addEventListener('click', () => {
+            this.rollRouseCheck();
+        });
+        
+        return div;
+    }
+    
+    createRemorseCheckButton() {
+        const div = document.createElement('div');
+        div.className = 'remorse-check-container';
+        
+        // Calculate the Remorse dice pool - spaces left between Humanity and Stains
+        const humanity = this.character.humanity;
+        const stains = this.character.humanityStains || 0;
+        // Calculate remorse dice: spaces between current humanity rating and 10
+        // Minimum 1 die even if there are no empty spaces
+        const remorseDicePool = Math.max(1, 10 - humanity - stains);
+        
+        div.innerHTML = `
+            <div class="remorse-header">
+                <span class="remorse-label">Remorse Check</span>
+                <div class="remorse-values">
+                    <span class="remorse-pool">${remorseDicePool} dice</span>
+                </div>
+            </div>
+            <button class="remorse-roll-btn">Roll</button>
+        `;
+        
+        // Add event listener for the Remorse roll button
+        div.querySelector('.remorse-roll-btn').addEventListener('click', () => {
+            this.rollRemorseCheck();
+        });
+        
+        return div;
+    }
+    
+    createFrenzyCheckButton() {
+        const div = document.createElement('div');
+        div.className = 'frenzy-check-container';
+        
+        // Calculate the Frenzy dice pool
+        const availableWillpower = this.calculateUnspentWillpower();
+        const humanityBonus = Math.floor(this.character.humanity / 3);
+        const frenzyDicePool = availableWillpower + humanityBonus;
+        
+        div.innerHTML = `
+            <div class="frenzy-header">
+                <span class="frenzy-label">Frenzy Check</span>
+                <div class="frenzy-values">
+                    <span class="frenzy-pool">${frenzyDicePool} dice</span>
+                </div>
+            </div>
+            <button class="frenzy-roll-btn">Roll</button>
+        `;
+        
+        // Add event listener for the Frenzy roll button
+        div.querySelector('.frenzy-roll-btn').addEventListener('click', () => {
+            this.rollFrenzyCheck();
+        });
+        
+        return div;
+    }
+    
+    calculateUnspentWillpower() {
+        if (!this.character || !this.character.willpower || !this.character.willpowerDamage) {
+            return 0;
+        }
+        
+        const maxWillpower = this.character.willpower;
+        const superficialDamage = this.character.willpowerDamage.superficial || 0;
+        const aggravatedDamage = this.character.willpowerDamage.aggravated || 0;
+        const totalDamage = superficialDamage + aggravatedDamage;
+        
+        return Math.max(0, maxWillpower - totalDamage);
+    }
+    
+    rollRemorseCheck() {
+        // Calculate the Remorse dice pool
+        const humanity = this.character.humanity;
+        const stains = this.character.humanityStains || 0;
+        // Calculate spaces left (10 - humanity - stains), minimum 1
+        const remorseDicePool = Math.max(1, 10 - humanity - stains);
+        
+        // Update the remorse dice pool in the control panel
+        document.getElementById('remorse_pool').value = remorseDicePool;
+        
+        // Make sure the remorse control is visible
+        const remorseControl = document.querySelector('.remorse-control');
+        if (remorseControl) {
+            remorseControl.classList.remove('hidden');
+        }
+        
+        // Update the remorse dice count display
+        const remorseInfo = document.getElementById('remorse-info');
+        if (remorseInfo) {
+            remorseInfo.textContent = `${remorseDicePool} Remorse Dice`;
+        }
+        
+        // Toggle the remorse button to active
+        const remorseToggle = document.querySelector('[data-target="remorse"]');
+        if (remorseToggle) {
+            remorseToggle.classList.add('active');
+        }
+        
+        // Add event listener for roll results
+        window.addEventListener('diceRollComplete', this.handleRemorseRollResult);
+        
+        // Close the modal
+        const modal = document.getElementById('progeny-modal');
+        if (modal) {
+            modal.classList.add('hidden');
+        }
+        
+        // Get the dice box instance from the global window object
+        const box = window.box;
+        if (box && box.start_throw) {
+            // Call start_throw with the proper notation getter
+            box.start_throw(
+                function() {
+                    return $t.dice.parse_notation(
+                        0, // Regular dice
+                        0, // Hunger dice
+                        0, // Rouse dice
+                        remorseDicePool, // Remorse dice
+                        0 // Frenzy dice
+                    );
+                },
+                window.before_roll,
+                window.after_roll
+            );
+        }
+    }
+    
+    rollRouseCheck() {
+        // Update the rouse checkbox in the control panel
+        const rouseCheckbox = document.getElementById('rouse_pool');
+        if (rouseCheckbox) {
+            rouseCheckbox.checked = true;
+        }
+        
+        // Make sure the rouse control is visible
+        const rouseControl = document.querySelector('.rouse-control');
+        if (rouseControl) {
+            rouseControl.classList.remove('hidden');
+        }
+        
+        // Update the rouse check label
+        const rouseInfo = document.getElementById('rouse-info');
+        if (rouseInfo) {
+            rouseInfo.textContent = `Rouse Check`;
+        }
+        
+        // Toggle the rouse button to active
+        const rouseToggle = document.querySelector('[data-target="rouse"]');
+        if (rouseToggle) {
+            rouseToggle.classList.add('active');
+        }
+        
+        // Add event listener for roll results
+        window.addEventListener('diceRollComplete', this.handleRouseRollResult);
+        
+        // Close the modal
+        const modal = document.getElementById('progeny-modal');
+        if (modal) {
+            modal.classList.add('hidden');
+        }
+        
+        // Get the dice box instance from the global window object
+        const box = window.box;
+        if (box && box.start_throw) {
+            // Call start_throw with the proper notation getter
+            box.start_throw(
+                function() {
+                    return $t.dice.parse_notation(
+                        0, // Regular dice
+                        0, // Hunger dice
+                        1, // Rouse dice (always 1)
+                        0, // Remorse dice
+                        0  // Frenzy dice
+                    );
+                },
+                window.before_roll,
+                window.after_roll
+            );
+        }
+    }
+    
+    handleRouseRollResult = (event) => {
+        // Only process rouse rolls
+        if (!event.detail || !event.detail.isRouse) {
+            return;
+        }
+        
+        // Remove the event listener to prevent duplicate handling
+        window.removeEventListener('diceRollComplete', this.handleRouseRollResult);
+        
+        // Check if the roll was successful (at least one success)
+        const successes = event.detail.successes || 0;
+        
+        if (successes === 0) {
+            // If no successes, increase hunger by 1
+            const currentHunger = this.character.hunger || 0;
+            this.character.hunger = Math.min(5, currentHunger + 1);
+            this.showNotification('Rouse check failed: Hunger increased by 1', 3000);
+        } else {
+            this.showNotification('Rouse check passed: Hunger unchanged', 3000);
+        }
+        
+        // Update the character sheet to reflect changes
+        this.displayCharacterStats();
+        this.saveCharacter();
+    }
+    
+    handleRemorseRollResult = (event) => {
+        // Only process remorse rolls
+        if (!event.detail || !event.detail.isRemorse) {
+            return;
+        }
+        
+        // Remove the event listener to prevent duplicate handling
+        window.removeEventListener('diceRollComplete', this.handleRemorseRollResult);
+        
+        // Check if the roll was successful (at least one success)
+        const successes = event.detail.successes || 0;
+        
+        if (successes === 0) {
+            // If no successes, reduce humanity by 1
+            this.character.humanity = Math.max(0, this.character.humanity - 1);
+            this.showNotification('Remorse check failed: Humanity reduced by 1', 3000);
+        } else {
+            this.showNotification('Remorse check passed', 3000);
+        }
+        
+        // Clear all stains regardless of success or failure
+        this.character.humanityStains = 0;
+        
+        // Update the character sheet to reflect changes
+        this.displayCharacterStats();
+        this.saveCharacter();
+    }
+    
+    rollFrenzyCheck() {
+        // Calculate the Frenzy dice pool
+        const availableWillpower = this.calculateUnspentWillpower();
+        const humanityBonus = Math.floor(this.character.humanity / 3);
+        const frenzyDicePool = availableWillpower + humanityBonus;
+        
+        // Update the frenzy dice pool in the control panel
+        document.getElementById('frenzy_pool').value = frenzyDicePool;
+        
+        // Make sure the frenzy control is visible
+        const frenzyControl = document.querySelector('.frenzy-control');
+        if (frenzyControl) {
+            frenzyControl.classList.remove('hidden');
+        }
+        
+        // Update the frenzy dice count display
+        const frenzyInfo = document.getElementById('frenzy-info');
+        if (frenzyInfo) {
+            frenzyInfo.textContent = `${frenzyDicePool} Frenzy Dice`;
+        }
+        
+        // Toggle the frenzy button to active
+        const frenzyToggle = document.querySelector('[data-target="frenzy"]');
+        if (frenzyToggle) {
+            frenzyToggle.classList.add('active');
+        }
+        
+        // Close the modal
+        const modal = document.getElementById('progeny-modal');
+        if (modal) {
+            modal.classList.add('hidden');
+        }
+        
+        // Get the dice box instance from the global window object
+        const box = window.box;
+        if (box && box.start_throw) {
+            // Call start_throw with the proper notation getter
+            box.start_throw(
+                function() {
+                    return $t.dice.parse_notation(
+                        0, // Regular dice
+                        0, // Hunger dice
+                        0, // Rouse dice
+                        0, // Remorse dice
+                        frenzyDicePool // Frenzy dice
+                    );
+                },
+                window.before_roll,
+                window.after_roll
+            );
+        }
+    }
 
+    // Updates health and willpower based on current attribute values
+    updateDerivedStats() {
+        // Update health based on Stamina
+        const newHealth = (this.character.attributes['Stamina'] || 0) + 3;
+        if (this.character.health !== newHealth) {
+            this.character.health = newHealth;
+        }
+        
+        // Update willpower based on Resolve and Composure
+        const newWillpower = (this.character.attributes['Resolve'] || 0) + (this.character.attributes['Composure'] || 0);
+        if (this.character.willpower !== newWillpower) {
+            this.character.willpower = newWillpower;
+        }
+    }
+    
     createHumanityTracker(humanity, stains) {
         const div = document.createElement('div');
         div.className = 'humanity-tracker';
@@ -1822,10 +2156,13 @@ class ProgenyManager {
         div.innerHTML = `
             <div class="humanity-header">
                 <span class="humanity-label">Humanity</span>
-                <div class="humanity-values">
-                    <span class="current-value">${humanity}</span>
-                    <span class="separator">/</span>
-                    <span class="max-value">10</span>
+                <div class="humanity-value-container">
+                    <div class="humanity-values">
+                        <span class="current-value">${humanity}</span>
+                        <span class="separator">/</span>
+                        <span class="max-value">10</span>
+                    </div>
+                    <button class="edit-button humanity-edit" title="Edit Humanity">✎</button>
                 </div>
             </div>
             <div class="stains-controls">
@@ -1841,6 +2178,56 @@ class ProgenyManager {
             ${isImpaired ? `<div class="status-warning impaired">Impaired (${excessStains} excess)</div>` : ''}
         `;
 
+        // Add event listener for humanity edit button
+        const humanityEditButton = div.querySelector('.humanity-edit');
+        if (humanityEditButton) {
+            humanityEditButton.addEventListener('click', () => {
+                const humanityValues = div.querySelector('.humanity-values');
+                const currentValue = div.querySelector('.current-value').textContent;
+                
+                // Create input field
+                const input = document.createElement('input');
+                input.type = 'number';
+                input.value = currentValue;
+                input.min = '0';
+                input.max = '10';
+                input.className = 'humanity-input';
+                
+                // Replace display with input
+                const originalHTML = humanityValues.innerHTML;
+                humanityValues.innerHTML = '';
+                humanityValues.appendChild(input);
+                input.focus();
+                
+                // Handle input completion
+                const finishEdit = () => {
+                    const newValue = parseInt(input.value);
+                    if (!isNaN(newValue) && newValue >= 0 && newValue <= 10) {
+                        this.character.humanity = newValue;
+                        humanityValues.innerHTML = `
+                            <span class="current-value">${newValue}</span>
+                            <span class="separator">/</span>
+                            <span class="max-value">10</span>
+                        `;
+                        // Refresh display to update all related elements
+                        this.displayCharacterStats();
+                        this.saveCharacter(); // Save changes
+                    } else {
+                        // Restore original display if invalid
+                        humanityValues.innerHTML = originalHTML;
+                    }
+                };
+                
+                // Handle events for completing edit
+                input.addEventListener('blur', finishEdit);
+                input.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        finishEdit();
+                    }
+                });
+            });
+        }
+        
         // Add event listeners for stains buttons
         div.querySelectorAll('.stains-btn').forEach(button => {
             button.addEventListener('click', () => {

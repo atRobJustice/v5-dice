@@ -275,24 +275,13 @@
     min-width: 900px !important;
   }
   
-  .modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px;
-    border-bottom: 1px solid var(--border-color);
-  }
-  
-  .modal-header h3 {
-    color: var(--text-color);
-    margin: 0;
-  }
+   
+
   
   .modal-header .roll-button-container {
     display: flex;
     align-items: center;
-    margin-left: auto;
-    margin-right: 10px;
+    width:50%
   }
   
   .modal-header .paired-roll-button {
@@ -429,7 +418,7 @@
     color: #000000;
   }
 
-  .humanity-tracker, .damage-tracker, .resonance-tracker {
+  .humanity-tracker, .damage-tracker, .resonance-tracker, .frenzy-check-container, .remorse-check-container, .rouse-check-container {
     background-color: rgba(35,35,35,0.95);
     border: 1px solid var(--border-color);
     border-radius: 4px;
@@ -438,23 +427,57 @@
     flex-direction: column;
   }
 
-  .humanity-header, .damage-header, .resonance-header {
+  .humanity-header, .damage-header, .resonance-header, .frenzy-header, .remorse-header, .rouse-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 8px;
   }
 
-  .humanity-label, .damage-label, .resonance-label {
+  .humanity-label, .damage-label, .resonance-label, .frenzy-label, .remorse-label, .rouse-label {
     color: var(--primary-color);
     font-weight: 500;
     font-size: 0.95em;
   }
 
-  .humanity-values, .damage-values, .resonance-values {
+  .humanity-values, .damage-values, .resonance-values, .frenzy-values, .remorse-values {
     display: flex;
     align-items: center;
     gap: 2px;
+  }
+  
+  .frenzy-info, .remorse-info {
+    font-size: 0.85em;
+    color: var(--text-color);
+    opacity: 0.8;
+    margin-bottom: 8px;
+    text-align: center;
+  }
+  
+  .frenzy-detail {
+    font-style: italic;
+  }
+  
+  .frenzy-roll-btn, .remorse-roll-btn, .rouse-roll-btn {
+    background-color: var(--primary-color);
+    color: var(--text-color);
+    border: none;
+    border-radius: 4px;
+    padding: 6px 12px;
+    font-size: 0.95em;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+    width: 100%;
+    margin-top: 4px;
+  }
+  
+  .frenzy-roll-btn:hover {
+    background-color: var(--primary-hover);
+    transform: translateY(-1px);
+  }
+  
+  .frenzy-roll-btn:active {
+    transform: translateY(1px);
   }
 
   .current-value {
@@ -1301,10 +1324,27 @@
     font-size: 0.95em;
   }
 
+  .humanity-value-container {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
   .humanity-values {
     display: flex;
     align-items: center;
     gap: 2px;
+  }
+  
+  .humanity-input {
+    width: 40px;
+    padding: 2px 4px;
+    border: 1px solid var(--primary-color);
+    border-radius: 3px;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    font-size: 0.9em;
+    text-align: center;
   }
 
   .stains-controls {
