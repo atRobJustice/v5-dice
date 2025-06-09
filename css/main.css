@@ -683,9 +683,11 @@ html {
     background-color: var(--primary-color);
     color: white;
     border-radius: 8px 8px 0 0;
+    border-bottom: 1px solid var(--border-color);
 }
 
 .modal-header h3 {
+    color: var(--text-color);
     margin: 0;
     font-size: 1.2em;
 }

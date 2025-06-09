@@ -827,6 +827,30 @@ function dice_initialize(container) {
                     console.error('Failed to send to Discord:', error);
                 });
             }
+            
+            // Dispatch custom event for roll results that can be listened to by other components
+            const isHungerRoll = hungerPool.value > 0;
+            const isRouseRoll = document.querySelector('.rouse-control:not(.hidden)') !== null;
+            const isRemorseRoll = document.querySelector('.remorse-control:not(.hidden)') !== null;
+            const isFrenzyRoll = document.querySelector('.frenzy-control:not(.hidden)') !== null;
+            
+            window.dispatchEvent(new CustomEvent('diceRollComplete', {
+                detail: {
+                    regularDice: parseInt(regularPool.value) || 0,
+                    hungerDice: parseInt(hungerPool.value) || 0,
+                    rouseDice: isRouseRoll ? 1 : 0,
+                    remorseDice: parseInt(remorsePool.value) || 0,
+                    frenzyDice: parseInt(frenzyPool.value) || 0,
+                    successes: successes,
+                    critical: critical,
+                    messyCritical: messyCritical,
+                    bestialFailure: bestialFailure,
+                    isHunger: isHungerRoll,
+                    isRouse: isRouseRoll,
+                    isRemorse: isRemorseRoll,
+                    isFrenzy: isFrenzyRoll
+                }
+            }));
         } catch (error) {
             console.error('Error processing roll result:', error);
             showError('Failed to process roll result. Please try again.');
