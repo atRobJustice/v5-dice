@@ -313,7 +313,7 @@
         if (frenzyCount < 0) frenzyCount = 0;
         if (regularCount > 20) regularCount = 20;
         if (hungerCount > 5) hungerCount = 5;
-        if (rouseCount > 1) rouseCount = 1;
+        if (rouseCount > 3) rouseCount = 3; // Allow up to 3 rouse dice
         if (remorseCount > 10) remorseCount = 10;
         if (frenzyCount > 15) frenzyCount = 15;
 

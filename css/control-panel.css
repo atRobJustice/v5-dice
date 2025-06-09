@@ -293,7 +293,11 @@
     max-width: 120px;
 }
 
-.slider-rouse,
+.slider-rouse{
+    width: 80px;
+    max-width: 80px;	
+}
+
 .slider-remorse{
     width: 220px;
     max-width: 220px;	
