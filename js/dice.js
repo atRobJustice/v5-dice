@@ -147,16 +147,14 @@
         return geom;
     }
 
-    self.standart_d10_dice_face_labels = [' ', '✪', ' ', ' ', ' ', ' ', ' ', '●', '●', '●', '●',
-      '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20'];
-    self.blood_d10_dice_face_labels = [' ', '✪', '⚠', ' ', ' ', ' ', ' ', '●', '●', '●', '●',
-      '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20'];
+    self.standard_d10_dice_face_labels = [' ', '✪', ' ', ' ', ' ', ' ', ' ', '●', '●', '●', '●'];
+    self.hunger_d10_dice_face_labels = [' ', '✪', '⚠', ' ', ' ', ' ', ' ', '●', '●', '●', '●'];
     
     function calc_texture_size(approx) {
         return Math.pow(2, Math.floor(Math.log(approx) / Math.log(2)));
     }
 
-    self.create_dice_materials = function(face_labels, size, margin, isBlood = false) {
+    self.create_dice_materials = function(face_labels, size, margin, isHunger = false, isRouse = false, isRemorse = false, isFrenzy = false) {
         function create_text_texture(text, color, back_color) {
             if (text == undefined) return null;
             var canvas = document.createElement("canvas");
@@ -185,7 +183,18 @@
         }
         var materials = [];
         for (var i = 0; i < face_labels.length; ++i) {
-            const fillColor = isBlood ? self.blood_dice_color : self.dice_color;
+            let fillColor;
+            if (isHunger) {
+                fillColor = self.hunger_dice_color;
+            } else if (isRouse) {
+                fillColor = self.rouse_dice_color;
+            } else if (isRemorse) {
+                fillColor = self.remorse_dice_color;
+            } else if (isFrenzy) {
+                fillColor = self.frenzy_dice_color;
+            } else {
+                fillColor = self.dice_color;
+            }
             materials.push(new THREE.MeshPhongMaterial($t.copyto(self.material_options,
                         { map: create_text_texture(face_labels[i], self.label_color, fillColor) })));
         }
@@ -213,8 +222,11 @@
         shading: THREE.FlatShading,
     };
     self.label_color = '#aaaaaa';
-    self.dice_color = '#101010';
-    self.blood_dice_color = '#8a3232';
+    self.dice_color = '#080206';  // Regular dice - Black
+    self.hunger_dice_color = '#A41B2E';  // Hunger dice - Madder
+    self.rouse_dice_color = '#331D43';  // Rouse dice - Dark Purple
+    self.remorse_dice_color = '#19305B';  // Remorse dice - Delft Blue
+    self.frenzy_dice_color = '#B83B1A';  // Frenzy dice - Rust
     self.ambient_light_color = 0x000000;
     self.rim_light_color = 0x666666;
     self.rim_light_intensity = 0.8;
@@ -229,43 +241,105 @@
 
     self.scale = 50;
 
-    self.create_d10 = function(isBlood = false) {
+    self.create_d10 = function(isHunger = false, isRouse = false, isRemorse = false, isFrenzy = false) {
         if (!this.d10_geometry) this.d10_geometry = this.create_d10_geometry(this.scale * 0.9);
         if (!this.dice_material) this.dice_material = new THREE.MeshFaceMaterial(
           this.create_dice_materials(
-            this.standart_d10_dice_face_labels,
+            this.standard_d10_dice_face_labels,
             this.scale / 2,
             1.0,
             false,
           )
         );
-        if (!this.blood_dice_material) this.blood_dice_material = new THREE.MeshFaceMaterial(
+        if (!this.hunger_dice_material) this.hunger_dice_material = new THREE.MeshFaceMaterial(
           this.create_dice_materials(
-            this.blood_d10_dice_face_labels,
+            this.hunger_d10_dice_face_labels,
             this.scale / 2,
             1.0,
             true,
           )
         );
-        if (isBlood) {
-          return new THREE.Mesh(this.d10_geometry, this.blood_dice_material);
+        if (!this.rouse_dice_material) this.rouse_dice_material = new THREE.MeshFaceMaterial(
+          this.create_dice_materials(
+            this.standard_d10_dice_face_labels,
+            this.scale / 2,
+            1.0,
+            false,
+            true,
+          )
+        );
+        if (!this.remorse_dice_material) this.remorse_dice_material = new THREE.MeshFaceMaterial(
+          this.create_dice_materials(
+            this.standard_d10_dice_face_labels,
+            this.scale / 2,
+            1.0,
+            false,
+            false,
+            true,
+          )
+        );
+        if (!this.frenzy_dice_material) this.frenzy_dice_material = new THREE.MeshFaceMaterial(
+          this.create_dice_materials(
+            this.standard_d10_dice_face_labels,
+            this.scale / 2,
+            1.0,
+            false,
+            false,
+            false,
+            true,
+          )
+        );
+        if (isHunger) {
+          return new THREE.Mesh(this.d10_geometry, this.hunger_dice_material);
+        }
+        if (isRouse) {
+          return new THREE.Mesh(this.d10_geometry, this.rouse_dice_material);
+        }
+        if (isRemorse) {
+          return new THREE.Mesh(this.d10_geometry, this.remorse_dice_material);
+        }
+        if (isFrenzy) {
+          return new THREE.Mesh(this.d10_geometry, this.frenzy_dice_material);
         }
         return new THREE.Mesh(this.d10_geometry, this.dice_material);
     }
 
-    self.parse_notation = function(regularCount, bloodCount) {
+    self.parse_notation = function(regularCount, hungerCount, rouseCount = 0, remorseCount = 0, frenzyCount = 0) {
         // Basic validation without breaking functionality
         if (regularCount < 0) regularCount = 0;
-        if (bloodCount < 0) bloodCount = 0;
+        if (hungerCount < 0) hungerCount = 0;
+        if (rouseCount < 0) rouseCount = 0;
+        if (remorseCount < 0) remorseCount = 0;
+        if (frenzyCount < 0) frenzyCount = 0;
         if (regularCount > 20) regularCount = 20;
-        if (bloodCount > 5) bloodCount = 5;
+        if (hungerCount > 5) hungerCount = 5;
+        if (rouseCount > 1) rouseCount = 1;
+        if (remorseCount > 10) remorseCount = 10;
+        if (frenzyCount > 10) frenzyCount = 10;
 
-        var ret = { set: [], bloodSet: [], constant: 0, result: [], error: false };
-        var regularCountCopy = regularCount;
-        var bloodCountCopy = bloodCount;
+        var ret = { 
+            set: [], 
+            hungerSet: [], 
+            rouseSet: [],
+            remorseSet: [],
+            frenzySet: [],
+            constant: 0, 
+            result: [], 
+            error: false 
+        };
+
+        // Ensure at least one die is being rolled
+        if (regularCount === 0 && hungerCount === 0 && rouseCount === 0 && remorseCount === 0 && frenzyCount === 0) {
+            ret.error = true;
+            return ret;
+        }
+
         var type = 'd10';
-        while (regularCountCopy--) { ret.set.push(type); }
-        while (bloodCountCopy--) { ret.bloodSet.push(type); }
+        for (var i = 0; i < regularCount; i++) { ret.set.push(type); }
+        for (var i = 0; i < hungerCount; i++) { ret.hungerSet.push(type); }
+        for (var i = 0; i < rouseCount; i++) { ret.rouseSet.push(type); }
+        for (var i = 0; i < remorseCount; i++) { ret.remorseSet.push(type); }
+        for (var i = 0; i < frenzyCount; i++) { ret.frenzySet.push(type); }
         return ret;
     }
 
@@ -449,10 +523,13 @@
               velocity: velocity,
               angle: angle,
               axis: axis,
-              isBlood: false,
+              isHunger: false,
+              isRouse: false,
+              isRemorse: false,
+              isFrenzy: false
             });
         }
-        for (var i in notation.bloodSet) {
+        for (var i in notation.hungerSet) {
             var vec = make_random_vector(vector);
             var pos = {
                 x: this.w * (vec.x > 0 ? -1 : 1) * 0.9,
@@ -463,7 +540,7 @@
             if (projector > 1.0) pos.y /= projector; else pos.x *= projector;
             var velvec = make_random_vector(vector);
             var velocity = { x: velvec.x * boost, y: velvec.y * boost, z: -10 };
-            var inertia = that.dice_inertia[notation.bloodSet[i]];
+            var inertia = that.dice_inertia[notation.hungerSet[i]];
             var angle = {
                 x: -(rnd() * vec.y * 5 + inertia * vec.y),
                 y: rnd() * vec.x * 5 + inertia * vec.x,
@@ -471,19 +548,112 @@
             };
             var axis = { x: rnd(), y: rnd(), z: rnd(), a: rnd() };
             vectors.push({
-              set: notation.bloodSet[i],
+              set: notation.hungerSet[i],
               pos: pos,
               velocity: velocity,
               angle: angle,
               axis: axis,
-              isBlood: true,
+              isHunger: true,
+              isRouse: false,
+              isRemorse: false,
+              isFrenzy: false
+            });
+        }
+        for (var i in notation.rouseSet) {
+            var vec = make_random_vector(vector);
+            var pos = {
+                x: this.w * (vec.x > 0 ? -1 : 1) * 0.9,
+                y: this.h * (vec.y > 0 ? -1 : 1) * 0.9,
+                z: rnd() * 200 + 200
+            };
+            var projector = Math.abs(vec.x / vec.y);
+            if (projector > 1.0) pos.y /= projector; else pos.x *= projector;
+            var velvec = make_random_vector(vector);
+            var velocity = { x: velvec.x * boost, y: velvec.y * boost, z: -10 };
+            var inertia = that.dice_inertia[notation.rouseSet[i]];
+            var angle = {
+                x: -(rnd() * vec.y * 5 + inertia * vec.y),
+                y: rnd() * vec.x * 5 + inertia * vec.x,
+                z: 0
+            };
+            var axis = { x: rnd(), y: rnd(), z: rnd(), a: rnd() };
+            vectors.push({
+              set: notation.rouseSet[i],
+              pos: pos,
+              velocity: velocity,
+              angle: angle,
+              axis: axis,
+              isHunger: false,
+              isRouse: true,
+              isRemorse: false,
+              isFrenzy: false
+            });
+        }
+        for (var i in notation.remorseSet) {
+            var vec = make_random_vector(vector);
+            var pos = {
+                x: this.w * (vec.x > 0 ? -1 : 1) * 0.9,
+                y: this.h * (vec.y > 0 ? -1 : 1) * 0.9,
+                z: rnd() * 200 + 200
+            };
+            var projector = Math.abs(vec.x / vec.y);
+            if (projector > 1.0) pos.y /= projector; else pos.x *= projector;
+            var velvec = make_random_vector(vector);
+            var velocity = { x: velvec.x * boost, y: velvec.y * boost, z: -10 };
+            var inertia = that.dice_inertia[notation.remorseSet[i]];
+            var angle = {
+                x: -(rnd() * vec.y * 5 + inertia * vec.y),
+                y: rnd() * vec.x * 5 + inertia * vec.x,
+                z: 0
+            };
+            var axis = { x: rnd(), y: rnd(), z: rnd(), a: rnd() };
+            vectors.push({
+              set: notation.remorseSet[i],
+              pos: pos,
+              velocity: velocity,
+              angle: angle,
+              axis: axis,
+              isHunger: false,
+              isRouse: false,
+              isRemorse: true,
+              isFrenzy: false
+            });
+        }
+        for (var i in notation.frenzySet) {
+            var vec = make_random_vector(vector);
+            var pos = {
+                x: this.w * (vec.x > 0 ? -1 : 1) * 0.9,
+                y: this.h * (vec.y > 0 ? -1 : 1) * 0.9,
+                z: rnd() * 200 + 200
+            };
+            var projector = Math.abs(vec.x / vec.y);
+            if (projector > 1.0) pos.y /= projector; else pos.x *= projector;
+            var velvec = make_random_vector(vector);
+            var velocity = { x: velvec.x * boost, y: velvec.y * boost, z: -10 };
+            var inertia = that.dice_inertia[notation.frenzySet[i]];
+            var angle = {
+                x: -(rnd() * vec.y * 5 + inertia * vec.y),
+                y: rnd() * vec.x * 5 + inertia * vec.x,
+                z: 0
+            };
+            var axis = { x: rnd(), y: rnd(), z: rnd(), a: rnd() };
+            vectors.push({
+              set: notation.frenzySet[i],
+              pos: pos,
+              velocity: velocity,
+              angle: angle,
+              axis: axis,
+              isHunger: false,
+              isRouse: false,
+              isRemorse: false,
+              isFrenzy: true
             });
         }
         return vectors;
     }
 
-    self.dice_box.prototype.create_dice = function(type, pos, velocity, angle, axis, isBlood = false) {
-        var dice = that['create_' + type](isBlood);
+    self.dice_box.prototype.create_dice = function(type, pos, velocity, angle, axis, isHunger = false, isRouse = false, isRemorse = false, isFrenzy = false) {
+        var dice = that['create_' + type](isHunger, isRouse, isRemorse, isFrenzy);
         dice.castShadow = true;
         dice.dice_type = type;
         dice.body = new CANNON.RigidBody(that.dice_mass[type],
@@ -616,7 +786,7 @@
         this.iteration = 0;
         for (var i in vectors) {
             this.create_dice(vectors[i].set, vectors[i].pos, vectors[i].velocity,
-                    vectors[i].angle, vectors[i].axis, vectors[i].isBlood);
+                    vectors[i].angle, vectors[i].axis, vectors[i].isHunger, vectors[i].isRouse, vectors[i].isRemorse, vectors[i].isFrenzy);
         }
     }
 
@@ -729,7 +899,10 @@
         }
         vector.x /= dist; vector.y /= dist;
         var notation = notation_getter.call(box);
-        if (notation.set.length == 0 && notation.bloodSet.length == 0) return;
+        // Check if any dice are present
+        if (notation.set.length == 0 && notation.hungerSet.length == 0 && 
+            notation.rouseSet.length == 0 && notation.remorseSet.length == 0 && 
+            notation.frenzySet.length == 0) return;
         var vectors = box.generate_vectors(notation, vector, boost);
         box.rolling = true;
         if (typeof before_roll === 'function') {
