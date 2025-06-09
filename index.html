@@ -76,18 +76,18 @@
             </div>
             <div class="icon-buttons">
                 <div class="discord-settings">
-                    <button id="toggle-discord" class="icon-button">
-                        <img src="./resources/Discord-Symbol-Blurple.png" alt="Discord Settings" class="icon">
+                    <button id="toggle-discord" class="discord-toggle">
+                        <img src="./assets/Discord-Symbol-Blurple.png" alt="Discord Settings" class="discord-icon">
                     </button>
                 </div>
                 <div class="progeny-settings">
-                    <button id="toggle-progeny" class="icon-button" title="Progeny Character">
-                        <img src="./resources/progeny-icon.svg" alt="Progeny Import" class="icon">
+                    <button id="toggle-progeny" class="progeny-toggle" title="Progeny Character">
+                        <img src="./assets/progeny-icon.svg" alt="Progeny Import" class="progeny-icon">
                     </button>
                 </div>
                 <div class="help-settings">
-                    <button id="toggle-legend" class="icon-button">
-                        <img src="./resources/help.png" alt="Help Import" class="icon">
+                    <button id="toggle-legend" class="legend-toggle">
+                        <img src="./assets/help.png" alt="Help Import" class="help-icon">
                     </button>
                 </div>
             </div>
@@ -108,10 +108,10 @@
             </div>
             <div class="modal-body">
                 <div class="dice-legend-grid">
-                    <p><span class="dice-regular"><span class="regular-circle">●</span> or ✪</span> - Success (+1)</p>
-                    <p><span class="dice-regular">✪ + ✪</span> - Critical Success (+4)</p>
-                    <p><span class="dice-hunger">⚠</span> - Bestial Failure (no successes)</p>
-                    <p><span class="dice-hunger">✪</span> + <span class="dice-regular">✪</span> or <span class="dice-hunger">✪</span> - Messy Critical (+4)</p>
+                    <p><span class="regular"><span class="regular-circle">●</span> or ✪</span> - Success (+1)</p>
+                    <p><span class="regular">✪ + ✪</span> - Critical Success (+4)</p>
+                    <p><span class="hunger">⚠</span> - Bestial Failure (no successes)</p>
+                    <p><span class="hunger">✪</span> + <span class="regular">✪</span> or <span class="hunger">✪</span> - Messy Critical (+4)</p>
                 </div>
                 <div class="version-info">
                     <span>Version 0.5.4</span>
@@ -152,7 +152,7 @@
                     <div class="file-upload-container empty-state">
                         <input type="file" id="progeny-file" accept=".json" class="file-input">
                         <label for="progeny-file" class="file-label">
-                            <span class="icon">📁</span>
+                            <span class="file-icon">📁</span>
                             <span class="file-text">Import Progeny JSON</span>
                         </label>
                         <div id="file-name" class="file-name"></div>
@@ -160,28 +160,28 @@
                     <div class="progeny-buttons loaded-state">
                         <div class="context-menu">
                             <button id="menu-trigger" class="menu-trigger" title="Character Actions">
-                                <span class="icon">⋮</span>
+                                <span class="menu-icon">⋮</span>
                             </button>
                             <div class="menu-content">
                                 <button id="save-progeny" class="menu-item save">
-                                    <span class="icon">💾</span>
+                                    <span class="menu-icon">💾</span>
                                     <span class="menu-text">Save</span>
                                 </button>
                                 <button id="export-progeny" class="menu-item export">
-                                    <span class="icon">📤</span>
+                                    <span class="menu-icon">📤</span>
                                     <span class="menu-text">Export</span>
                                 </button>
                                 <button id="import-progeny" class="menu-item import">
-                                    <span class="icon">📥</span>
+                                    <span class="menu-icon">📥</span>
                                     <span class="menu-text">Import</span>
                                 </button>
                                 <button id="clear-progeny" class="menu-item clear">
-                                    <span class="icon">🗑️</span>
+                                    <span class="menu-icon">🗑️</span>
                                     <span class="menu-text">Clear</span>
                                 </button>
                                 <div class="menu-divider"></div>
                                 <button id="close-progeny-menu" class="menu-item close">
-                                    <span class="icon">✕</span>
+                                    <span class="menu-icon">✕</span>
                                     <span class="menu-text">Close</span>
                                 </button>
                             </div>
