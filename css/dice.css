@@ -1,90 +1,61 @@
-@import 'base.css';
-@import 'components.css';
-@import 'responsive.css';
-
-/* Dice Layout */
-.centered-field {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
+.center_field {
+    position: absolute;
+    text-align: center;
     height: 100%;
+    width: 100%;
+}
+
+.center_field * {
+    position: relative;
+    font-family: Trebuchet MS;
+    background-color: rgba(255, 255, 255, 0.6);
+    padding: 5px 15px;
+}
+
+.center_field br {
+    background-color: rgba(0, 0, 0, 0);
 }
 
 #label {
-    font-size: 1.2em;
-    margin-bottom: var(--spacing-md);
-    color: var(--text-color);
+    font-size: 32pt;
+    word-spacing: 0.5em;
+    padding: 5px 15px;
+    color: rgba(21, 26, 26, 0.6);
+    top: 45%;
+}
+
+#labelhelp {
+    font-size: 12pt;
+    padding: 5px 15px;
+    color: rgba(21, 26, 26, 0.5);
+    bottom: 50px;
 }
 
 #set {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--spacing-md);
-    justify-content: center;
-    align-items: center;
+    text-align: center;
+    font-size: 26pt;
+    border: none;
+    color: rgba(0, 0, 0, 0.8);
+    background-color: rgba(255, 255, 255, 0);
+    top: 60%;
+}
+
+#sethelp {
+    font-size: 12pt;
+    color: rgba(21, 26, 26, 0.5);
+    background: none;
+    top: 25%;
 }
 
 .dice_place {
-    position: relative;
-    width: 60px;
-    height: 60px;
-    margin: var(--spacing-sm);
+    position: absolute;
+    border: solid black 1px;
 }
 
-/* Dice Animations */
-.dice {
-    animation: roll 1s ease-in-out;
-}
-
-@keyframes roll {
-    0% { transform: rotateX(0) rotateY(0) rotateZ(0); }
-    25% { transform: rotateX(180deg) rotateY(90deg) rotateZ(45deg); }
-    50% { transform: rotateX(360deg) rotateY(180deg) rotateZ(90deg); }
-    75% { transform: rotateX(540deg) rotateY(270deg) rotateZ(135deg); }
-    100% { transform: rotateX(720deg) rotateY(360deg) rotateZ(180deg); }
-}
-
-/* Dice Results */
-.dice-result {
-    font-size: 1.5em;
-    font-weight: bold;
-    text-align: center;
-    margin: var(--spacing-md) 0;
-    padding: var(--spacing-sm);
-    border-radius: var(--border-radius-sm);
-    background: var(--panel-bg);
-    box-shadow: var(--shadow-sm);
-}
-
-.dice-result.critical {
-    color: var(--critical-color);
-    animation: criticalGlow 2s infinite;
-}
-
-.dice-result.failure {
-    color: var(--failure-color);
-    animation: bestialShake 0.5s ease-in-out;
-}
-
-/* Dice Colors */
-.dice-regular {
-    color: var(--text-color);
-}
-
-.dice-hunger {
-    color: var(--hunger-color);
-}
-
-.dice-rouse {
-    color: var(--rouse-color);
-}
-
-.dice-remorse {
-    color: var(--remorse-color);
-}
-
-.dice-frenzy {
-    color: var(--frenzy-color);
+#canvas-cover {
+    position: absolute;
+    left: 0;
+    top: 100px;
+    bottom: 0;
+    right: 0;
 }
