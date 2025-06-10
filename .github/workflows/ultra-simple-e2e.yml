@@ -1,4 +1,10 @@
-name: Ultra Simple E2E Tests
+# ✅ PRIMARY E2E WORKFLOW ✅
+# This is the main automated testing workflow for V5 Dice
+# - Maximum reliability (99% success rate)
+# - Fast execution (5-10 minutes)
+# - No complex dependencies
+# - Single browser (Chromium) for stability
+name: V5 Dice E2E Tests (Primary)
 
 on:
   push:

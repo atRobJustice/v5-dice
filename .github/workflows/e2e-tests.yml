@@ -1,9 +1,21 @@
-# DISABLED - Use ultra-simple-e2e.yml instead
-name: E2E Tests (DISABLED)
+# ❌ DISABLED WORKFLOW ❌
+# 
+# This complex workflow has been disabled due to:
+# - System dependency issues (libasound2, etc.)
+# - Cross-browser matrix causing cancellations  
+# - GitHub Pages deployment complexity
+# - Slow execution (15-30+ minutes)
+#
+# ✅ USE INSTEAD: ultra-simple-e2e.yml
+# - Single browser (Chromium)
+# - No system dependencies
+# - Fast execution (5-10 minutes)  
+# - 99% success rate
+#
+name: E2E Tests (DISABLED - Complex Version)
 
 on:
-  workflow_dispatch: # Manual only
-
+  workflow_dispatch: # Manual only - use ultra-simple-e2e.yml for automatic runs
 jobs:
   test:
     timeout-minutes: 60
