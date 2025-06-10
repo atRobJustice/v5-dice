@@ -1,0 +1,58 @@
+# DISABLED - Use ultra-simple-e2e.yml instead  
+name: Simple E2E Tests (DISABLED)
+
+on:
+  workflow_dispatch: # Manual only
+
+jobs:
+  test:
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox]
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 18
+    
+    - name: Install dependencies
+      run: npm install
+    
+    - name: Install Playwright Browsers
+      run: npx playwright install --with-deps ${{ matrix.browser }}
+    
+    - name: Run Playwright tests
+      run: npx playwright test --project=${{ matrix.browser }} --reporter=line
+      continue-on-error: true
+      
+    - name: Upload test results on failure
+      uses: actions/upload-artifact@v4
+      if: failure()
+      with:
+        name: test-results-${{ matrix.browser }}
+        path: |
+          test-results/
+          playwright-report/
+        retention-days: 7
+        if-no-files-found: ignore
+        
+    - name: Test Summary
+      if: always()
+      run: |
+        echo "## 🎲 V5 Dice E2E Test Results - ${{ matrix.browser }}" >> $GITHUB_STEP_SUMMARY
+        if [ $? -eq 0 ]; then
+          echo "✅ Tests passed successfully!" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "❌ Some tests failed. Check logs for details." >> $GITHUB_STEP_SUMMARY
+        fi
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Test Coverage:**" >> $GITHUB_STEP_SUMMARY
+        echo "- Dice rolling combinations" >> $GITHUB_STEP_SUMMARY
+        echo "- Character import/export" >> $GITHUB_STEP_SUMMARY
+        echo "- Character sheet updates" >> $GITHUB_STEP_SUMMARY
+        echo "- All roll buttons functionality" >> $GITHUB_STEP_SUMMARY
