@@ -16,7 +16,6 @@ name: E2E Tests (DISABLED - Complex Version)
 
 on:
   workflow_dispatch: # Manual only - use ultra-simple-e2e.yml for automatic runs
-
 jobs:
   test:
     timeout-minutes: 60
