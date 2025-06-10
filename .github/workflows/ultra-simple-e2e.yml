@@ -32,7 +32,7 @@ jobs:
       run: npm install
     
     - name: Install Playwright
-      run: npx playwright install chromium --with-deps
+      run: npx playwright install chromium
     
     - name: Run V5 Dice E2E Tests
       run: |

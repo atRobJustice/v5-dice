@@ -38,7 +38,11 @@ jobs:
 
     
     - name: Install Playwright Browsers
-      run: npx playwright install --with-deps
+      run: |
+        # Install browsers without system dependencies to avoid libasound2 issues
+        npx playwright install ${{ matrix.browser }}
+        echo "⚠️  System dependencies skipped to avoid Ubuntu package conflicts"
+        echo "🚀 Use ultra-simple-e2e.yml for most reliable testing"
     
     - name: Run Playwright tests
       run: npx playwright test --project=${{ matrix.browser }}
