@@ -3061,6 +3061,12 @@ class ProgenyManager {
         // Update the remorse dice pool in the control panel
         document.getElementById('remorse_pool').value = remorseDicePool;
         
+        // Hide regular dice control
+        const regularControl = document.querySelector('.dice-control:not(.hidden-controls *)');
+        if (regularControl) {
+            regularControl.classList.add('hidden');
+        }
+        
         // Make sure the remorse control is visible
         const remorseControl = document.querySelector('.remorse-control');
         if (remorseControl) {
@@ -3073,10 +3079,14 @@ class ProgenyManager {
             remorseInfo.textContent = `${remorseDicePool} Remorse Dice`;
         }
         
-        // Toggle the remorse button to active
+        // Toggle the remorse button to active and deactivate others
         const remorseToggle = document.querySelector('[data-target="remorse"]');
         if (remorseToggle) {
             remorseToggle.classList.add('active');
+            // Deactivate other toggles
+            document.querySelectorAll('[data-target="hunger"], [data-target="rouse"], [data-target="frenzy"]').forEach(btn => {
+                btn.classList.remove('active');
+            });
         }
         
         // Add event listener for roll results
@@ -3225,6 +3235,12 @@ class ProgenyManager {
         // Update the frenzy dice pool in the control panel
         document.getElementById('frenzy_pool').value = frenzyDicePool;
         
+        // Hide regular dice control
+        const regularControl = document.querySelector('.dice-control:not(.hidden-controls *)');
+        if (regularControl) {
+            regularControl.classList.add('hidden');
+        }
+        
         // Make sure the frenzy control is visible
         const frenzyControl = document.querySelector('.frenzy-control');
         if (frenzyControl) {
@@ -3237,10 +3253,14 @@ class ProgenyManager {
             frenzyInfo.textContent = `${frenzyDicePool} Frenzy Dice`;
         }
         
-        // Toggle the frenzy button to active
+        // Toggle the frenzy button to active and deactivate others
         const frenzyToggle = document.querySelector('[data-target="frenzy"]');
         if (frenzyToggle) {
             frenzyToggle.classList.add('active');
+            // Deactivate other toggles
+            document.querySelectorAll('[data-target="hunger"], [data-target="rouse"], [data-target="remorse"]').forEach(btn => {
+                btn.classList.remove('active');
+            });
         }
         
         // Close the modal
