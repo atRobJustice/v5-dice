@@ -470,7 +470,8 @@ function dice_initialize(container) {
                 hunger: false,
                 rouse: false,
                 remorse: false,
-                frenzy: false
+                frenzy: false,
+                regular: true  // Regular dice is visible by default
             }
         };
 
@@ -483,6 +484,16 @@ function dice_initialize(container) {
 
         // Restore toggle states
         if (settings.toggles) {
+            // Handle regular dice visibility first
+            const regularControl = document.querySelector('.dice-control:not(.hidden-controls *)');
+            if (regularControl) {
+                if (!settings.toggles.regular) {
+                    regularControl.classList.add('hidden');
+                } else {
+                    regularControl.classList.remove('hidden');
+                }
+            }
+
             if (settings.toggles.hunger) {
                 document.querySelector('.hunger-control').classList.remove('hidden');
                 document.querySelector('[data-target="hunger"]').classList.add('active');
@@ -635,7 +646,8 @@ function dice_initialize(container) {
                 hunger: !document.querySelector('.hunger-control').classList.contains('hidden'),
                 rouse: !document.querySelector('.rouse-control').classList.contains('hidden'),
                 remorse: !document.querySelector('.remorse-control').classList.contains('hidden'),
-                frenzy: !document.querySelector('.frenzy-control').classList.contains('hidden')
+                frenzy: !document.querySelector('.frenzy-control').classList.contains('hidden'),
+                regular: !document.querySelector('.dice-control:not(.hidden-controls *)').classList.contains('hidden')
             }
         };
         localStorage.setItem('diceSettings', JSON.stringify(settings));
@@ -814,7 +826,7 @@ function dice_initialize(container) {
                 if (typeof roll !== 'number') {
                     throw new Error('Invalid roll value');
                 }
-                const isHunger = i >= notation.set.length;
+                const isHunger = i >= notation.set.length && i < notation.set.length + notation.hungerSet.length;
                 if (6 <= roll && roll <= 9) {
                     simpleAnkhs += 1;
                 }
