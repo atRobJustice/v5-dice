@@ -453,8 +453,37 @@ function dice_initialize(container) {
         }
     });
 
-    
+    // Add cleanup function
+    function cleanupDiceBox() {
+        if (window.box) {
+            window.box.dispose();
+            window.box = null;
+        }
+    }
 
+    // Add event listener for page unload
+    window.addEventListener('unload', cleanupDiceBox);
+
+    // Add cleanup to the clear roll button
+    clearRollButton.addEventListener('click', () => {
+        // Clear the text result
+        latestElement.innerHTML = '';
+        latestElement.classList.remove('rolling');
+        throwButton.disabled = false;
+
+        // Remove all dice from the canvas
+        if (box) {
+            box.clear();
+            box.init();
+        }
+    });
+
+    // Add cleanup when switching views or closing modals
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            cleanupDiceBox();
+        }
+    });
 
     // Initialize dice settings
     function initializeDiceSettings() {
@@ -803,6 +832,12 @@ function dice_initialize(container) {
             if (!Array.isArray(result)) {
                 throw new Error('Invalid roll result format');
             }
+
+            // Determine roll types
+            const isHungerRoll = hungerPool.value > 0;
+            const isRouseRoll = document.querySelector('.rouse-control:not(.hidden)') !== null;
+            const isRemorseRoll = document.querySelector('.remorse-control:not(.hidden)') !== null;
+            const isFrenzyRoll = document.querySelector('.frenzy-control:not(.hidden)') !== null;
             
             // Handle rouse checks - Check if we have rouse dice and there's a progeny manager available
             const rouseCount = notation.rouseSet ? notation.rouseSet.length : 0;
@@ -882,7 +917,15 @@ function dice_initialize(container) {
             let newHtml = '';
             const hasRegularOrHungerDice = notation.set.length > 0 || notation.hungerSet.length > 0;
             
-            if (hasRegularOrHungerDice) {
+            if (isRemorseRoll) {
+                // For Remorse checks, we need to check if any of the dice rolled 6 or higher
+                const remorseSuccess = result.some(r => r >= 6);
+                newHtml += `<span class="${remorseSuccess ? 'success' : 'failure'}">Remorse Check: ${remorseSuccess ? 'Success' : 'Failure'}</span>`;
+            } else if (isFrenzyRoll) {
+                // For Frenzy checks, we need to check if any of the dice rolled 6 or higher
+                const frenzySuccess = result.some(r => r >= 6);
+                newHtml += `<span class="${frenzySuccess ? 'success' : 'failure'}">Frenzy Check: ${frenzySuccess ? 'Success' : 'Failure'}</span>`;
+            } else if (hasRegularOrHungerDice) {
                 if (successes > 0) {
                     newHtml += `${successes} Success`;
                     if (successes > 1) { newHtml += 'es'; }
@@ -902,7 +945,7 @@ function dice_initialize(container) {
 
             // Add Rouse check result if present
             if (notation.rouseSet && notation.rouseSet.length > 0) {
-                if (hasRegularOrHungerDice) {
+                if (hasRegularOrHungerDice || isFrenzyRoll || isRemorseRoll) {
                     newHtml += '<br>';
                 }
                 newHtml += `<span class="${rouseSuccess ? 'success' : 'failure'}">Rouse Check: ${rouseSuccess ? 'Success' : 'Failure'}</span>`;
@@ -937,11 +980,6 @@ function dice_initialize(container) {
             }
             
             // Dispatch custom event for roll results that can be listened to by other components
-            const isHungerRoll = hungerPool.value > 0;
-            const isRouseRoll = document.querySelector('.rouse-control:not(.hidden)') !== null;
-            const isRemorseRoll = document.querySelector('.remorse-control:not(.hidden)') !== null;
-            const isFrenzyRoll = document.querySelector('.frenzy-control:not(.hidden)') !== null;
-            
             // For Rouse checks, we need to check if any of the Rouse dice rolled 6 or higher
             let rouseSuccesses = 0;
             if (isRouseRoll && notation.rouseSet) {

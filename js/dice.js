@@ -772,13 +772,94 @@
         this.running = false;
         var dice;
         while (dice = this.dices.pop()) {
+            // Dispose of dice-specific resources
+            if (dice.geometry) {
+                dice.geometry.dispose();
+            }
+            if (dice.material) {
+                // Handle MeshFaceMaterial (array of materials)
+                if (Array.isArray(dice.material.materials)) {
+                    dice.material.materials.forEach(material => {
+                        if (material.map) material.map.dispose();
+                        material.dispose();
+                    });
+                }
+                // Handle single material
+                else if (dice.material.map) {
+                    dice.material.map.dispose();
+                    dice.material.dispose();
+                }
+            }
             this.scene.remove(dice);
             if (dice.body) this.world.remove(dice.body);
         }
-        if (this.pane) this.scene.remove(this.pane);
+        if (this.pane) {
+            if (this.pane.geometry) this.pane.geometry.dispose();
+            if (this.pane.material) {
+                if (this.pane.material.map) this.pane.material.map.dispose();
+                this.pane.material.dispose();
+            }
+            this.scene.remove(this.pane);
+        }
         this.renderer.render(this.scene, this.camera);
         var box = this;
         setTimeout(function() { box.renderer.render(box.scene, box.camera); }, 100);
+    }
+
+    self.dice_box.prototype.dispose = function() {
+        // Clear all dice and the pane
+        this.clear();
+        
+        // Dispose of shared geometries
+        if (this.d10_geometry) {
+            this.d10_geometry.dispose();
+            this.d10_geometry = null;
+        }
+        
+        // Dispose of shared materials
+        const disposeMaterial = (material) => {
+            if (!material) return;
+            if (Array.isArray(material.materials)) {
+                material.materials.forEach(m => {
+                    if (m.map) m.map.dispose();
+                    m.dispose();
+                });
+            } else if (material.map) {
+                material.map.dispose();
+                material.dispose();
+            }
+        };
+
+        disposeMaterial(this.dice_material);
+        disposeMaterial(this.hunger_dice_material);
+        disposeMaterial(this.rouse_dice_material);
+        disposeMaterial(this.remorse_dice_material);
+        disposeMaterial(this.frenzy_dice_material);
+        
+        this.dice_material = null;
+        this.hunger_dice_material = null;
+        this.rouse_dice_material = null;
+        this.remorse_dice_material = null;
+        this.frenzy_dice_material = null;
+        
+        // Dispose of renderer
+        if (this.renderer) {
+            this.renderer.dispose();
+            this.renderer = null;
+        }
+        
+        // Clear the scene
+        if (this.scene) {
+            while(this.scene.children.length > 0) { 
+                this.scene.remove(this.scene.children[0]); 
+            }
+            this.scene = null;
+        }
+        
+        // Clear the world
+        if (this.world) {
+            this.world = null;
+        }
     }
 
     self.dice_box.prototype.prepare_dices_for_roll = function(vectors) {
