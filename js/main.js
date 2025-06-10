@@ -358,7 +358,7 @@ function dice_initialize(container) {
         });
 
         // Add smooth slider interaction
-        [regularPool, hungerPool, remorsePool, frenzyPool].forEach(slider => {
+        [regularPool, hungerPool, remorsePool, frenzyPool, rousePool].forEach(slider => {
             slider.addEventListener('input', function() {
                 this.style.setProperty('--slider-value', this.value);
                 // Update the text immediately
@@ -366,26 +366,22 @@ function dice_initialize(container) {
                 const isHunger = slider === hungerPool;
                 const isRemorse = slider === remorsePool;
                 const isFrenzy = slider === frenzyPool;
+                const isRouse = slider === rousePool;
                 
                 let word;
                 if (isRegular) word = (this.value == '1') ? 'Regular Die' : 'Regular Dice';
                 else if (isHunger) word = (this.value == '1') ? 'Hunger Die' : 'Hunger Dice';
                 else if (isRemorse) word = (this.value == '1') ? 'Remorse Die' : 'Remorse Dice';
                 else if (isFrenzy) word = (this.value == '1') ? 'Frenzy Die' : 'Frenzy Dice';
+                else if (isRouse) word = (this.value == '1') ? 'Rouse Die' : 'Rouse Dice';
                 
                 const infoElement = isRegular ? regularInfo : 
                                   isHunger ? hungerInfo :
                                   isRemorse ? remorseInfo :
-                                  frenzyInfo;
+                                  isFrenzy ? frenzyInfo :
+                                  rouseInfo;
                 infoElement.innerHTML = this.value + ' ' + word;
             });
-        });
-
-        // Handle Rouse checkbox
-        rousePool.addEventListener('change', function() {
-            const value = this.checked ? '1' : '0';
-            rouseInfo.textContent = value + ' Rouse Die';
-            saveDiceSettings();
         });
 
         // Add keyboard navigation
@@ -398,7 +394,7 @@ function dice_initialize(container) {
 
     // Add touch event handling for sliders
     function setupTouchHandlers() {
-        const sliders = [regularPool, hungerPool, remorsePool, frenzyPool];
+        const sliders = [regularPool, hungerPool, remorsePool, frenzyPool, rousePool];
         sliders.forEach(slider => {
             slider.addEventListener('touchstart', function(e) {
                 e.preventDefault();
@@ -523,6 +519,56 @@ function dice_initialize(container) {
                 const control = document.querySelector(`.${target}-control`);
                 
                 if (control.classList.contains('hidden')) {
+                    // For Remorse and Frenzy dice, hide all other controls and deactivate other toggles
+                    if (target === 'remorse' || target === 'frenzy') {
+                        // Hide all other controls
+                        document.querySelectorAll('.hunger-control, .rouse-control, .remorse-control, .frenzy-control, .dice-control:not(.hidden-controls *)').forEach(ctrl => {
+                            if (!ctrl.classList.contains(`${target}-control`)) {
+                                ctrl.classList.add('hidden');
+                            }
+                        });
+                        
+                        // Deactivate all other toggle buttons
+                        toggleButtons.forEach(btn => {
+                            if (btn !== button) {
+                                btn.classList.remove('active');
+                            }
+                        });
+                        
+                        // Reset all other dice values
+                        document.getElementById('regular_pool').value = '0';
+                        document.getElementById('hunger_pool').value = '0';
+                        document.getElementById('rouse_pool').value = '0';
+                        if (target === 'remorse') {
+                            document.getElementById('frenzy_pool').value = '0';
+                        } else {
+                            document.getElementById('remorse_pool').value = '0';
+                        }
+                    }
+                    // For Hunger and Rouse, hide Remorse and Frenzy controls and deactivate their toggles
+                    else if (target === 'hunger' || target === 'rouse') {
+                        // Hide Remorse and Frenzy controls
+                        document.querySelectorAll('.remorse-control, .frenzy-control').forEach(ctrl => {
+                            ctrl.classList.add('hidden');
+                        });
+                        
+                        // Deactivate Remorse and Frenzy toggle buttons
+                        document.querySelectorAll('[data-target="remorse"], [data-target="frenzy"]').forEach(btn => {
+                            btn.classList.remove('active');
+                        });
+                        
+                        // Reset Remorse and Frenzy values
+                        document.getElementById('remorse_pool').value = '0';
+                        document.getElementById('frenzy_pool').value = '0';
+
+                        // Ensure Regular dice control is visible
+                        document.querySelector('.dice-control:not(.hidden-controls *)').classList.remove('hidden');
+                        const regularSlider = document.getElementById('regular_pool');
+                        if (regularSlider.value === '0') {
+                            regularSlider.value = '1';
+                        }
+                    }
+                    
                     // Show control and set value to 1 if it was 0
                     control.classList.remove('hidden');
                     button.classList.add('active');
@@ -545,6 +591,16 @@ function dice_initialize(container) {
                     } else {
                         document.getElementById(`${target}_pool`).value = '0';
                     }
+                    
+                    // If turning off Remorse or Frenzy, show Regular dice control
+                    if (target === 'remorse' || target === 'frenzy') {
+                        document.querySelector('.dice-control:not(.hidden-controls *)').classList.remove('hidden');
+                        const regularSlider = document.getElementById('regular_pool');
+                        if (regularSlider.value === '0') {
+                            regularSlider.value = '1';
+                        }
+                    }
+                    
                     updateDiceLabels();
                 }
             });
