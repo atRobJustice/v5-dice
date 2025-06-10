@@ -1,6 +1,36 @@
 # Changelog
 All notable changes to the Vampire Dice Roller will be documented in this file.
 
+## [0.5.8]
+### Added
+- Enhanced Discipline power management
+  - Added "Roll" buttons directly to discipline powers
+  - Improved power creation interface with structured forms
+  - Added Rouse Cost display for powers
+- Improved dice type controls and UI feedback
+  - Enhanced toggle system for switching between dice types
+  - Added automatic dice control visibility management
+  - Improved Rouse Check success/failure detection and feedback
+
+### Changed
+- Improved dice pool calculation for Disciplines
+  - Now uses number of powers instead of highest level
+- Enhanced UI for special dice types
+  - Better visual distinction between active dice types
+  - More consistent styling across control panels
+- Updated power management with structured data
+  - Added secondary attribute/skill/discipline selectors
+
+### Fixed
+- Fixed improper handling of Rouse checks for Discipline powers
+- Fixed dice visibility issues when switching between dice types
+- Improved roll result display for special dice types
+
+### Technical Changes
+- Refactored dice control management for better organization
+- Enhanced special dice type handling with improved toggle system
+- Updated CSS variables for more consistent theming
+
 ## [0.5.7]
 ### Added
 - Added Remorse Check system for Humanity testing

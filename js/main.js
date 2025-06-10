@@ -358,7 +358,7 @@ function dice_initialize(container) {
         });
 
         // Add smooth slider interaction
-        [regularPool, hungerPool, remorsePool, frenzyPool].forEach(slider => {
+        [regularPool, hungerPool, remorsePool, frenzyPool, rousePool].forEach(slider => {
             slider.addEventListener('input', function() {
                 this.style.setProperty('--slider-value', this.value);
                 // Update the text immediately
@@ -366,26 +366,22 @@ function dice_initialize(container) {
                 const isHunger = slider === hungerPool;
                 const isRemorse = slider === remorsePool;
                 const isFrenzy = slider === frenzyPool;
+                const isRouse = slider === rousePool;
                 
                 let word;
                 if (isRegular) word = (this.value == '1') ? 'Regular Die' : 'Regular Dice';
                 else if (isHunger) word = (this.value == '1') ? 'Hunger Die' : 'Hunger Dice';
                 else if (isRemorse) word = (this.value == '1') ? 'Remorse Die' : 'Remorse Dice';
                 else if (isFrenzy) word = (this.value == '1') ? 'Frenzy Die' : 'Frenzy Dice';
+                else if (isRouse) word = (this.value == '1') ? 'Rouse Die' : 'Rouse Dice';
                 
                 const infoElement = isRegular ? regularInfo : 
                                   isHunger ? hungerInfo :
                                   isRemorse ? remorseInfo :
-                                  frenzyInfo;
+                                  isFrenzy ? frenzyInfo :
+                                  rouseInfo;
                 infoElement.innerHTML = this.value + ' ' + word;
             });
-        });
-
-        // Handle Rouse checkbox
-        rousePool.addEventListener('change', function() {
-            const value = this.checked ? '1' : '0';
-            rouseInfo.textContent = value + ' Rouse Die';
-            saveDiceSettings();
         });
 
         // Add keyboard navigation
@@ -398,7 +394,7 @@ function dice_initialize(container) {
 
     // Add touch event handling for sliders
     function setupTouchHandlers() {
-        const sliders = [regularPool, hungerPool, remorsePool, frenzyPool];
+        const sliders = [regularPool, hungerPool, remorsePool, frenzyPool, rousePool];
         sliders.forEach(slider => {
             slider.addEventListener('touchstart', function(e) {
                 e.preventDefault();
@@ -474,19 +470,30 @@ function dice_initialize(container) {
                 hunger: false,
                 rouse: false,
                 remorse: false,
-                frenzy: false
+                frenzy: false,
+                regular: true  // Regular dice is visible by default
             }
         };
 
         // Set initial values
         document.getElementById('regular_pool').value = settings.regular;
         document.getElementById('hunger_pool').value = settings.hunger;
-        document.getElementById('rouse_pool').checked = settings.rouse === 1;
+        document.getElementById('rouse_pool').value = settings.rouse;
         document.getElementById('remorse_pool').value = settings.remorse;
         document.getElementById('frenzy_pool').value = settings.frenzy;
 
         // Restore toggle states
         if (settings.toggles) {
+            // Handle regular dice visibility first
+            const regularControl = document.querySelector('.dice-control:not(.hidden-controls *)');
+            if (regularControl) {
+                if (!settings.toggles.regular) {
+                    regularControl.classList.add('hidden');
+                } else {
+                    regularControl.classList.remove('hidden');
+                }
+            }
+
             if (settings.toggles.hunger) {
                 document.querySelector('.hunger-control').classList.remove('hidden');
                 document.querySelector('[data-target="hunger"]').classList.add('active');
@@ -511,7 +518,7 @@ function dice_initialize(container) {
         // Add event listeners for sliders
         document.getElementById('regular_pool').addEventListener('input', updateDiceLabels);
         document.getElementById('hunger_pool').addEventListener('input', updateDiceLabels);
-        document.getElementById('rouse_pool').addEventListener('change', updateDiceLabels);
+        document.getElementById('rouse_pool').addEventListener('input', updateDiceLabels);
         document.getElementById('remorse_pool').addEventListener('input', updateDiceLabels);
         document.getElementById('frenzy_pool').addEventListener('input', updateDiceLabels);
 
@@ -523,11 +530,61 @@ function dice_initialize(container) {
                 const control = document.querySelector(`.${target}-control`);
                 
                 if (control.classList.contains('hidden')) {
+                    // For Remorse and Frenzy dice, hide all other controls and deactivate other toggles
+                    if (target === 'remorse' || target === 'frenzy') {
+                        // Hide all other controls
+                        document.querySelectorAll('.hunger-control, .rouse-control, .remorse-control, .frenzy-control, .dice-control:not(.hidden-controls *)').forEach(ctrl => {
+                            if (!ctrl.classList.contains(`${target}-control`)) {
+                                ctrl.classList.add('hidden');
+                            }
+                        });
+                        
+                        // Deactivate all other toggle buttons
+                        toggleButtons.forEach(btn => {
+                            if (btn !== button) {
+                                btn.classList.remove('active');
+                            }
+                        });
+                        
+                        // Reset all other dice values
+                        document.getElementById('regular_pool').value = '0';
+                        document.getElementById('hunger_pool').value = '0';
+                        document.getElementById('rouse_pool').value = '0';
+                        if (target === 'remorse') {
+                            document.getElementById('frenzy_pool').value = '0';
+                        } else {
+                            document.getElementById('remorse_pool').value = '0';
+                        }
+                    }
+                    // For Hunger and Rouse, hide Remorse and Frenzy controls and deactivate their toggles
+                    else if (target === 'hunger' || target === 'rouse') {
+                        // Hide Remorse and Frenzy controls
+                        document.querySelectorAll('.remorse-control, .frenzy-control').forEach(ctrl => {
+                            ctrl.classList.add('hidden');
+                        });
+                        
+                        // Deactivate Remorse and Frenzy toggle buttons
+                        document.querySelectorAll('[data-target="remorse"], [data-target="frenzy"]').forEach(btn => {
+                            btn.classList.remove('active');
+                        });
+                        
+                        // Reset Remorse and Frenzy values
+                        document.getElementById('remorse_pool').value = '0';
+                        document.getElementById('frenzy_pool').value = '0';
+
+                        // Ensure Regular dice control is visible
+                        document.querySelector('.dice-control:not(.hidden-controls *)').classList.remove('hidden');
+                        const regularSlider = document.getElementById('regular_pool');
+                        if (regularSlider.value === '0') {
+                            regularSlider.value = '1';
+                        }
+                    }
+                    
                     // Show control and set value to 1 if it was 0
                     control.classList.remove('hidden');
                     button.classList.add('active');
                     if (target === 'rouse') {
-                        document.getElementById('rouse_pool').checked = true;
+                        document.getElementById('rouse_pool').value = 1;
                         updateDiceLabels();
                     } else {
                         const slider = document.getElementById(`${target}_pool`);
@@ -541,10 +598,20 @@ function dice_initialize(container) {
                     control.classList.add('hidden');
                     button.classList.remove('active');
                     if (target === 'rouse') {
-                        document.getElementById('rouse_pool').checked = false;
+                        document.getElementById('rouse_pool').value = 0;
                     } else {
                         document.getElementById(`${target}_pool`).value = '0';
                     }
+                    
+                    // If turning off Remorse or Frenzy, show Regular dice control
+                    if (target === 'remorse' || target === 'frenzy') {
+                        document.querySelector('.dice-control:not(.hidden-controls *)').classList.remove('hidden');
+                        const regularSlider = document.getElementById('regular_pool');
+                        if (regularSlider.value === '0') {
+                            regularSlider.value = '1';
+                        }
+                    }
+                    
                     updateDiceLabels();
                 }
             });
@@ -554,12 +621,13 @@ function dice_initialize(container) {
     function updateDiceLabels() {
         const regular = document.getElementById('regular_pool').value;
         const hunger = document.getElementById('hunger_pool').value;
-        const rouse = document.getElementById('rouse_pool').checked ? 1 : 0;
+        const rouse = parseInt(document.getElementById('rouse_pool').value);
         const remorse = document.getElementById('remorse_pool').value;
         const frenzy = document.getElementById('frenzy_pool').value;
 
         document.getElementById('regular-info').textContent = `${regular} Regular Dice`;
         document.getElementById('hunger-info').textContent = `${hunger} Hunger Dice`;
+        document.getElementById('rouse-info').textContent = `${rouse} Rouse Dice`;
         document.getElementById('remorse-info').textContent = `${remorse} Remorse Dice`;
         document.getElementById('frenzy-info').textContent = `${frenzy} Frenzy Dice`;
 
@@ -571,14 +639,15 @@ function dice_initialize(container) {
         const settings = {
             regular: document.getElementById('regular_pool').value,
             hunger: document.getElementById('hunger_pool').value,
-            rouse: document.getElementById('rouse_pool').checked ? 1 : 0,
+            rouse: parseInt(document.getElementById('rouse_pool').value),
             remorse: document.getElementById('remorse_pool').value,
             frenzy: document.getElementById('frenzy_pool').value,
             toggles: {
                 hunger: !document.querySelector('.hunger-control').classList.contains('hidden'),
                 rouse: !document.querySelector('.rouse-control').classList.contains('hidden'),
                 remorse: !document.querySelector('.remorse-control').classList.contains('hidden'),
-                frenzy: !document.querySelector('.frenzy-control').classList.contains('hidden')
+                frenzy: !document.querySelector('.frenzy-control').classList.contains('hidden'),
+                regular: !document.querySelector('.dice-control:not(.hidden-controls *)').classList.contains('hidden')
             }
         };
         localStorage.setItem('diceSettings', JSON.stringify(settings));
@@ -717,7 +786,7 @@ function dice_initialize(container) {
     }
 
     function notation_getter() {
-        const rouseValue = rousePool.checked ? 1 : 0;
+        const rouseValue = parseInt(rousePool.value);
         return $t.dice.parse_notation(
             parseInt(regularPool.value),
             parseInt(hungerPool.value),
@@ -735,28 +804,56 @@ function dice_initialize(container) {
             if (!Array.isArray(result)) {
                 throw new Error('Invalid roll result format');
             }
+            
+            // Handle rouse checks - Check if we have rouse dice and there's a progeny manager available
+            const rouseCount = notation.rouseSet ? notation.rouseSet.length : 0;
+            if (rouseCount > 0 && window.progenyManager) {
+                // Get the rouse dice results (offset by regular and hunger dice)
+                const rouseStartIndex = notation.set.length + notation.hungerSet.length;
+                if (result.length > rouseStartIndex) {
+                    // Extract all rouse dice results
+                    const rouseResults = result.slice(rouseStartIndex, rouseStartIndex + rouseCount);
+                    
+                    // Only use handleRouseResults for Discipline power rolls
+                    if (window.progenyManager._currentPower && window.progenyManager._currentPower.rouseChecks > 0) {
+                        window.progenyManager.handleRouseResults(rouseResults);
+                    }
+                }
+            }
 
             let simpleAnkhs = 0;
             let hungerDoubleAnkhs = 0;
             let regularDoubleAnhks = 0;
             let bestialFailureCandidate = false;
+            let rouseSuccess = false;
             
             result.forEach((roll, i) => {
                 if (typeof roll !== 'number') {
                     throw new Error('Invalid roll value');
                 }
-                const isHunger = i >= notation.set.length;
-                if (6 <= roll && roll <= 9) {
-                    simpleAnkhs += 1;
-                }
-                if (isHunger && roll == 1) {
-                    bestialFailureCandidate = true;
-                }
-                if (roll == 0) {
-                    if (isHunger) {
-                        hungerDoubleAnkhs += 1;
-                    } else {
-                        regularDoubleAnhks += 1;
+                const isHunger = i >= notation.set.length && i < notation.set.length + notation.hungerSet.length;
+                const isRouse = i >= notation.set.length + notation.hungerSet.length && 
+                               i < notation.set.length + notation.hungerSet.length + notation.rouseSet.length;
+                
+                if (isRouse) {
+                    // Rouse check is successful on 6 or higher (including ✪ which is 0)
+                    if (roll >= 6 || roll === 0) {
+                        rouseSuccess = true;
+                    }
+                } else {
+                    // Only count successes for non-Rouse dice
+                    if (6 <= roll && roll <= 9) {
+                        simpleAnkhs += 1;
+                    }
+                    if (isHunger && roll == 1) {
+                        bestialFailureCandidate = true;
+                    }
+                    if (roll == 0) {
+                        if (isHunger) {
+                            hungerDoubleAnkhs += 1;
+                        } else {
+                            regularDoubleAnhks += 1;
+                        }
                     }
                 }
             });
@@ -784,20 +881,32 @@ function dice_initialize(container) {
 
             // Update interface with animation
             let newHtml = '';
-            if (successes > 0) {
-                newHtml += `${successes} Success`;
-                if (successes > 1) { newHtml += 'es'; }
-                if (messyCritical) {
-                    newHtml += ', <span class="messy-critical critical">Messy Critical</span>'
-                } else if (critical) {
-                    newHtml += ', <span class="critical">Critical</span>'
-                }
-            } else {
-                if (bestialFailure) {
-                    newHtml += '<span class="bestial-failure failure">Bestial Failure</span>';
+            const hasRegularOrHungerDice = notation.set.length > 0 || notation.hungerSet.length > 0;
+            
+            if (hasRegularOrHungerDice) {
+                if (successes > 0) {
+                    newHtml += `${successes} Success`;
+                    if (successes > 1) { newHtml += 'es'; }
+                    if (messyCritical) {
+                        newHtml += ', <span class="messy-critical critical">Messy Critical</span>'
+                    } else if (critical) {
+                        newHtml += ', <span class="critical">Critical</span>'
+                    }
                 } else {
-                    newHtml += '<span class="failure">Failure</span>';
+                    if (bestialFailure) {
+                        newHtml += '<span class="bestial-failure failure">Bestial Failure</span>';
+                    } else {
+                        newHtml += '<span class="failure">Failure</span>';
+                    }
                 }
+            }
+
+            // Add Rouse check result if present
+            if (notation.rouseSet && notation.rouseSet.length > 0) {
+                if (hasRegularOrHungerDice) {
+                    newHtml += '<br>';
+                }
+                newHtml += `<span class="${rouseSuccess ? 'success' : 'failure'}">Rouse Check: ${rouseSuccess ? 'Success' : 'Failure'}</span>`;
             }
 
             latestElement.innerHTML = newHtml;
@@ -834,6 +943,14 @@ function dice_initialize(container) {
             const isRemorseRoll = document.querySelector('.remorse-control:not(.hidden)') !== null;
             const isFrenzyRoll = document.querySelector('.frenzy-control:not(.hidden)') !== null;
             
+            // For Rouse checks, we need to check if any of the Rouse dice rolled 6 or higher
+            let rouseSuccesses = 0;
+            if (isRouseRoll && notation.rouseSet) {
+                const rouseStartIndex = notation.set.length + notation.hungerSet.length;
+                const rouseResults = result.slice(rouseStartIndex, rouseStartIndex + notation.rouseSet.length);
+                rouseSuccesses = rouseResults.some(r => r >= 6) ? 1 : 0;
+            }
+            
             window.dispatchEvent(new CustomEvent('diceRollComplete', {
                 detail: {
                     regularDice: parseInt(regularPool.value) || 0,
@@ -841,7 +958,7 @@ function dice_initialize(container) {
                     rouseDice: isRouseRoll ? 1 : 0,
                     remorseDice: parseInt(remorsePool.value) || 0,
                     frenzyDice: parseInt(frenzyPool.value) || 0,
-                    successes: successes,
+                    successes: isRouseRoll ? rouseSuccesses : successes,
                     critical: critical,
                     messyCritical: messyCritical,
                     bestialFailure: bestialFailure,

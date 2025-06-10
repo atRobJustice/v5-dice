@@ -25,7 +25,24 @@
                 <span id="regular-info" class="dice-info">0 Regular Dice</span>
                 <input type="range" min="0" max="20" value="0" class="slider slider-regular" id="regular_pool">
             </div>
-            
+            <div class="hidden-controls">
+                <div class="dice-control hunger-control hidden">
+                    <span id="hunger-info" class="dice-info">0 Hunger Dice</span>
+                    <input type="range" min="0" max="5" value="0" class="slider slider-hunger" id="hunger_pool">
+                </div>
+                <div class="dice-control rouse-control hidden">
+                    <span id="rouse-info" class="dice-info">0 Rouse Dice</span>
+                    <input type="range" min="0" max="3" value="0" class="slider slider-rouse" id="rouse_pool">
+                </div>
+                <div class="dice-control remorse-control hidden">
+                    <span id="remorse-info" class="dice-info">0 Remorse Dice</span>
+                    <input type="range" min="0" max="10" value="0" class="slider slider-remorse" id="remorse_pool">
+                </div>
+                <div class="dice-control frenzy-control hidden">
+                    <span id="frenzy-info" class="dice-info">0 Frenzy Dice</span>
+                    <input type="range" min="0" max="15" value="0" class="slider slider-frenzy" id="frenzy_pool">
+                </div>
+            </div>
             <!-- Special dice toggles -->
             <div class="special-dice-controls">
                 <button class="dice-toggle" data-target="hunger">
@@ -40,26 +57,6 @@
                 <button class="dice-toggle" data-target="frenzy">
                     <span class="toggle-label">Frenzy</span>
                 </button>
-            </div>
-
-            <!-- Hidden controls that appear when toggles are active -->
-            <div class="hidden-controls">
-                <div class="dice-control hunger-control hidden">
-                    <span id="hunger-info" class="dice-info">0 Hunger Dice</span>
-                    <input type="range" min="0" max="5" value="0" class="slider slider-hunger" id="hunger_pool">
-                </div>
-                <div class="dice-control rouse-control hidden">
-                    <span id="rouse-info" class="dice-info">Rouse Check</span>
-                    <input type="checkbox" id="rouse_pool" class="dice-checkbox">
-                </div>
-                <div class="dice-control remorse-control hidden">
-                    <span id="remorse-info" class="dice-info">0 Remorse Dice</span>
-                    <input type="range" min="0" max="10" value="0" class="slider slider-remorse" id="remorse_pool">
-                </div>
-                <div class="dice-control frenzy-control hidden">
-                    <span id="frenzy-info" class="dice-info">0 Frenzy Dice</span>
-                    <input type="range" min="0" max="15" value="0" class="slider slider-frenzy" id="frenzy_pool">
-                </div>
             </div>
         </div>
 
@@ -115,7 +112,7 @@
                     <p><span class="hunger">✪</span> + <span class="regular">✪</span> or <span class="hunger">✪</span> - Messy Critical (+4)</p>
                 </div>
                 <div class="version-info">
-                    <span>Version 0.5.7</span>
+                    <span>Version 0.5.8</span>
                 </div>
             </div>
         </div>

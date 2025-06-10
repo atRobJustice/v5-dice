@@ -917,6 +917,25 @@
     margin-bottom: 4px;
   }
   
+  .power-controls {
+    margin: 4px 0;
+  }
+  
+  .roll-power {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 3px 8px;
+    font-size: 0.8em;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  
+  .roll-power:hover {
+    background-color: #7a5a42;
+  }
+  
   .power-details, .merit-details, .flaw-details {
     font-size: 0.9em;
     color: var(--text-color);

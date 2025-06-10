@@ -263,7 +263,8 @@ class ProgenyManager {
                     name: discipline.name,
                     level: discipline.level,
                     dicePool: discipline.dicePool,
-                    summary: discipline.summary
+                    summary: discipline.summary,
+                    rouseChecks: discipline.rouseChecks || 0
                 });
             });
 
@@ -436,31 +437,1167 @@ class ProgenyManager {
     }
 
     addPower(discipline) {
-        const name = prompt('Enter power name:');
-        if (!name) return;
-
-        const level = parseInt(prompt('Enter power level (1-5):'));
-        if (isNaN(level) || level < 1 || level > 5) {
-            alert('Invalid level. Please enter a number between 1 and 5.');
+        this.createPowerModal(discipline, (power) => {
+            if (!power) return; // User cancelled
+            
+            this.character.disciplines[discipline].push(power);
+            this.displayCharacterStats();
+            this.showNotification(`Added ${power.name} power to ${discipline}`);
+        });
+    }
+    
+    createPowerModal(discipline, callback) {
+        // Create modal container
+        const modal = document.createElement('div');
+        modal.className = 'power-modal';
+        modal.style.position = 'fixed';
+        modal.style.top = '0';
+        modal.style.left = '0';
+        modal.style.width = '100%';
+        modal.style.height = '100%';
+        modal.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+        modal.style.display = 'flex';
+        modal.style.justifyContent = 'center';
+        modal.style.alignItems = 'center';
+        modal.style.zIndex = '1000';
+        
+        // Create modal content
+        const content = document.createElement('div');
+        content.className = 'power-modal-content';
+        content.style.backgroundColor = '#242424';
+        content.style.padding = '20px';
+        content.style.borderRadius = '5px';
+        content.style.maxWidth = '500px';
+        content.style.width = '90%';
+        content.style.maxHeight = '80vh';
+        content.style.overflowY = 'auto';
+        
+        // Header
+        const header = document.createElement('h3');
+        header.textContent = `Add Power to ${this.formatName(discipline)}`;
+        header.style.marginTop = '0';
+        content.appendChild(header);
+        
+        // Power Name
+        const nameLabel = document.createElement('label');
+        nameLabel.textContent = 'Power Name:';
+        nameLabel.style.display = 'block';
+        nameLabel.style.marginBottom = '5px';
+        nameLabel.style.fontWeight = 'bold';
+        content.appendChild(nameLabel);
+        
+        const nameInput = document.createElement('input');
+        nameInput.type = 'text';
+        nameInput.style.width = '100%';
+        nameInput.style.padding = '8px';
+        nameInput.style.marginBottom = '15px';
+        nameInput.style.backgroundColor = '#333';
+        nameInput.style.color = '#fff';
+        nameInput.style.border = '1px solid #555';
+        nameInput.style.borderRadius = '3px';
+        content.appendChild(nameInput);
+        
+        // Power Level
+        const levelLabel = document.createElement('label');
+        levelLabel.textContent = 'Power Level (1-5):';
+        levelLabel.style.display = 'block';
+        levelLabel.style.marginBottom = '5px';
+        levelLabel.style.fontWeight = 'bold';
+        content.appendChild(levelLabel);
+        
+        const levelSelect = document.createElement('select');
+        levelSelect.style.width = '100%';
+        levelSelect.style.padding = '8px';
+        levelSelect.style.marginBottom = '15px';
+        levelSelect.style.backgroundColor = '#333';
+        levelSelect.style.color = '#fff';
+        levelSelect.style.border = '1px solid #555';
+        levelSelect.style.borderRadius = '3px';
+        
+        for (let i = 1; i <= 5; i++) {
+            const option = document.createElement('option');
+            option.value = i;
+            option.textContent = i;
+            levelSelect.appendChild(option);
+        }
+        
+        content.appendChild(levelSelect);
+        
+        // Rouse Checks
+        const rouseLabel = document.createElement('label');
+        rouseLabel.textContent = 'Rouse Checks (0-3):';
+        rouseLabel.style.display = 'block';
+        rouseLabel.style.marginBottom = '5px';
+        rouseLabel.style.fontWeight = 'bold';
+        content.appendChild(rouseLabel);
+        
+        const rouseSelect = document.createElement('select');
+        rouseSelect.style.width = '100%';
+        rouseSelect.style.padding = '8px';
+        rouseSelect.style.marginBottom = '15px';
+        rouseSelect.style.backgroundColor = '#333';
+        rouseSelect.style.color = '#fff';
+        rouseSelect.style.border = '1px solid #555';
+        rouseSelect.style.borderRadius = '3px';
+        
+        for (let i = 0; i <= 3; i++) {
+            const option = document.createElement('option');
+            option.value = i;
+            option.textContent = i;
+            rouseSelect.appendChild(option);
+        }
+        
+        content.appendChild(rouseSelect);
+        
+        // Dice Pool Section
+        const dicePoolLabel = document.createElement('h4');
+        dicePoolLabel.textContent = 'Dice Pool';
+        dicePoolLabel.style.marginTop = '20px';
+        dicePoolLabel.style.marginBottom = '10px';
+        content.appendChild(dicePoolLabel);
+        
+        // Define options
+        const attributes = ['Strength', 'Dexterity', 'Stamina', 'Charisma', 'Manipulation', 'Composure', 'Intelligence', 'Wits', 'Resolve'];
+        const skills = ['Athletics', 'Brawl', 'Craft', 'Drive', 'Firearms', 'Melee', 'Larceny', 'Stealth', 'Survival', 
+                        'Animal Ken', 'Etiquette', 'Insight', 'Intimidation', 'Leadership', 'Performance', 'Persuasion', 'Streetwise', 'Subterfuge',
+                        'Academics', 'Awareness', 'Finance', 'Investigation', 'Medicine', 'Occult', 'Politics', 'Science', 'Technology'];
+        const disciplines = ['Animalism', 'Auspex', 'Blood Sorcery', 'Celerity', 'Dominate', 'Fortitude', 'Obfuscate', 'Oblivion', 'Potence', 
+                             'Presence', 'Protean', 'Thin-Blood Alchemy'];
+        
+        // First die section (always attribute)
+        const firstDieLabel = document.createElement('label');
+        firstDieLabel.textContent = 'Primary Attribute:';
+        firstDieLabel.style.display = 'block';
+        firstDieLabel.style.marginBottom = '5px';
+        firstDieLabel.style.fontWeight = 'bold';
+        content.appendChild(firstDieLabel);
+        
+        const firstDieSelect = document.createElement('select');
+        firstDieSelect.id = 'first-die';
+        firstDieSelect.style.width = '100%';
+        firstDieSelect.style.padding = '8px';
+        firstDieSelect.style.marginBottom = '15px';
+        firstDieSelect.style.backgroundColor = '#333';
+        firstDieSelect.style.color = '#fff';
+        firstDieSelect.style.border = '1px solid #555';
+        firstDieSelect.style.borderRadius = '3px';
+        
+        // Add empty option
+        const emptyOption = document.createElement('option');
+        emptyOption.value = '';
+        emptyOption.textContent = '-- Select Attribute --';
+        firstDieSelect.appendChild(emptyOption);
+        
+        // Add attribute options
+        attributes.forEach(attr => {
+            const option = document.createElement('option');
+            option.value = attr;
+            option.textContent = attr;
+            firstDieSelect.appendChild(option);
+        });
+        
+        content.appendChild(firstDieSelect);
+        
+        // Secondary first die (optional)
+        const secondaryFirstLabel = document.createElement('label');
+        secondaryFirstLabel.textContent = 'Secondary Attribute (Optional):';
+        secondaryFirstLabel.style.display = 'block';
+        secondaryFirstLabel.style.marginBottom = '5px';
+        secondaryFirstLabel.style.fontWeight = 'bold';
+        content.appendChild(secondaryFirstLabel);
+        
+        const secondaryFirstSelect = document.createElement('select');
+        secondaryFirstSelect.id = 'secondary-first-die';
+        secondaryFirstSelect.style.width = '100%';
+        secondaryFirstSelect.style.padding = '8px';
+        secondaryFirstSelect.style.marginBottom = '15px';
+        secondaryFirstSelect.style.backgroundColor = '#333';
+        secondaryFirstSelect.style.color = '#fff';
+        secondaryFirstSelect.style.border = '1px solid #555';
+        secondaryFirstSelect.style.borderRadius = '3px';
+        
+        // Add empty option for "None"
+        const emptySecondaryOption = document.createElement('option');
+        emptySecondaryOption.value = '';
+        emptySecondaryOption.textContent = '-- None --';
+        secondaryFirstSelect.appendChild(emptySecondaryOption);
+        
+        // Add attribute options
+        attributes.forEach(attr => {
+            const option = document.createElement('option');
+            option.value = attr;
+            option.textContent = attr;
+            secondaryFirstSelect.appendChild(option);
+        });
+        
+        content.appendChild(secondaryFirstSelect);
+        
+        // Second die section (attribute, skill, or discipline)
+        const secondDieLabel = document.createElement('label');
+        secondDieLabel.textContent = 'Second Die Type:';
+        secondDieLabel.style.display = 'block';
+        secondDieLabel.style.marginBottom = '5px';
+        secondDieLabel.style.fontWeight = 'bold';
+        content.appendChild(secondDieLabel);
+        
+        const secondDieTypeSelect = document.createElement('select');
+        secondDieTypeSelect.id = 'second-die-type';
+        secondDieTypeSelect.style.width = '100%';
+        secondDieTypeSelect.style.padding = '8px';
+        secondDieTypeSelect.style.marginBottom = '15px';
+        secondDieTypeSelect.style.backgroundColor = '#333';
+        secondDieTypeSelect.style.color = '#fff';
+        secondDieTypeSelect.style.border = '1px solid #555';
+        secondDieTypeSelect.style.borderRadius = '3px';
+        
+        // Add options for second die type
+        const typeOptions = [
+            { value: '', text: '-- None --' },
+            { value: 'attribute', text: 'Attribute' },
+            { value: 'skill', text: 'Skill' },
+            { value: 'discipline', text: 'Discipline' }
+        ];
+        
+        typeOptions.forEach(opt => {
+            const option = document.createElement('option');
+            option.value = opt.value;
+            option.textContent = opt.text;
+            secondDieTypeSelect.appendChild(option);
+        });
+        
+        content.appendChild(secondDieTypeSelect);
+        
+        // Container for second die options (will be populated based on type selection)
+        const secondDieOptionsContainer = document.createElement('div');
+        secondDieOptionsContainer.id = 'second-die-options';
+        content.appendChild(secondDieOptionsContainer);
+        
+        // Power Summary
+        const summaryLabel = document.createElement('label');
+        summaryLabel.textContent = 'Power Summary:';
+        summaryLabel.style.display = 'block';
+        summaryLabel.style.marginTop = '20px';
+        summaryLabel.style.marginBottom = '5px';
+        summaryLabel.style.fontWeight = 'bold';
+        content.appendChild(summaryLabel);
+        
+        const summaryTextarea = document.createElement('textarea');
+        summaryTextarea.style.width = '100%';
+        summaryTextarea.style.height = '100px';
+        summaryTextarea.style.padding = '8px';
+        summaryTextarea.style.marginBottom = '20px';
+        summaryTextarea.style.backgroundColor = '#333';
+        summaryTextarea.style.color = '#fff';
+        summaryTextarea.style.border = '1px solid #555';
+        summaryTextarea.style.borderRadius = '3px';
+        summaryTextarea.style.resize = 'vertical';
+        content.appendChild(summaryTextarea);
+        
+        // Buttons
+        const buttonContainer = document.createElement('div');
+        buttonContainer.style.display = 'flex';
+        buttonContainer.style.justifyContent = 'space-between';
+        
+        const cancelButton = document.createElement('button');
+        cancelButton.textContent = 'Cancel';
+        cancelButton.className = 'progeny-button';
+        cancelButton.style.padding = '8px 15px';
+        cancelButton.addEventListener('click', () => {
+            document.body.removeChild(modal);
+            callback(null);
+        });
+        buttonContainer.appendChild(cancelButton);
+        
+        const saveButton = document.createElement('button');
+        saveButton.textContent = 'Save Power';
+        saveButton.className = 'progeny-button';
+        saveButton.style.padding = '8px 15px';
+        saveButton.addEventListener('click', () => {
+            // Validate required fields
+            const name = nameInput.value.trim();
+            if (!name) {
+                alert('Power name is required');
+                return;
+            }
+            
+            const level = parseInt(levelSelect.value);
+            const rouseChecks = parseInt(rouseSelect.value);
+            const summary = summaryTextarea.value.trim();
+            
+            if (!summary) {
+                alert('Power summary is required');
+                return;
+            }
+            
+            // Build the dice pool string
+            const firstDie = firstDieSelect.value;
+            const secondaryFirst = secondaryFirstSelect.value;
+            const secondDieType = secondDieTypeSelect.value;
+            let secondDie = '';
+            let secondarySecond = '';
+            
+            // Get second die value based on the selected type
+            if (secondDieType) {
+                const secondDieSelect = document.getElementById('second-die-value');
+                secondDie = secondDieSelect ? secondDieSelect.value : '';
+                
+                const secondarySecondSelect = document.getElementById('secondary-second-die');
+                secondarySecond = secondarySecondSelect ? secondarySecondSelect.value : '';
+            }
+            
+            // Build the dice pool string
+            let dicePool = '';
+            
+            // First die part
+            if (firstDie) {
+                dicePool += firstDie;
+                if (secondaryFirst) {
+                    dicePool += ' / ' + secondaryFirst;
+                }
+            }
+            
+            // Second die part
+            if (secondDie) {
+                dicePool += ' + ' + secondDie;
+                if (secondarySecond) {
+                    dicePool += ' / ' + secondarySecond;
+                }
+            }
+            
+            const power = {
+                name,
+                level,
+                dicePool,
+                summary,
+                rouseChecks,
+                description: ''
+            };
+            
+            document.body.removeChild(modal);
+            callback(power);
+        });
+        buttonContainer.appendChild(saveButton);
+        
+        content.appendChild(buttonContainer);
+        modal.appendChild(content);
+        document.body.appendChild(modal);
+        
+        // Focus the name input
+        nameInput.focus();
+        
+        // Event listener for second die type selection
+        secondDieTypeSelect.addEventListener('change', () => {
+            const container = document.getElementById('second-die-options');
+            container.innerHTML = ''; // Clear existing options
+            
+            const selectedType = secondDieTypeSelect.value;
+            if (!selectedType) return; // No type selected
+            
+            // Create selection for the second die
+            const secondDieLabel = document.createElement('label');
+            secondDieLabel.textContent = `Select ${selectedType.charAt(0).toUpperCase() + selectedType.slice(1)}:`;
+            secondDieLabel.style.display = 'block';
+            secondDieLabel.style.marginBottom = '5px';
+            secondDieLabel.style.fontWeight = 'bold';
+            container.appendChild(secondDieLabel);
+            
+            const secondDieSelect = document.createElement('select');
+            secondDieSelect.id = 'second-die-value';
+            secondDieSelect.style.width = '100%';
+            secondDieSelect.style.padding = '8px';
+            secondDieSelect.style.marginBottom = '15px';
+            secondDieSelect.style.backgroundColor = '#333';
+            secondDieSelect.style.color = '#fff';
+            secondDieSelect.style.border = '1px solid #555';
+            secondDieSelect.style.borderRadius = '3px';
+            
+            // Add empty option
+            const emptyOption = document.createElement('option');
+            emptyOption.value = '';
+            emptyOption.textContent = `-- Select ${selectedType.charAt(0).toUpperCase() + selectedType.slice(1)} --`;
+            secondDieSelect.appendChild(emptyOption);
+            
+            // Add options based on selected type
+            let options = [];
+            if (selectedType === 'attribute') options = attributes;
+            else if (selectedType === 'skill') options = skills;
+            else if (selectedType === 'discipline') options = disciplines;
+            
+            options.forEach(opt => {
+                const option = document.createElement('option');
+                option.value = opt;
+                option.textContent = opt;
+                secondDieSelect.appendChild(option);
+            });
+            
+            container.appendChild(secondDieSelect);
+            
+            // Add secondary option (if attribute or discipline)
+            if (selectedType === 'attribute' || selectedType === 'skill' || selectedType === 'discipline') {
+                const secondaryLabel = document.createElement('label');
+                secondaryLabel.textContent = `Secondary ${selectedType.charAt(0).toUpperCase() + selectedType.slice(1)} (Optional):`;
+                secondaryLabel.style.display = 'block';
+                secondaryLabel.style.marginBottom = '5px';
+                secondaryLabel.style.fontWeight = 'bold';
+                container.appendChild(secondaryLabel);
+                
+                const secondarySelect = document.createElement('select');
+                secondarySelect.id = 'secondary-second-die';
+                secondarySelect.style.width = '100%';
+                secondarySelect.style.padding = '8px';
+                secondarySelect.style.backgroundColor = '#333';
+                secondarySelect.style.color = '#fff';
+                secondarySelect.style.border = '1px solid #555';
+                secondarySelect.style.borderRadius = '3px';
+                
+                // Add empty option for "None"
+                const emptySecondaryOption = document.createElement('option');
+                emptySecondaryOption.value = '';
+                emptySecondaryOption.textContent = '-- None --';
+                secondarySelect.appendChild(emptySecondaryOption);
+                
+                // Add options
+                options.forEach(opt => {
+                    const option = document.createElement('option');
+                    option.value = opt;
+                    option.textContent = opt;
+                    secondarySelect.appendChild(option);
+                });
+                
+                container.appendChild(secondarySelect);
+            }
+        });
+    }
+    
+    rollDisciplinePower(discipline, power) {
+        if (!power.dicePool) {
+            this.showNotification("This power doesn't have a dice pool defined");
             return;
         }
+        
+        // Parse the dice pool string
+        this.parseDicePool(power.dicePool, (dicePoolComponents) => {
+            if (!dicePoolComponents) return; // User cancelled
+            
+            // Temporarily set selectedStat and secondStat to the dice pool components
+            const savedSelectedStat = this.selectedStat;
+            const savedSecondStat = this.secondStat;
+            
+            // Set the first die component
+            this.selectedStat = dicePoolComponents.firstDie;
+            
+            // Set the second die component (if any)
+            this.secondStat = dicePoolComponents.secondDie || null;
+            
+            // Calculate the dice pool manually to ensure correct values
+            let totalRegularDice = 0;
+            let firstDiceValue = 0;
+            let secondDiceValue = 0;
+            
+            // Add debug info
+            console.log('Dice Pool Components:', dicePoolComponents);
+            
+            // First die (attribute)
+            if (dicePoolComponents.firstDie && this.character.attributes[dicePoolComponents.firstDie] !== undefined) {
+                firstDiceValue = this.character.attributes[dicePoolComponents.firstDie];
+                totalRegularDice += firstDiceValue;
+                console.log(`First die (${dicePoolComponents.firstDie}): ${firstDiceValue}`);
+            }
+            
+            // Second die (attribute, skill, or discipline)
+            if (dicePoolComponents.secondDie) {
+                // Check if second die is an attribute
+                if (this.character.attributes[dicePoolComponents.secondDie] !== undefined) {
+                    secondDiceValue = this.character.attributes[dicePoolComponents.secondDie];
+                    console.log(`Second die (${dicePoolComponents.secondDie} - attribute): ${secondDiceValue}`);
+                }
+                // Check if second die is a skill
+                else if (this.character.skills[dicePoolComponents.secondDie] !== undefined) {
+                    secondDiceValue = this.character.skills[dicePoolComponents.secondDie];
+                    console.log(`Second die (${dicePoolComponents.secondDie} - skill): ${secondDiceValue}`);
+                    
+                    // Check for specialty bonus
+                    if (this.character.skillSpecialties) {
+                        const hasSpecialty = this.character.skillSpecialties.some(
+                            specialty => specialty.skill === dicePoolComponents.secondDie
+                        );
+                        
+                        if (hasSpecialty) {
+                            console.log(`Adding specialty bonus for ${dicePoolComponents.secondDie}`);
+                            secondDiceValue += 1; // Add +1 for specialty
+                        }
+                    }
+                }
+                // Check if second die is a discipline
+                else {
+                    // Debug: Log all available disciplines
+                    console.log('Available disciplines:', Object.keys(this.character.disciplines));
+                    console.log('Looking for discipline:', dicePoolComponents.secondDie);
+                    
+                    // Map standard discipline names to ensure consistent matching
+                    const disciplineMap = {
+                        'animalism': 'Animalism',
+                        'auspex': 'Auspex',
+                        'celerity': 'Celerity',
+                        'dominate': 'Dominate',
+                        'fortitude': 'Fortitude',
+                        'obfuscate': 'Obfuscate',
+                        'potence': 'Potence', 
+                        'presence': 'Presence',
+                        'protean': 'Protean',
+                        'blood sorcery': 'Blood Sorcery',
+                        'thin-blood alchemy': 'Thin-Blood Alchemy'
+                    };
+                    
+                    // Check if we have a standard discipline name
+                    const standardName = disciplineMap[dicePoolComponents.secondDie.toLowerCase()];
+                    if (standardName && this.character.disciplines[standardName]) {
+                        console.log(`Matched standard discipline name: ${standardName}`);
+                        dicePoolComponents.secondDie = standardName;
+                    }
+                    
+                    // Try case-insensitive matching for disciplines
+                    const disciplineKey = Object.keys(this.character.disciplines).find(
+                        d => d.toLowerCase() === dicePoolComponents.secondDie.toLowerCase()
+                    );
+                    
+                    if (disciplineKey) {
+                        console.log(`Found discipline match: ${disciplineKey}`);
+                        const powers = this.character.disciplines[disciplineKey];
+                        if (powers && powers.length > 0) {
+                            // Log all power details to debug
+                            console.log('Powers:', powers);
+                            
+                            // Count the number of powers in the discipline
+                            secondDiceValue = powers.length;
+                            console.log(`Second die (${disciplineKey} - discipline): ${secondDiceValue} (count of powers)`)
+                        }
+                    } else {
+                        console.log(`Discipline not found: ${dicePoolComponents.secondDie}`);
+                        // Try a more flexible approach - look for any discipline containing the name
+                        const partialMatch = Object.keys(this.character.disciplines).find(
+                            d => d.toLowerCase().includes(dicePoolComponents.secondDie.toLowerCase()) ||
+                                 dicePoolComponents.secondDie.toLowerCase().includes(d.toLowerCase())
+                        );
+                        
+                        if (partialMatch) {
+                            console.log(`Found partial discipline match: ${partialMatch}`);
+                            const powers = this.character.disciplines[partialMatch];
+                            if (powers && powers.length > 0) {
+                                // Count the number of powers in the discipline
+                                secondDiceValue = powers.length;
+                                console.log(`Second die (${partialMatch} - discipline, partial match): ${secondDiceValue} (count of powers)`)
+                            }
+                        }
+                    }
+                }
+                
+                totalRegularDice += secondDiceValue;
+            }
+            
+            console.log(`Total dice: ${firstDiceValue} + ${secondDiceValue} = ${totalRegularDice}`);
+            
+            // Calculate hunger dice
+            const hungerDice = Math.min(totalRegularDice, this.character.hunger || 0);
+            
+            // Calculate final dice pools (hunger dice replace regular dice)
+            const finalRegularDice = Math.max(0, totalRegularDice - hungerDice);
+            
+            // Get rouse checks
+            const rouseChecks = power.rouseChecks || 0;
+            
+            // Update the hidden input fields used by the 3D dice roller
+            document.getElementById('regular_pool').value = finalRegularDice;
+            document.getElementById('hunger_pool').value = hungerDice;
+            
+            // Handle rouse slider
+            const rouseSlider = document.getElementById('rouse_pool');
+            if (rouseSlider) {
+                rouseSlider.value = rouseChecks;
+            }
+            
+            // Update display text if needed
+            const regularInfo = document.getElementById('regular-info');
+            const hungerInfo = document.getElementById('hunger-info');
+            if (regularInfo && hungerInfo) {
+                regularInfo.textContent = `${finalRegularDice} Regular Dice`;
+                hungerInfo.textContent = `${hungerDice} Hunger Dice`;
+            }
+            
+            // Show what we're rolling
+            this.showNotification(`Rolling ${power.name}: ${totalRegularDice} dice (${firstDiceValue} + ${secondDiceValue}) with ${hungerDice} hunger${rouseChecks > 0 ? ` and ${rouseChecks} rouse` : ''}`);
+            
+            // Close the modal
+            const modal = document.getElementById('progeny-modal');
+            if (modal) {
+                modal.classList.add('hidden');
+            }
+            
+            // Store the current discipline power so we can refer to it after roll
+            this._currentPower = {
+                discipline,
+                power,
+                rouseChecks
+            };
+            
+            // Get the dice box instance from the global window object
+            const box = window.box;
+            if (box && box.start_throw) {
+                // Call start_throw with all the dice pools
+                box.start_throw(
+                    function() {
+                        const rouseValue = parseInt(document.getElementById('rouse_pool').value);
+                        return $t.dice.parse_notation(
+                            parseInt(document.getElementById('regular_pool').value),
+                            parseInt(document.getElementById('hunger_pool').value),
+                            rouseValue,
+                            0, // No remorse dice
+                            0  // No frenzy dice
+                        );
+                    },
+                    window.before_roll,
+                    window.after_roll
+                );
+            }
+            
+            // Restore the original selected stats
+            this.selectedStat = savedSelectedStat;
+            this.secondStat = savedSecondStat;
+        });
+    }
+    
+    parseDicePool(dicePoolString, callback) {
+        // If no dice pool, return empty components
+        if (!dicePoolString || dicePoolString.trim() === '') {
+            callback(null);
+            return;
+        }
+        
+        // Normalize the dice pool string (remove extra spaces, standardize +)
+        const normalizedString = dicePoolString
+            .replace(/\s+/g, ' ')           // Standardize spaces
+            .replace(/\s*\+\s*/g, '+')      // Remove spaces around '+'
+            .trim();
+            
+        console.log('Normalized dice pool string:', normalizedString);
+        
+        // Simple case: no choices needed
+        if (!normalizedString.includes('/')) {
+            // Parse the standard format: "Attribute + Skill"
+            const parts = normalizedString.split('+').map(p => p.trim());
+            const firstDie = this.formatStatName(parts[0]);
+            const secondDie = parts.length > 1 ? this.formatStatName(parts[1]) : null;
+            
+            console.log('Parsed dice pool components:', { firstDie, secondDie });
+            
+            callback({
+                firstDie,
+                secondDie
+            });
+            return;
+        }
+        
+        // Complex case: choices needed
+        // Parse the string to find all choices
+        const dicePoolParts = normalizedString.split('+').map(p => p.trim());
+        
+        // Parse first die choices
+        const firstDiePart = dicePoolParts[0];
+        const firstDieChoices = firstDiePart.split('/').map(p => this.formatStatName(p.trim()));
+        
+        // Parse second die choices (if any)
+        let secondDieChoices = [];
+        if (dicePoolParts.length > 1) {
+            const secondDiePart = dicePoolParts[1];
+            secondDieChoices = secondDiePart.split('/').map(p => this.formatStatName(p.trim()));
+        }
+        
+        console.log('Choices:', { firstDieChoices, secondDieChoices });
+        
+        // If we have choices, show a modal to select
+        this.showDicePoolChoicesModal(firstDieChoices, secondDieChoices, callback);
+    }
+    
+    formatStatName(name) {
+        if (!name) return name;
+        
+        // Capitalize first letter of each word
+        return name.split(' ')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+            .join(' ');
+    }
+    
+    showDicePoolChoicesModal(firstDieChoices, secondDieChoices, callback) {
+        // Create modal container
+        const modal = document.createElement('div');
+        modal.className = 'dice-pool-choices-modal';
+        modal.style.position = 'fixed';
+        modal.style.top = '0';
+        modal.style.left = '0';
+        modal.style.width = '100%';
+        modal.style.height = '100%';
+        modal.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+        modal.style.display = 'flex';
+        modal.style.justifyContent = 'center';
+        modal.style.alignItems = 'center';
+        modal.style.zIndex = '1000';
+        
+        // Create modal content
+        const content = document.createElement('div');
+        content.className = 'dice-pool-choices-content';
+        content.style.backgroundColor = '#242424';
+        content.style.padding = '20px';
+        content.style.borderRadius = '5px';
+        content.style.maxWidth = '400px';
+        content.style.width = '90%';
+        
+        // Header
+        const header = document.createElement('h3');
+        header.textContent = 'Select Dice Pool Components';
+        header.style.marginTop = '0';
+        content.appendChild(header);
+        
+        // First die selection
+        if (firstDieChoices.length > 1) {
+            const firstDieLabel = document.createElement('label');
+            firstDieLabel.textContent = 'Select First Component:';
+            firstDieLabel.style.display = 'block';
+            firstDieLabel.style.marginBottom = '5px';
+            firstDieLabel.style.fontWeight = 'bold';
+            content.appendChild(firstDieLabel);
+            
+            const firstDieSelect = document.createElement('select');
+            firstDieSelect.id = 'first-die-choice';
+            firstDieSelect.style.width = '100%';
+            firstDieSelect.style.padding = '8px';
+            firstDieSelect.style.marginBottom = '15px';
+            firstDieSelect.style.backgroundColor = '#333';
+            firstDieSelect.style.color = '#fff';
+            firstDieSelect.style.border = '1px solid #555';
+            
+            firstDieChoices.forEach(choice => {
+                const option = document.createElement('option');
+                option.value = choice;
+                option.textContent = choice;
+                firstDieSelect.appendChild(option);
+            });
+            
+            content.appendChild(firstDieSelect);
+        }
+        
+        // Second die selection
+        if (secondDieChoices.length > 1) {
+            const secondDieLabel = document.createElement('label');
+            secondDieLabel.textContent = 'Select Second Component:';
+            secondDieLabel.style.display = 'block';
+            secondDieLabel.style.marginBottom = '5px';
+            secondDieLabel.style.fontWeight = 'bold';
+            content.appendChild(secondDieLabel);
+            
+            const secondDieSelect = document.createElement('select');
+            secondDieSelect.id = 'second-die-choice';
+            secondDieSelect.style.width = '100%';
+            secondDieSelect.style.padding = '8px';
+            secondDieSelect.style.marginBottom = '15px';
+            secondDieSelect.style.backgroundColor = '#333';
+            secondDieSelect.style.color = '#fff';
+            secondDieSelect.style.border = '1px solid #555';
+            
+            secondDieChoices.forEach(choice => {
+                const option = document.createElement('option');
+                option.value = choice;
+                option.textContent = choice;
+                secondDieSelect.appendChild(option);
+            });
+            
+            content.appendChild(secondDieSelect);
+        }
+        
+        // Buttons
+        const buttonContainer = document.createElement('div');
+        buttonContainer.style.display = 'flex';
+        buttonContainer.style.justifyContent = 'space-between';
+        buttonContainer.style.marginTop = '20px';
+        
+        const cancelButton = document.createElement('button');
+        cancelButton.textContent = 'Cancel';
+        cancelButton.className = 'progeny-button';
+        cancelButton.style.padding = '8px 15px';
+        cancelButton.addEventListener('click', () => {
+            document.body.removeChild(modal);
+            callback(null);
+        });
+        buttonContainer.appendChild(cancelButton);
+        
+        const rollButton = document.createElement('button');
+        rollButton.textContent = 'Roll';
+        rollButton.className = 'progeny-button';
+        rollButton.style.padding = '8px 15px';
+        rollButton.addEventListener('click', () => {
+            // Get selected values
+            const firstDie = firstDieChoices.length > 1 
+                ? document.getElementById('first-die-choice').value 
+                : firstDieChoices[0];
+                
+            const secondDie = secondDieChoices.length > 1 
+                ? document.getElementById('second-die-choice').value 
+                : secondDieChoices[0] || null;
+            
+            document.body.removeChild(modal);
+            callback({
+                firstDie,
+                secondDie
+            });
+        });
+        buttonContainer.appendChild(rollButton);
+        
+        content.appendChild(buttonContainer);
+        modal.appendChild(content);
+        document.body.appendChild(modal);
+    }
+    
+    // This method should be called from main.js after dice are rolled
+    handleRouseResults(results) {
+        // Only process if we have a current power with rouse checks
+        if (!this._currentPower || this._currentPower.rouseChecks <= 0) return;
+        
+        // If results isn't an array, make it one
+        if (!Array.isArray(results)) {
+            results = [results];
+        }
+        
+        // Count failures (below 6) and successes
+        const failures = results.filter(result => result < 6).length;
+        const successes = results.filter(result => result >= 6).length;
+        
+        // Build a readable list of results
+        const resultList = results.map(r => r < 6 ? `<strong style="color:red">${r}</strong>` : `<strong style="color:green">${r}</strong>`).join(', ');
+        
+        if (failures > 0) {
+            // Increase hunger
+            this.character.hunger = Math.min(5, (this.character.hunger || 0) + failures);
+            this.displayCharacterStats();
+            this.saveCharacter();
+            
+            // Notify the user
+            setTimeout(() => {
+                if (results.length > 1) {
+                    this.showNotification(`Rouse checks (${resultList}): ${failures} failed. Hunger increased to ${this.character.hunger}.`, 4000);
+                } else {
+                    this.showNotification(`Rouse check failed (${results[0]}). Hunger increased to ${this.character.hunger}.`, 3000);
+                }
+            }, 2000);
+        } else {
+            // Success notification
+            setTimeout(() => {
+                if (results.length > 1) {
+                    this.showNotification(`All rouse checks succeeded! (${resultList})`, 3000);
+                } else {
+                    this.showNotification(`Rouse check succeeded (${results[0]})!`, 2000);
+                }
+            }, 2000);
+        }
+        
+        // Clear the current power
+        this._currentPower = null;
+    }
+    
+    // Legacy method name for compatibility
+    handleRouseResult(result) {
+        this.handleRouseResults(result);
+    }
+    
+    createDicePoolSelector(callback) {
+        // Create modal container
+        const modal = document.createElement('div');
+        modal.className = 'dice-pool-modal';
+        modal.style.position = 'fixed';
+        modal.style.top = '0';
+        modal.style.left = '0';
+        modal.style.width = '100%';
+        modal.style.height = '100%';
+        modal.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+        modal.style.display = 'flex';
+        modal.style.justifyContent = 'center';
+        modal.style.alignItems = 'center';
+        modal.style.zIndex = '1000';
 
-        const dicePool = prompt('Enter dice pool (e.g., "Strength + Brawl"):');
-        if (!dicePool) return;
-
-        const summary = prompt('Enter power summary:');
-        if (!summary) return;
-
-        const power = {
-            name,
-            level,
-            dicePool,
-            summary
-        };
-
-        this.character.disciplines[discipline].push(power);
-        this.displayCharacterStats();
-        this.showNotification(`Added ${name} power to ${discipline}`);
+        // Create modal content
+        const content = document.createElement('div');
+        content.className = 'dice-pool-content';
+        content.style.backgroundColor = '#242424';
+        content.style.padding = '20px';
+        content.style.borderRadius = '5px';
+        content.style.maxWidth = '500px';
+        content.style.width = '90%';
+        
+        // Header
+        const header = document.createElement('h3');
+        header.textContent = 'Build Dice Pool';
+        header.style.marginTop = '0';
+        content.appendChild(header);
+        
+        // Define options
+        const attributes = ['Strength', 'Dexterity', 'Stamina', 'Charisma', 'Manipulation', 'Composure', 'Intelligence', 'Wits', 'Resolve'];
+        const skills = ['Athletics', 'Brawl', 'Craft', 'Drive', 'Firearms', 'Melee', 'Larceny', 'Stealth', 'Survival', 
+                        'Animal Ken', 'Etiquette', 'Insight', 'Intimidation', 'Leadership', 'Performance', 'Persuasion', 'Streetwise', 'Subterfuge',
+                        'Academics', 'Awareness', 'Finance', 'Investigation', 'Medicine', 'Occult', 'Politics', 'Science', 'Technology'];
+        const disciplines = ['Animalism', 'Auspex', 'Blood Sorcery', 'Celerity', 'Dominate', 'Fortitude', 'Obfuscate', 'Oblivion', 'Potence', 
+                             'Presence', 'Protean', 'Thin-Blood Alchemy'];
+        
+        // First die section (always attribute)
+        const firstDieSection = document.createElement('div');
+        firstDieSection.style.marginBottom = '15px';
+        
+        const firstDieLabel = document.createElement('label');
+        firstDieLabel.textContent = 'Primary Attribute: ';
+        firstDieLabel.style.display = 'block';
+        firstDieLabel.style.marginBottom = '5px';
+        firstDieSection.appendChild(firstDieLabel);
+        
+        const firstDieSelect = document.createElement('select');
+        firstDieSelect.id = 'first-die';
+        firstDieSelect.style.width = '100%';
+        firstDieSelect.style.padding = '5px';
+        firstDieSelect.style.marginBottom = '10px';
+        firstDieSelect.style.backgroundColor = '#333';
+        firstDieSelect.style.color = '#fff';
+        firstDieSelect.style.border = '1px solid #555';
+        
+        // Add empty option
+        const emptyOption = document.createElement('option');
+        emptyOption.value = '';
+        emptyOption.textContent = '-- Select Attribute --';
+        firstDieSelect.appendChild(emptyOption);
+        
+        // Add attribute options
+        attributes.forEach(attr => {
+            const option = document.createElement('option');
+            option.value = attr;
+            option.textContent = attr;
+            firstDieSelect.appendChild(option);
+        });
+        
+        firstDieSection.appendChild(firstDieSelect);
+        
+        // Secondary first die (optional)
+        const secondaryFirstLabel = document.createElement('label');
+        secondaryFirstLabel.textContent = 'Secondary Attribute (Optional): ';
+        secondaryFirstLabel.style.display = 'block';
+        secondaryFirstLabel.style.marginBottom = '5px';
+        firstDieSection.appendChild(secondaryFirstLabel);
+        
+        const secondaryFirstSelect = document.createElement('select');
+        secondaryFirstSelect.id = 'secondary-first-die';
+        secondaryFirstSelect.style.width = '100%';
+        secondaryFirstSelect.style.padding = '5px';
+        secondaryFirstSelect.style.backgroundColor = '#333';
+        secondaryFirstSelect.style.color = '#fff';
+        secondaryFirstSelect.style.border = '1px solid #555';
+        
+        // Add empty option for "None"
+        const emptySecondaryOption = document.createElement('option');
+        emptySecondaryOption.value = '';
+        emptySecondaryOption.textContent = '-- None --';
+        secondaryFirstSelect.appendChild(emptySecondaryOption);
+        
+        // Add attribute options
+        attributes.forEach(attr => {
+            const option = document.createElement('option');
+            option.value = attr;
+            option.textContent = attr;
+            secondaryFirstSelect.appendChild(option);
+        });
+        
+        firstDieSection.appendChild(secondaryFirstSelect);
+        content.appendChild(firstDieSection);
+        
+        // Second die section (attribute, skill, or discipline)
+        const secondDieSection = document.createElement('div');
+        secondDieSection.style.marginBottom = '15px';
+        
+        const secondDieLabel = document.createElement('label');
+        secondDieLabel.textContent = 'Second Die Type: ';
+        secondDieLabel.style.display = 'block';
+        secondDieLabel.style.marginBottom = '5px';
+        secondDieSection.appendChild(secondDieLabel);
+        
+        const secondDieTypeSelect = document.createElement('select');
+        secondDieTypeSelect.id = 'second-die-type';
+        secondDieTypeSelect.style.width = '100%';
+        secondDieTypeSelect.style.padding = '5px';
+        secondDieTypeSelect.style.marginBottom = '10px';
+        secondDieTypeSelect.style.backgroundColor = '#333';
+        secondDieTypeSelect.style.color = '#fff';
+        secondDieTypeSelect.style.border = '1px solid #555';
+        
+        // Add options for second die type
+        const typeOptions = [
+            { value: '', text: '-- None --' },
+            { value: 'attribute', text: 'Attribute' },
+            { value: 'skill', text: 'Skill' },
+            { value: 'discipline', text: 'Discipline' }
+        ];
+        
+        typeOptions.forEach(opt => {
+            const option = document.createElement('option');
+            option.value = opt.value;
+            option.textContent = opt.text;
+            secondDieTypeSelect.appendChild(option);
+        });
+        
+        secondDieSection.appendChild(secondDieTypeSelect);
+        
+        // Container for second die options (will be populated based on type selection)
+        const secondDieOptionsContainer = document.createElement('div');
+        secondDieOptionsContainer.id = 'second-die-options';
+        secondDieSection.appendChild(secondDieOptionsContainer);
+        
+        content.appendChild(secondDieSection);
+        
+        // Buttons
+        const buttonContainer = document.createElement('div');
+        buttonContainer.style.display = 'flex';
+        buttonContainer.style.justifyContent = 'space-between';
+        buttonContainer.style.marginTop = '20px';
+        
+        const cancelButton = document.createElement('button');
+        cancelButton.textContent = 'Cancel';
+        cancelButton.className = 'progeny-button';
+        cancelButton.style.padding = '8px 15px';
+        cancelButton.addEventListener('click', () => {
+            document.body.removeChild(modal);
+            callback(''); // Return empty dice pool
+        });
+        buttonContainer.appendChild(cancelButton);
+        
+        const saveButton = document.createElement('button');
+        saveButton.textContent = 'Save';
+        saveButton.className = 'progeny-button';
+        saveButton.style.padding = '8px 15px';
+        saveButton.addEventListener('click', () => {
+            // Build the dice pool string
+            const firstDie = firstDieSelect.value;
+            const secondaryFirst = secondaryFirstSelect.value;
+            const secondDieType = secondDieTypeSelect.value;
+            let secondDie = '';
+            let secondarySecond = '';
+            
+            // Get second die value based on the selected type
+            if (secondDieType) {
+                const secondDieSelect = document.getElementById('second-die-value');
+                secondDie = secondDieSelect ? secondDieSelect.value : '';
+                
+                const secondarySecondSelect = document.getElementById('secondary-second-die');
+                secondarySecond = secondarySecondSelect ? secondarySecondSelect.value : '';
+            }
+            
+            // Build the dice pool string
+            let dicePool = '';
+            
+            // First die part
+            if (firstDie) {
+                dicePool += firstDie;
+                if (secondaryFirst) {
+                    dicePool += ' / ' + secondaryFirst;
+                }
+            }
+            
+            // Second die part
+            if (secondDie) {
+                dicePool += ' + ' + secondDie;
+                if (secondarySecond) {
+                    dicePool += ' / ' + secondarySecond;
+                }
+            }
+            
+            document.body.removeChild(modal);
+            callback(dicePool);
+        });
+        buttonContainer.appendChild(saveButton);
+        
+        content.appendChild(buttonContainer);
+        modal.appendChild(content);
+        document.body.appendChild(modal);
+        
+        // Event listener for second die type selection
+        secondDieTypeSelect.addEventListener('change', () => {
+            const container = document.getElementById('second-die-options');
+            container.innerHTML = ''; // Clear existing options
+            
+            const selectedType = secondDieTypeSelect.value;
+            if (!selectedType) return; // No type selected
+            
+            // Create selection for the second die
+            const secondDieLabel = document.createElement('label');
+            secondDieLabel.textContent = `Select ${selectedType.charAt(0).toUpperCase() + selectedType.slice(1)}: `;
+            secondDieLabel.style.display = 'block';
+            secondDieLabel.style.marginBottom = '5px';
+            container.appendChild(secondDieLabel);
+            
+            const secondDieSelect = document.createElement('select');
+            secondDieSelect.id = 'second-die-value';
+            secondDieSelect.style.width = '100%';
+            secondDieSelect.style.padding = '5px';
+            secondDieSelect.style.marginBottom = '10px';
+            secondDieSelect.style.backgroundColor = '#333';
+            secondDieSelect.style.color = '#fff';
+            secondDieSelect.style.border = '1px solid #555';
+            
+            // Add empty option
+            const emptyOption = document.createElement('option');
+            emptyOption.value = '';
+            emptyOption.textContent = `-- Select ${selectedType.charAt(0).toUpperCase() + selectedType.slice(1)} --`;
+            secondDieSelect.appendChild(emptyOption);
+            
+            // Add options based on selected type
+            let options = [];
+            if (selectedType === 'attribute') options = attributes;
+            else if (selectedType === 'skill') options = skills;
+            else if (selectedType === 'discipline') options = disciplines;
+            
+            options.forEach(opt => {
+                const option = document.createElement('option');
+                option.value = opt;
+                option.textContent = opt;
+                secondDieSelect.appendChild(option);
+            });
+            
+            container.appendChild(secondDieSelect);
+            
+            // Add secondary option (if attribute or discipline)
+            if (selectedType === 'attribute' || selectedType === 'skill' || selectedType === 'discipline') {
+                const secondaryLabel = document.createElement('label');
+                secondaryLabel.textContent = `Secondary ${selectedType.charAt(0).toUpperCase() + selectedType.slice(1)} (Optional): `;
+                secondaryLabel.style.display = 'block';
+                secondaryLabel.style.marginBottom = '5px';
+                container.appendChild(secondaryLabel);
+                
+                const secondarySelect = document.createElement('select');
+                secondarySelect.id = 'secondary-second-die';
+                secondarySelect.style.width = '100%';
+                secondarySelect.style.padding = '5px';
+                secondarySelect.style.backgroundColor = '#333';
+                secondarySelect.style.color = '#fff';
+                secondarySelect.style.border = '1px solid #555';
+                
+                // Add empty option for "None"
+                const emptySecondaryOption = document.createElement('option');
+                emptySecondaryOption.value = '';
+                emptySecondaryOption.textContent = '-- None --';
+                secondarySelect.appendChild(emptySecondaryOption);
+                
+                // Add options
+                options.forEach(opt => {
+                    const option = document.createElement('option');
+                    option.value = opt;
+                    option.textContent = opt;
+                    secondarySelect.appendChild(option);
+                });
+                
+                container.appendChild(secondarySelect);
+            }
+        });
     }
 
     removePower(discipline, powerName) {
@@ -774,8 +1911,12 @@ class ProgenyManager {
                         <span class="power-level">Level ${power.level}</span>
                         <span class="power-name">${power.name}</span>
                         <button class="remove-power" title="Remove Power">×</button>
+                        <div class="power-controls">
+                            ${power.dicePool ? `<button class="roll-power progeny-button" title="Roll ${power.name}">Roll</button>` : ''}
+                        </div>
                         <div class="power-details">
-                            <div>${power.dicePool}</div>
+                            <div class="power-dice-pool">${power.dicePool}</div>
+                            <div class="power-rouse">Rouse Cost: ${power.rouseChecks || 0}</div>
                             <div class="power-summary">${power.summary}</div>
                         </div>
                     </div>
@@ -798,6 +1939,17 @@ class ProgenyManager {
                 const powerItem = btn.closest('.power-item');
                 const powerName = powerItem.querySelector('.power-name').textContent;
                 btn.addEventListener('click', () => this.removePower(discipline, powerName));
+            });
+            
+            // Add event listeners for roll buttons
+            const rollPowerBtns = div.querySelectorAll('.roll-power');
+            rollPowerBtns.forEach(btn => {
+                const powerItem = btn.closest('.power-item');
+                const powerName = powerItem.querySelector('.power-name').textContent;
+                const power = this.character.disciplines[discipline].find(p => p.name === powerName);
+                if (power) {
+                    btn.addEventListener('click', () => this.rollDisciplinePower(discipline, power));
+                }
             });
 
             disciplinesList.appendChild(div);
@@ -1213,11 +2365,10 @@ class ProgenyManager {
 
         // Check if the stat exists in disciplines
         if (this.character.disciplines[stat]) {
-            // Find the highest level power for this discipline
+            // Count the number of powers in the discipline
             const powers = this.character.disciplines[stat];
             if (powers && powers.length > 0) {
-                const highestLevel = Math.max(...powers.map(power => power.level));
-                regularDice += highestLevel;
+                regularDice += powers.length; // Use count of powers instead of highest level
             }
         }
 
@@ -1523,29 +2674,17 @@ class ProgenyManager {
     addPower(discipline) {
         if (!this.character) return;
         
-        const powerName = prompt('Enter power name:');
-        if (!powerName) return;
-        
-        const level = parseInt(prompt('Enter power level (1-5):'));
-        if (isNaN(level) || level < 1 || level > 5) {
-            alert('Invalid power level');
-            return;
-        }
-        
-        const power = {
-            name: powerName,
-            level: level,
-            description: '',
-            rouseChecks: 0,
-            amalgamPrerequisites: [],
-            summary: '',
-            dicePool: ''
-        };
-        
-        this.character.disciplines[discipline].push(power);
-        this.displayCharacterStats();
-        this.saveCharacter(); // Save after adding power
-        this.showNotification(`Added ${powerName} power to ${this.formatName(discipline)}`);
+        this.createPowerModal(discipline, (power) => {
+            if (!power) return; // User cancelled
+            
+            // Add additional fields needed for this version
+            power.amalgamPrerequisites = [];
+            
+            this.character.disciplines[discipline].push(power);
+            this.displayCharacterStats();
+            this.saveCharacter(); // Save after adding power
+            this.showNotification(`Added ${power.name} power to ${this.formatName(discipline)}`);
+        });
     }
 
     removePower(discipline, powerName) {
@@ -1922,6 +3061,12 @@ class ProgenyManager {
         // Update the remorse dice pool in the control panel
         document.getElementById('remorse_pool').value = remorseDicePool;
         
+        // Hide regular dice control
+        const regularControl = document.querySelector('.dice-control:not(.hidden-controls *)');
+        if (regularControl) {
+            regularControl.classList.add('hidden');
+        }
+        
         // Make sure the remorse control is visible
         const remorseControl = document.querySelector('.remorse-control');
         if (remorseControl) {
@@ -1934,10 +3079,14 @@ class ProgenyManager {
             remorseInfo.textContent = `${remorseDicePool} Remorse Dice`;
         }
         
-        // Toggle the remorse button to active
+        // Toggle the remorse button to active and deactivate others
         const remorseToggle = document.querySelector('[data-target="remorse"]');
         if (remorseToggle) {
             remorseToggle.classList.add('active');
+            // Deactivate other toggles
+            document.querySelectorAll('[data-target="hunger"], [data-target="rouse"], [data-target="frenzy"]').forEach(btn => {
+                btn.classList.remove('active');
+            });
         }
         
         // Add event listener for roll results
@@ -2086,6 +3235,12 @@ class ProgenyManager {
         // Update the frenzy dice pool in the control panel
         document.getElementById('frenzy_pool').value = frenzyDicePool;
         
+        // Hide regular dice control
+        const regularControl = document.querySelector('.dice-control:not(.hidden-controls *)');
+        if (regularControl) {
+            regularControl.classList.add('hidden');
+        }
+        
         // Make sure the frenzy control is visible
         const frenzyControl = document.querySelector('.frenzy-control');
         if (frenzyControl) {
@@ -2098,10 +3253,14 @@ class ProgenyManager {
             frenzyInfo.textContent = `${frenzyDicePool} Frenzy Dice`;
         }
         
-        // Toggle the frenzy button to active
+        // Toggle the frenzy button to active and deactivate others
         const frenzyToggle = document.querySelector('[data-target="frenzy"]');
         if (frenzyToggle) {
             frenzyToggle.classList.add('active');
+            // Deactivate other toggles
+            document.querySelectorAll('[data-target="hunger"], [data-target="rouse"], [data-target="remorse"]').forEach(btn => {
+                btn.classList.remove('active');
+            });
         }
         
         // Close the modal
