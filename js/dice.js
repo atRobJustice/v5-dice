@@ -146,9 +146,9 @@
         geom.cannon_shape = create_shape(vectors, faces, radius);
         return geom;
     }
-
-    self.standard_d10_dice_face_labels = [' ', '✪', ' ', ' ', ' ', ' ', ' ', '●', '●', '●', '●'];
-    self.hunger_d10_dice_face_labels = [' ', '✪', '⚠', ' ', ' ', ' ', ' ', '●', '●', '●', '●'];
+    
+    self.standard_d10_dice_face_labels  = [' ', ' ', ' ', ' ', ' ', ' ', '●', '●', '●', '●', '✪'];
+    self.hunger_d10_dice_face_labels    = [' ', '⚠', ' ', ' ', ' ', ' ', '●', '●', '●', '●', '✪'];
     
     function calc_texture_size(approx) {
         return Math.pow(2, Math.floor(Math.log(approx) / Math.log(2)));
@@ -235,7 +235,7 @@
     self.use_shadows = true;
     
     self.known_types = ['d10'];
-    self.dice_face_range = { 'd10': [0, 9]};
+    self.dice_face_range = { 'd10': [1, 10]};
     self.dice_mass = { 'd10': 5 };
     self.dice_inertia = { 'd10': 15 };
 
@@ -305,12 +305,12 @@
     }
 
     self.parse_notation = function(regularCount, hungerCount, rouseCount = 0, remorseCount = 0, frenzyCount = 0) {
-        // Basic validation without breaking functionality
-        if (regularCount < 0) regularCount = 0;
-        if (hungerCount < 0) hungerCount = 0;
-        if (rouseCount < 0) rouseCount = 0;
-        if (remorseCount < 0) remorseCount = 0;
-        if (frenzyCount < 0) frenzyCount = 0;
+        // Convert to integers and ensure valid values
+        regularCount = Math.max(0, parseInt(regularCount) || 0);
+        hungerCount = Math.max(0, parseInt(hungerCount) || 0);
+        rouseCount = Math.max(0, parseInt(rouseCount) || 0);
+        remorseCount = Math.max(0, parseInt(remorseCount) || 0);
+        frenzyCount = Math.max(0, parseInt(frenzyCount) || 0);
         if (regularCount > 20) regularCount = 20;
         if (hungerCount > 5) hungerCount = 5;
         if (rouseCount > 3) rouseCount = 3; // Allow up to 3 rouse dice
@@ -709,7 +709,7 @@
                 closest_face = face;
             }
         }
-        var matindex = closest_face.materialIndex - 1;
+        var matindex = closest_face.materialIndex;
         return matindex;
     }
 
@@ -772,13 +772,94 @@
         this.running = false;
         var dice;
         while (dice = this.dices.pop()) {
+            // Dispose of dice-specific resources
+            if (dice.geometry) {
+                dice.geometry.dispose();
+            }
+            if (dice.material) {
+                // Handle MeshFaceMaterial (array of materials)
+                if (Array.isArray(dice.material.materials)) {
+                    dice.material.materials.forEach(material => {
+                        if (material.map) material.map.dispose();
+                        material.dispose();
+                    });
+                }
+                // Handle single material
+                else if (dice.material.map) {
+                    dice.material.map.dispose();
+                    dice.material.dispose();
+                }
+            }
             this.scene.remove(dice);
             if (dice.body) this.world.remove(dice.body);
         }
-        if (this.pane) this.scene.remove(this.pane);
+        if (this.pane) {
+            if (this.pane.geometry) this.pane.geometry.dispose();
+            if (this.pane.material) {
+                if (this.pane.material.map) this.pane.material.map.dispose();
+                this.pane.material.dispose();
+            }
+            this.scene.remove(this.pane);
+        }
         this.renderer.render(this.scene, this.camera);
         var box = this;
         setTimeout(function() { box.renderer.render(box.scene, box.camera); }, 100);
+    }
+
+    self.dice_box.prototype.dispose = function() {
+        // Clear all dice and the pane
+        this.clear();
+        
+        // Dispose of shared geometries
+        if (this.d10_geometry) {
+            this.d10_geometry.dispose();
+            this.d10_geometry = null;
+        }
+        
+        // Dispose of shared materials
+        const disposeMaterial = (material) => {
+            if (!material) return;
+            if (Array.isArray(material.materials)) {
+                material.materials.forEach(m => {
+                    if (m.map) m.map.dispose();
+                    m.dispose();
+                });
+            } else if (material.map) {
+                material.map.dispose();
+                material.dispose();
+            }
+        };
+
+        disposeMaterial(this.dice_material);
+        disposeMaterial(this.hunger_dice_material);
+        disposeMaterial(this.rouse_dice_material);
+        disposeMaterial(this.remorse_dice_material);
+        disposeMaterial(this.frenzy_dice_material);
+        
+        this.dice_material = null;
+        this.hunger_dice_material = null;
+        this.rouse_dice_material = null;
+        this.remorse_dice_material = null;
+        this.frenzy_dice_material = null;
+        
+        // Dispose of renderer
+        if (this.renderer) {
+            this.renderer.dispose();
+            this.renderer = null;
+        }
+        
+        // Clear the scene
+        if (this.scene) {
+            while(this.scene.children.length > 0) { 
+                this.scene.remove(this.scene.children[0]); 
+            }
+            this.scene = null;
+        }
+        
+        // Clear the world
+        if (this.world) {
+            this.world = null;
+        }
     }
 
     self.dice_box.prototype.prepare_dices_for_roll = function(vectors) {
@@ -792,8 +873,6 @@
 
     function shift_dice_faces(dice, value, res) {
         var r = that.dice_face_range[dice.dice_type];
-        if (dice.dice_type == 'd10' && value == 10) value = 0;
-        if (dice.dice_type == 'd10' && res == 10) res = 0;
         if (!(value >= r[0] && value <= r[1])) return;
         var num = value - res;
         var geom = dice.geometry.clone();
