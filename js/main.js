@@ -923,6 +923,7 @@ function dice_initialize(container) {
 
                 if (isRouse) {
                     // Rouse check is successful on 6 or higher (including 10/✪)
+                    // In V5, a Rouse check fails on 1-5 and succeeds on 6-10
                     if (roll >= 6) {
                         rouseSuccess = true;
                     }
@@ -1000,7 +1001,23 @@ function dice_initialize(container) {
                 if (hasRegularOrHungerDice || isFrenzyRoll || isRemorseRoll) {
                     newHtml += '<br>';
                 }
-                newHtml += `<span class="${rouseSuccess ? 'success' : 'failure'}">Rouse Check: ${rouseSuccess ? 'Success' : 'Failure'}</span>`;
+                
+                // Count successes for multiple rouse checks
+                const rouseStartIndex = notation.set.length + notation.hungerSet.length;
+                const rouseEndIndex = rouseStartIndex + notation.rouseSet.length;
+                const rouseResults = result.slice(rouseStartIndex, rouseEndIndex);
+                const rouseSuccesses = rouseResults.filter(r => r >= 6).length;
+                const rouseFailures = rouseResults.length - rouseSuccesses;
+                
+                if (rouseResults.length === 1) {
+                    // Single rouse check
+                    newHtml += `<span class="${rouseSuccess ? 'success' : 'failure'}">Rouse Check: ${rouseSuccess ? 'Success' : 'Failure'}</span>`;
+                } else {
+                    // Multiple rouse checks
+                    newHtml += `<span class="${rouseSuccesses === rouseResults.length ? 'success' : 'failure'}">
+                        Rouse Checks: ${rouseSuccesses} Success${rouseSuccesses !== 1 ? 'es' : ''}, ${rouseFailures} Failure${rouseFailures !== 1 ? 's' : ''}
+                    </span>`;
+                }
             }
 
             latestElement.innerHTML = newHtml;
@@ -1032,29 +1049,40 @@ function dice_initialize(container) {
             }
             
             // Dispatch custom event for roll results that can be listened to by other components
-            // For Rouse checks, we need to check if any of the Rouse dice rolled 6 or higher
-            let rouseSuccesses = 0;
+            // Prepare dice results for event
+            let rouseResults = [];
+            let rouseSuccessCount = 0;
             if (isRouseRoll && notation.rouseSet) {
                 const rouseStartIndex = notation.set.length + notation.hungerSet.length;
-                const rouseResults = result.slice(rouseStartIndex, rouseStartIndex + notation.rouseSet.length);
-                rouseSuccesses = rouseResults.some(r => r >= 6) ? 1 : 0;
+                const rouseEndIndex = rouseStartIndex + notation.rouseSet.length;
+                rouseResults = result.slice(rouseStartIndex, rouseEndIndex).map((value, i) => {
+                    const isSuccess = value >= 6;
+                    if (isSuccess) rouseSuccessCount++;
+                    return {
+                        value: value,
+                        // Rouse check success is 6 or higher (6-10)
+                        success: isSuccess
+                    };
+                });
             }
             
             window.dispatchEvent(new CustomEvent('diceRollComplete', {
                 detail: {
                     regularDice: parseInt(regularPool.value) || 0,
                     hungerDice: parseInt(hungerPool.value) || 0,
-                    rouseDice: isRouseRoll ? 1 : 0,
+                    rouseDice: parseInt(rousePool.value) || 0,
                     remorseDice: parseInt(remorsePool.value) || 0,
                     frenzyDice: parseInt(frenzyPool.value) || 0,
-                    successes: isRouseRoll ? rouseSuccesses : successes,
+                    results: rouseResults.length > 0 ? rouseResults : result,
+                    successes: isRouseRoll ? rouseSuccessCount : successes,
                     critical: critical,
                     messyCritical: messyCritical,
                     bestialFailure: bestialFailure,
                     isHunger: isHungerRoll,
                     isRouse: isRouseRoll,
                     isRemorse: isRemorseRoll,
-                    isFrenzy: isFrenzyRoll
+                    isFrenzy: isFrenzyRoll,
+                    diceType: isRouseRoll ? 'rouse' : (isRemorseRoll ? 'remorse' : (isFrenzyRoll ? 'frenzy' : 'regular'))
                 }
             }));
         } catch (error) {

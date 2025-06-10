@@ -525,6 +525,37 @@
     text-align: center;
   }
 
+  .mend-btn {
+    width: 100%;
+    padding: 4px 6px;
+    margin-top: 6px;
+    font-size: 0.85em;
+    cursor: pointer;
+    background-color: #3d0000;
+    color: #ffffff;
+    border: 1px solid #600;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    text-align: center;
+  }
+
+  .mend-btn:hover {
+    background-color: #600;
+    transform: translateY(-1px);
+  }
+
+  .mend-btn:active {
+    transform: translateY(1px);
+  }
+
+  .superficial-mend {
+    background-color: #3d0000;
+  }
+
+  .aggravated-mend {
+    background-color: #330000;
+  }
+
   .stains-buttons, .damage-buttons {
     display: flex;
     align-items: center;

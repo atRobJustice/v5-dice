@@ -3334,6 +3334,15 @@ class ProgenyManager {
             statusText = 'Impaired';
         }
         
+        // Create mend buttons HTML only for Health
+        const superficialMendHTML = type === 'Health' ? 
+            `<button class="mend-btn superficial-mend" title="Mend Superficial damage (1 Rouse Check)">Mend</button>` 
+            : '';
+            
+        const aggravatedMendHTML = type === 'Health' ? 
+            `<button class="mend-btn aggravated-mend" title="Mend Aggravated damage (3 Rouse Checks)">Mend</button>` 
+            : '';
+            
         div.innerHTML = `
             <div class="damage-header">
                 <span class="damage-label">${type}</span>
@@ -3351,6 +3360,7 @@ class ProgenyManager {
                         <span class="damage-value">${damage.superficial}</span>
                         <button class="damage-btn plus" data-type="superficial">+</button>
                     </div>
+                    ${superficialMendHTML}
                 </div>
                 <div class="damage-type">
                     <span class="damage-label">Aggravated</span>
@@ -3359,6 +3369,7 @@ class ProgenyManager {
                         <span class="damage-value">${damage.aggravated}</span>
                         <button class="damage-btn plus" data-type="aggravated">+</button>
                     </div>
+                    ${aggravatedMendHTML}
                 </div>
             </div>
             ${statusText ? `<div class="status-warning impaired">${statusText}</div>` : ''}
@@ -3389,6 +3400,84 @@ class ProgenyManager {
                 this.displayCharacterStats();
             });
         });
+        
+        // Add event listeners for mend buttons (only for Health)
+        if (type === 'Health') {
+            // Mend Superficial damage
+            const superficialMendButton = div.querySelector('.superficial-mend');
+            if (superficialMendButton) {
+                superficialMendButton.addEventListener('click', () => {
+                    // Check if there's superficial damage to heal
+                    if (damage.superficial <= 0) {
+                        this.showNotification('No superficial damage to mend.');
+                        return;
+                    }
+                    
+                    // Perform a rouse check (set rouse dice to 1)
+                    this.rollRouseCheck(1);
+                    
+                    // Function to handle the result after the roll is complete
+                    const handleRouseResult = (event) => {
+                        // Determine how many superficial damage points to heal based on Blood Potency
+                        const bloodPotency = this.character.bloodPotency || 0;
+                        let healAmount;
+                        
+                        if (bloodPotency <= 1) healAmount = 1;
+                        else if (bloodPotency <= 3) healAmount = 2;
+                        else if (bloodPotency <= 7) healAmount = 3;
+                        else if (bloodPotency <= 9) healAmount = 4;
+                        else healAmount = 5;
+                        
+                        // Heal the character (damage is healed regardless of Rouse check result)
+                        const currentDamage = this.character.healthDamage;
+                        const actualHealAmount = Math.min(healAmount, currentDamage.superficial);
+                        currentDamage.superficial = Math.max(0, currentDamage.superficial - healAmount);
+                        
+                        // Update display and show notification
+                        this.displayCharacterStats();
+                        this.showNotification(`Mended ${actualHealAmount} points of Superficial damage.`);
+                        
+                        // Remove the event listener after handling the result
+                        document.removeEventListener('rouseCheckComplete', handleRouseResult);
+                    };
+                    
+                    // Add event listener for when the rouse check is complete
+                    document.addEventListener('rouseCheckComplete', handleRouseResult);
+                });
+            }
+            
+            // Mend Aggravated damage
+            const aggravatedMendButton = div.querySelector('.aggravated-mend');
+            if (aggravatedMendButton) {
+                aggravatedMendButton.addEventListener('click', () => {
+                    // Check if there's aggravated damage to heal
+                    if (damage.aggravated <= 0) {
+                        this.showNotification('No aggravated damage to mend.');
+                        return;
+                    }
+                    
+                    // Perform three rouse checks
+                    this.rollRouseCheck(3);
+                    
+                    // Function to handle the result after the roll is complete
+                    const handleRouseResult = (event) => {
+                        // Heal 1 point of aggravated damage (regardless of Rouse check results)
+                        const currentDamage = this.character.healthDamage;
+                        currentDamage.aggravated = Math.max(0, currentDamage.aggravated - 1);
+                        
+                        // Update display and show notification
+                        this.displayCharacterStats();
+                        this.showNotification('Mended 1 point of Aggravated damage.');
+                        
+                        // Remove the event listener after handling the result
+                        document.removeEventListener('rouseCheckComplete', handleRouseResult);
+                    };
+                    
+                    // Add event listener for when the rouse check is complete
+                    document.addEventListener('rouseCheckComplete', handleRouseResult);
+                });
+            }
+        }
 
         return div;
     }
@@ -3548,11 +3637,12 @@ class ProgenyManager {
         }
     }
     
-    rollRouseCheck() {
+    rollRouseCheck(numChecks = 1) {
         // Update the rouse checkbox in the control panel
         const rouseCheckbox = document.getElementById('rouse_pool');
         if (rouseCheckbox) {
-            rouseCheckbox.checked = true;
+            // Set the rouse pool to the number of checks (slider value)
+            rouseCheckbox.value = numChecks;
         }
         
         // Make sure the rouse control is visible
@@ -3564,7 +3654,7 @@ class ProgenyManager {
         // Update the rouse check label
         const rouseInfo = document.getElementById('rouse-info');
         if (rouseInfo) {
-            rouseInfo.textContent = `Rouse Check`;
+            rouseInfo.textContent = numChecks > 1 ? `${numChecks} Rouse Checks` : `Rouse Check`;
         }
         
         // Toggle the rouse button to active
@@ -3586,12 +3676,13 @@ class ProgenyManager {
         const box = window.box;
         if (box && box.start_throw) {
             // Call start_throw with the proper notation getter
+            const rouseChecks = numChecks;
             box.start_throw(
                 function() {
                     return $t.dice.parse_notation(
                         0, // Regular dice
                         0, // Hunger dice
-                        1, // Rouse dice (always 1)
+                        rouseChecks, // Rouse dice (variable)
                         0, // Remorse dice
                         0  // Frenzy dice
                     );
@@ -3611,14 +3702,32 @@ class ProgenyManager {
         // Remove the event listener to prevent duplicate handling
         window.removeEventListener('diceRollComplete', this.handleRouseRollResult);
         
-        // Check if the roll was successful (at least one success)
-        const successes = event.detail.successes || 0;
+        // Count failed checks (dice with value 1-5)
+        // In V5, a Rouse check fails on 1-5 and succeeds on 6-10
+        const results = event.detail.results || [];
+        const failedChecks = results.filter(die => die.value < 6).length;
         
-        if (successes === 0) {
-            // If no successes, increase hunger by 1
+        if (failedChecks > 0) {
+            // Increase hunger by the number of failed checks, up to maximum of 5
             const currentHunger = this.character.hunger || 0;
-            this.character.hunger = Math.min(5, currentHunger + 1);
+            this.character.hunger = Math.min(5, currentHunger + failedChecks);
+            
+            // Notify the user about hunger increase
+            this.showNotification(`Failed ${failedChecks} Rouse Check${failedChecks > 1 ? 's' : ''}. Hunger increased to ${this.character.hunger}.`);
+        } else if (results.length > 0) {
+            // All checks succeeded
+            this.showNotification(`All ${results.length} Rouse Check${results.length > 1 ? 's' : ''} succeeded.`);
         }
+        
+        // Create a custom event with all the results data
+        const rouseCompleteEvent = new CustomEvent('rouseCheckComplete', {
+            detail: {
+                results: results,
+                failedChecks: failedChecks,
+                allSucceeded: failedChecks === 0 && results.length > 0
+            }
+        });
+        document.dispatchEvent(rouseCompleteEvent);
         
         // Update the character sheet to reflect changes
         this.displayCharacterStats();
