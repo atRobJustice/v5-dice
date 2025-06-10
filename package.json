@@ -5,11 +5,16 @@
   "scripts": {
     "test": "playwright test",
     "test:headed": "playwright test --headed",
-    "test:debug": "playwright test --debug"
+    "test:debug": "playwright test --debug",
+    "test:chromium": "playwright test --project=chromium",
+    "test:ci": "playwright test --reporter=line"
   },
   "devDependencies": {
-    "@playwright/test": "^1.44.0",
-    "typescript": "^5.0.0",
-    "ts-node": "^10.9.0"
+    "@playwright/test": "1.44.0",
+    "typescript": "5.0.4",
+    "ts-node": "10.9.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
