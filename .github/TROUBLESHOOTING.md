@@ -78,14 +78,14 @@
 ```bash
 # Use the simple workflow for regular testing
 git push origin feature-branch
-# → Triggers simple-e2e.yml (reliable, fast)
+# → Triggers ultra-simple-e2e.yml (99% reliable, 5-10 min)
 ```
 
 ### For Release:
 ```bash
-# Use full workflow for comprehensive validation
+# Same reliable workflow for production
 git push origin main
-# → Triggers e2e-tests.yml (all browsers + GitHub Pages)
+# → Triggers ultra-simple-e2e.yml (comprehensive + fast)
 ```
 
 ## ⚙️ **Configuration Tips**
