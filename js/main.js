@@ -738,24 +738,23 @@ function dice_initialize(container) {
             localStorage.setItem('characterName', characterNameInput.value);
         }
         
-        // Show success message
-        const successDiv = document.createElement('div');
-        successDiv.className = 'notification';
-        successDiv.textContent = 'Discord settings saved successfully!';
-        document.body.appendChild(successDiv);
-        
-        // Add show class after a small delay to trigger animation
-        setTimeout(() => {
-            successDiv.classList.add('show');
-        }, 10);
-        
-        setTimeout(() => {
-            successDiv.classList.remove('show');
-            // Remove element after animation completes
+        // Create a single notification element at initialization
+        const notification = document.createElement('div');
+        notification.className = 'notification';
+        document.body.appendChild(notification);
+
+        function showNotification(message, duration = 2000) {
+            notification.textContent = message;
+            notification.classList.add('show');
+            
             setTimeout(() => {
-                successDiv.remove();
-            }, 300);
-        }, 2000);
+                notification.classList.remove('show');
+            }, duration);
+        }
+
+        // Then use it like this:
+        showNotification('Discord settings saved successfully!');
+
 
         // Close the Discord modal
         discordModal.classList.add('hidden');
@@ -834,10 +833,10 @@ function dice_initialize(container) {
                 const isHunger = i >= notation.set.length && i < notation.set.length + notation.hungerSet.length;
                 const isRouse = i >= notation.set.length + notation.hungerSet.length && 
                                i < notation.set.length + notation.hungerSet.length + notation.rouseSet.length;
-                
+
                 if (isRouse) {
-                    // Rouse check is successful on 6 or higher (including ✪ which is 0)
-                    if (roll >= 6 || roll === 0) {
+                    // Rouse check is successful on 6 or higher (including 10/✪)
+                    if (roll >= 6) {
                         rouseSuccess = true;
                     }
                 } else {
@@ -848,7 +847,7 @@ function dice_initialize(container) {
                     if (isHunger && roll == 1) {
                         bestialFailureCandidate = true;
                     }
-                    if (roll == 0) {
+                    if (roll == 10) {
                         if (isHunger) {
                             hungerDoubleAnkhs += 1;
                         } else {

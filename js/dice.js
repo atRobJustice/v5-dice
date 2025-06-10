@@ -146,9 +146,9 @@
         geom.cannon_shape = create_shape(vectors, faces, radius);
         return geom;
     }
-
-    self.standard_d10_dice_face_labels = [' ', '✪', ' ', ' ', ' ', ' ', ' ', '●', '●', '●', '●'];
-    self.hunger_d10_dice_face_labels = [' ', '✪', '⚠', ' ', ' ', ' ', ' ', '●', '●', '●', '●'];
+    
+    self.standard_d10_dice_face_labels  = [' ', ' ', ' ', ' ', ' ', ' ', '●', '●', '●', '●', '✪'];
+    self.hunger_d10_dice_face_labels    = [' ', '⚠', ' ', ' ', ' ', ' ', '●', '●', '●', '●', '✪'];
     
     function calc_texture_size(approx) {
         return Math.pow(2, Math.floor(Math.log(approx) / Math.log(2)));
@@ -235,7 +235,7 @@
     self.use_shadows = true;
     
     self.known_types = ['d10'];
-    self.dice_face_range = { 'd10': [0, 9]};
+    self.dice_face_range = { 'd10': [1, 10]};
     self.dice_mass = { 'd10': 5 };
     self.dice_inertia = { 'd10': 15 };
 
@@ -305,12 +305,12 @@
     }
 
     self.parse_notation = function(regularCount, hungerCount, rouseCount = 0, remorseCount = 0, frenzyCount = 0) {
-        // Basic validation without breaking functionality
-        if (regularCount < 0) regularCount = 0;
-        if (hungerCount < 0) hungerCount = 0;
-        if (rouseCount < 0) rouseCount = 0;
-        if (remorseCount < 0) remorseCount = 0;
-        if (frenzyCount < 0) frenzyCount = 0;
+        // Convert to integers and ensure valid values
+        regularCount = Math.max(0, parseInt(regularCount) || 0);
+        hungerCount = Math.max(0, parseInt(hungerCount) || 0);
+        rouseCount = Math.max(0, parseInt(rouseCount) || 0);
+        remorseCount = Math.max(0, parseInt(remorseCount) || 0);
+        frenzyCount = Math.max(0, parseInt(frenzyCount) || 0);
         if (regularCount > 20) regularCount = 20;
         if (hungerCount > 5) hungerCount = 5;
         if (rouseCount > 3) rouseCount = 3; // Allow up to 3 rouse dice
@@ -709,7 +709,7 @@
                 closest_face = face;
             }
         }
-        var matindex = closest_face.materialIndex - 1;
+        var matindex = closest_face.materialIndex;
         return matindex;
     }
 
@@ -792,8 +792,6 @@
 
     function shift_dice_faces(dice, value, res) {
         var r = that.dice_face_range[dice.dice_type];
-        if (dice.dice_type == 'd10' && value == 10) value = 0;
-        if (dice.dice_type == 'd10' && res == 10) res = 0;
         if (!(value >= r[0] && value <= r[1])) return;
         var num = value - res;
         var geom = dice.geometry.clone();

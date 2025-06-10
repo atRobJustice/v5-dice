@@ -201,12 +201,17 @@
     <script type="text/javascript" src="./js/main.js"></script>
     <script type="text/javascript">
         // Initialize the dice roller when the DOM is fully loaded
+        let diceInitialized = false;
         document.addEventListener('DOMContentLoaded', function() {
-            if (document.readyState === 'complete') {
+            if (document.readyState === 'complete' && !diceInitialized) {
+                diceInitialized = true;
                 dice_initialize(document.getElementById('body'));
             } else {
                 window.addEventListener('load', function() {
-                    dice_initialize(document.getElementById('body'));
+                    if (!diceInitialized) {
+                        diceInitialized = true;
+                        dice_initialize(document.getElementById('body'));
+                    }
                 });
             }
         });
