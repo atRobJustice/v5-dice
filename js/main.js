@@ -188,12 +188,24 @@ function dice_initialize(container) {
             // Update box dimensions
             if (box && typeof box.reinit === 'function') {
                 try {
-                    box.reinit(canvas, { 
-                        w: window.innerWidth, 
-                        h: canvasHeight
-                    });
+                    // Make sure canvas exists and is properly attached to DOM
+                    if (canvas && canvas.parentNode && document.body.contains(canvas)) {
+                        box.reinit(canvas, { 
+                            w: window.innerWidth, 
+                            h: canvasHeight
+                        });
+                    } else {
+                        console.warn('Canvas not ready for dice box initialization');
+                    }
                 } catch (e) {
                     console.warn('Error reinitializing dice box:', e);
+                    // If we get an error, try to recreate the box from scratch
+                    try {
+                        if (typeof box.clear === 'function') box.clear();
+                        initDiceBox();
+                    } catch (reinitError) {
+                        console.error('Failed to recover dice box:', reinitError);
+                    }
                 }
             }
         } catch (error) {
@@ -819,6 +831,30 @@ function dice_initialize(container) {
 
     function notation_getter() {
         const rouseValue = parseInt(rousePool.value);
+        
+        // Debug output
+        console.log(`Dice values - Regular: ${regularPool.value}, Hunger: ${hungerPool.value}, Rouse: ${rouseValue}`);
+        
+        // Force the rouse control to be visible if rouse value > 0
+        if (rouseValue > 0) {
+            const rouseControl = document.querySelector('.rouse-control');
+            if (rouseControl) {
+                rouseControl.classList.remove('hidden');
+            }
+            
+            // Also make sure the rouse toggle is activated
+            const rouseToggle = document.querySelector('.dice-toggle[data-target="rouse"]');
+            if (rouseToggle) {
+                rouseToggle.classList.add('active');
+            }
+            
+            // Make sure special dice controls are visible 
+            const specialDice = document.querySelector('.special-dice-controls');
+            if (specialDice) {
+                specialDice.classList.remove('hidden');
+            }
+        }
+        
         return $t.dice.parse_notation(
             parseInt(regularPool.value),
             parseInt(hungerPool.value),
@@ -836,15 +872,25 @@ function dice_initialize(container) {
             if (!Array.isArray(result)) {
                 throw new Error('Invalid roll result format');
             }
+            
+            // Always reset Blood Surge state after any roll if progeny manager exists
+            if (window.progenyManager && window.progenyManager.bloodSurgeEnabled) {
+                window.progenyManager.resetBloodSurge();
+            }
 
             // Determine roll types
             const isHungerRoll = hungerPool.value > 0;
-            const isRouseRoll = document.querySelector('.rouse-control:not(.hidden)') !== null;
+            const isRouseRoll = parseInt(rousePool.value) > 0;
             const isRemorseRoll = document.querySelector('.remorse-control:not(.hidden)') !== null;
             const isFrenzyRoll = document.querySelector('.frenzy-control:not(.hidden)') !== null;
             
             // Handle rouse checks - Check if we have rouse dice and there's a progeny manager available
             const rouseCount = notation.rouseSet ? notation.rouseSet.length : 0;
+            
+            // Debug output to check notation and rouse dice
+            console.log('Notation:', notation);
+            console.log(`Rouse count: ${rouseCount}, isRouseRoll: ${isRouseRoll}`);
+            
             if (rouseCount > 0 && window.progenyManager) {
                 // Get the rouse dice results (offset by regular and hunger dice)
                 const rouseStartIndex = notation.set.length + notation.hungerSet.length;
@@ -856,6 +902,8 @@ function dice_initialize(container) {
                     if (window.progenyManager._currentPower && window.progenyManager._currentPower.rouseChecks > 0) {
                         window.progenyManager.handleRouseResults(rouseResults);
                     }
+                    
+                    // Handle additional logic for rouse checks if needed
                 }
             }
 

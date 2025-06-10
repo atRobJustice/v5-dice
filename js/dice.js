@@ -454,12 +454,12 @@
         }
 
         this.wh = this.ch / this.aspect / Math.tan(10 * Math.PI / 180);
-        if (this.camera) this.scene.remove(this.camera);
+        if (this.camera && this.scene) this.scene.remove(this.camera);
         this.camera = new THREE.PerspectiveCamera(20, this.cw / this.ch, 1, this.wh * 1.3);
-        this.camera.position.z = this.wh;
+        if (this.camera) this.camera.position.z = this.wh;
 
         var mw = Math.max(this.w, this.h);
-        if (this.light) this.scene.remove(this.light);
+        if (this.light && this.scene) this.scene.remove(this.light);
         this.light = new THREE.DirectionalLight(that.rim_light_color, that.rim_light_intensity);
         this.light.position.set(-mw/2, mw/2, mw);
         this.light.target.position.set(0, 0, 0);
@@ -737,14 +737,14 @@
         if (time_diff > 3) time_diff = that.frame_rate;
         ++this.iteration;
         if (this.use_adapvite_timestep) {
-            while (time_diff > that.frame_rate * 1.1) {
+            while (time_diff > that.frame_rate * 1.1 && this.world) {
                 this.world.step(that.frame_rate);
                 time_diff -= that.frame_rate;
             }
-            this.world.step(time_diff);
+            if (this.world) this.world.step(time_diff);
         }
         else {
-            this.world.step(that.frame_rate);
+            if (this.world) this.world.step(that.frame_rate);
         }
         for (var i in this.scene.children) {
             var interact = this.scene.children[i];

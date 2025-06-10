@@ -24,6 +24,7 @@ class ProgenyManager {
         const exportButton = document.getElementById('export-progeny');
         const saveButton = document.getElementById('save-progeny');
         const menuTrigger = document.getElementById('menu-trigger');
+        this.bloodSurgeEnabled = false;
 
         // Close menu when clicking outside
         document.addEventListener('click', (e) => {
@@ -1047,23 +1048,68 @@ class ProgenyManager {
             
             console.log(`Total dice: ${firstDiceValue} + ${secondDiceValue} = ${totalRegularDice}`);
             
+            // Add Blood Surge dice if enabled
+            if (this.bloodSurgeEnabled) {
+                const bloodSurgeDice = this.getBloodSurgeDice();
+                if (bloodSurgeDice > 0) {
+                    totalRegularDice += bloodSurgeDice;
+                    console.log(`Adding ${bloodSurgeDice} Blood Surge dice (Blood Potency: ${this.character.bloodPotency})`);
+                    
+                    // Blood Surge always requires a Rouse Check
+                    // We'll handle this in the rouse checks section below, just note that we need a Blood Surge check
+                    const needsBloodSurgeRouse = true;
+                    
+                    // Make sure rouse control is visible
+                    const rouseControl = document.querySelector('.rouse-control');
+                    if (rouseControl) {
+                        rouseControl.classList.remove('hidden');
+                    }
+                }
+            }
+            
             // Calculate hunger dice
             const hungerDice = Math.min(totalRegularDice, this.character.hunger || 0);
             
             // Calculate final dice pools (hunger dice replace regular dice)
             const finalRegularDice = Math.max(0, totalRegularDice - hungerDice);
             
-            // Get rouse checks
-            const rouseChecks = power.rouseChecks || 0;
+            // Get rouse checks from the power
+            const powerRouseChecks = power.rouseChecks || 0;
             
             // Update the hidden input fields used by the 3D dice roller
             document.getElementById('regular_pool').value = finalRegularDice;
             document.getElementById('hunger_pool').value = hungerDice;
             
-            // Handle rouse slider
+            // Handle rouse slider - calculate total rouse checks needed
             const rouseSlider = document.getElementById('rouse_pool');
             if (rouseSlider) {
-                rouseSlider.value = rouseChecks;
+                // Calculate the total Rouse checks needed
+                let totalRouseChecks = powerRouseChecks;
+                
+                // Add 1 for Blood Surge if enabled
+                if (this.bloodSurgeEnabled) {
+                    totalRouseChecks += 1;
+                    console.log(`Total rouse checks: ${powerRouseChecks} (power) + 1 (Blood Surge) = ${totalRouseChecks}`);
+                } else {
+                    console.log(`Total rouse checks: ${powerRouseChecks} (power only)`);
+                }
+                
+                // Set the exact value needed
+                rouseSlider.value = totalRouseChecks;
+                
+                // Make sure rouse control is visible if we have rouse checks
+                if (parseInt(rouseSlider.value) > 0) {
+                    const rouseControl = document.querySelector('.rouse-control');
+                    if (rouseControl) {
+                        rouseControl.classList.remove('hidden');
+                    }
+                    
+                    // Also activate the rouse toggle
+                    const rouseToggle = document.querySelector('.dice-toggle[data-target="rouse"]');
+                    if (rouseToggle) {
+                        rouseToggle.classList.add('active');
+                    }
+                }
             }
             
             // Update display text if needed
@@ -1084,7 +1130,7 @@ class ProgenyManager {
             this._currentPower = {
                 discipline,
                 power,
-                rouseChecks
+                rouseChecks: powerRouseChecks
             };
             
             // Get the dice box instance from the global window object
@@ -1110,15 +1156,21 @@ class ProgenyManager {
                 try {
                     box.start_throw(
                         function() {
-                            const rouseValue = parseInt(document.getElementById('rouse_pool').value) || 0;
+                            // Calculate the rouse checks needed
+                            const powerRouseChecks = this._currentPower ? this._currentPower.rouseChecks : 0;
+                            const bloodSurgeRouseCheck = this.bloodSurgeEnabled ? 1 : 0;
+                            const totalRouseChecks = powerRouseChecks + bloodSurgeRouseCheck;
+                            
+                            console.log(`Power roll: Using ${totalRouseChecks} rouse dice (${powerRouseChecks} from power + ${bloodSurgeRouseCheck} from Blood Surge)`);
+                            
                             return $t.dice.parse_notation(
                                 parseInt(document.getElementById('regular_pool').value) || 0,
                                 parseInt(document.getElementById('hunger_pool').value) || 0,
-                                rouseValue,
+                                totalRouseChecks,
                                 0, // No remorse dice
                                 0  // No frenzy dice
                             );
-                        },
+                        }.bind(this),
                         window.before_roll,
                         window.after_roll
                     );
@@ -1282,6 +1334,8 @@ class ProgenyManager {
             content.appendChild(secondDieSelect);
         }
         
+
+        
         // Buttons
         const buttonContainer = document.createElement('div');
         buttonContainer.style.display = 'flex';
@@ -1312,6 +1366,7 @@ class ProgenyManager {
                 ? document.getElementById('second-die-choice').value 
                 : secondDieChoices[0] || null;
             
+
             document.body.removeChild(modal);
             callback({
                 firstDie,
@@ -1737,6 +1792,7 @@ class ProgenyManager {
                             <span>${this.character.bloodPotency || 0}</span>
                         </div>
                         <button class="edit-button" data-field="bloodPotency" data-type="number">✎</button>
+                        <button id="blood-surge-toggle" class="blood-surge-button ${this.bloodSurgeEnabled ? 'active' : ''}" title="Blood Surge (add dice based on Blood Potency, requires Rouse Check)">Surge</button>
                     </div>
                     <div class="info-stat-row">
                         <span class="stat-label">Hunger</span>
@@ -2070,6 +2126,9 @@ class ProgenyManager {
         });
 
         meritsFlawsList.appendChild(flawsDiv);
+        
+        // Initialize Blood Surge button
+        this.initBloodSurgeButton();
     }
 
     formatName(name) {
@@ -2342,8 +2401,61 @@ class ProgenyManager {
         if (!firstPool) return;
 
         // Calculate total regular dice
-        const totalRegularDice = firstPool.regular + (secondPool ? secondPool.regular : 0);
+        let totalRegularDice = firstPool.regular + (secondPool ? secondPool.regular : 0);
         const hungerDice = firstPool.hunger;
+        
+        // Add Blood Surge dice if enabled
+        if (this.bloodSurgeEnabled) {
+            const bloodSurgeDice = this.getBloodSurgeDice();
+            if (bloodSurgeDice > 0) {
+                totalRegularDice += bloodSurgeDice;
+                console.log(`Adding ${bloodSurgeDice} Blood Surge dice (Blood Potency: ${this.character.bloodPotency})`);
+                
+                // Add a Rouse Check when Blood Surge is used
+                // This requires several steps to ensure the UI and internal state are in sync
+                
+                // 1. Update the rouse slider value - always set to exactly 1 for Blood Surge
+                const rouseSlider = document.getElementById('rouse_pool');
+                if (rouseSlider) {
+                    // Blood Surge always costs exactly 1 Rouse die
+                    const newRouseValue = 1;
+                    rouseSlider.value = newRouseValue;
+                    console.log(`Blood Surge: Setting rouse value to ${newRouseValue}`);
+                    
+                    // 2. Make sure rouse control is visible
+                    const rouseControl = document.querySelector('.rouse-control');
+                    if (rouseControl) {
+                        rouseControl.classList.remove('hidden');
+                        console.log('Blood Surge: Made rouse control visible');
+                    }
+                    
+                    // 3. Make sure special dice controls are visible 
+                    const specialDice = document.querySelector('.special-dice-controls');
+                    if (specialDice) {
+                        specialDice.classList.remove('hidden');
+                        console.log('Blood Surge: Made special dice controls visible');
+                    }
+                    
+                    // 4. Update the rouse info text
+                    const rouseInfo = document.getElementById('rouse-info');
+                    if (rouseInfo) {
+                        rouseInfo.textContent = `${newRouseValue} Rouse Dice`;
+                        console.log(`Blood Surge: Updated rouse info text to ${newRouseValue} Rouse Dice`);
+                    }
+                    
+                    // 5. Activate the rouse toggle
+                    const rouseToggle = document.querySelector('.dice-toggle[data-target="rouse"]');
+                    if (rouseToggle) {
+                        rouseToggle.classList.add('active');
+                        console.log('Blood Surge: Activated rouse toggle');
+                    }
+                    
+                    // 6. Apply the slider style property
+                    rouseSlider.style.setProperty('--slider-value', newRouseValue);
+                    console.log('Blood Surge: Updated slider visual display');
+                }
+            }
+        }
 
         // Calculate final dice pools (hunger dice replace regular dice)
         const finalRegularDice = Math.max(0, totalRegularDice - hungerDice);
@@ -2355,9 +2467,44 @@ class ProgenyManager {
         // Update the display text
         const regularInfo = document.getElementById('regular-info');
         const hungerInfo = document.getElementById('hunger-info');
+        const rouseInfo = document.getElementById('rouse-info');
+        
         if (regularInfo && hungerInfo) {
             regularInfo.textContent = `${finalRegularDice} Regular Dice`;
             hungerInfo.textContent = `${hungerDice} Hunger Dice`;
+        }
+        
+        // Make sure rouse info is updated if Blood Surge is enabled
+        if (this.bloodSurgeEnabled && rouseInfo) {
+            const rouseSlider = document.getElementById('rouse_pool');
+            if (rouseSlider) {
+                const rouseChecks = parseInt(rouseSlider.value) || 0;
+                rouseInfo.textContent = `${rouseChecks} Rouse Dice`;
+                
+                // Ensure the slider's visual style is updated
+                rouseSlider.style.setProperty('--slider-value', rouseChecks);
+                
+                // Show the rouse control in the main UI
+                const rouseControl = document.querySelector('.rouse-control');
+                if (rouseControl) {
+                    rouseControl.classList.remove('hidden');
+                    console.log('Made rouse control visible before roll');
+                }
+                
+                // Also make sure the rouse toggle in the main UI is active
+                const rouseToggle = document.querySelector('.dice-toggle[data-target="rouse"]');
+                if (rouseToggle) {
+                    rouseToggle.classList.add('active');
+                    console.log('Activated rouse toggle before roll');
+                    
+                    // Also show the special dice controls
+                    const specialDice = document.querySelector('.special-dice-controls');
+                    if (specialDice) {
+                        specialDice.classList.remove('hidden');
+                        console.log('Made special dice controls visible before roll');
+                    }
+                }
+            }
         }
 
         // Close the modal
@@ -2385,11 +2532,19 @@ class ProgenyManager {
             try {
                 box.start_throw(
                     function() {
+                        // Include exactly 1 rouse die if Blood Surge is enabled
+                        const rouseValue = this.bloodSurgeEnabled ? 1 : 0;
+                            
+                        console.log(`Creating notation with rouse value: ${rouseValue}`);
+                        
                         return $t.dice.parse_notation(
                             document.getElementById('regular_pool').value,
-                            document.getElementById('hunger_pool').value
+                            document.getElementById('hunger_pool').value,
+                            rouseValue,  // Include rouse dice
+                            0,  // No remorse dice
+                            0   // No frenzy dice
                         );
-                    },
+                    }.bind(this),
                     window.before_roll,
                     window.after_roll
                 );
@@ -2735,6 +2890,106 @@ class ProgenyManager {
         });
     }
 
+    // Reset Blood Surge state and UI
+    resetBloodSurge() {
+        console.log('Resetting Blood Surge state');
+        this.bloodSurgeEnabled = false;
+        
+        // Update the UI
+        const bloodSurgeToggle = document.getElementById('blood-surge-toggle');
+        if (bloodSurgeToggle) {
+            bloodSurgeToggle.classList.remove('active');
+        }
+    }
+    
+    // Get the number of Blood Surge dice based on Blood Potency
+    initBloodSurgeButton() {
+        // Check if Blood Surge button exists
+        const bloodSurgeToggle = document.getElementById('blood-surge-toggle');
+        if (bloodSurgeToggle) {
+            // Set initial visual state based on current state
+            if (this.bloodSurgeEnabled) {
+                bloodSurgeToggle.classList.add('active');
+            } else {
+                bloodSurgeToggle.classList.remove('active');
+            }
+            
+            // Remove any existing event listeners by cloning
+            bloodSurgeToggle.replaceWith(bloodSurgeToggle.cloneNode(true));
+            
+            // Get the fresh reference
+            const newBloodSurgeToggle = document.getElementById('blood-surge-toggle');
+            
+            // Add new event listener
+            newBloodSurgeToggle.addEventListener('click', () => {
+                this.bloodSurgeEnabled = !this.bloodSurgeEnabled;
+                
+                // Update visual state
+                if (this.bloodSurgeEnabled) {
+                    newBloodSurgeToggle.classList.add('active');
+                    
+                    // Add a Rouse Check automatically when Blood Surge is activated
+                    const rouseSlider = document.getElementById('rouse_pool');
+                    if (rouseSlider) {
+                        const currentRouseChecks = parseInt(rouseSlider.value) || 0;
+                        rouseSlider.value = currentRouseChecks + 1;
+                        
+                        // Make sure rouse control is visible
+                        const rouseControl = document.querySelector('.rouse-control');
+                        if (rouseControl) {
+                            rouseControl.classList.remove('hidden');
+                        }
+                        
+                        // Update the rouse info text
+                        const rouseInfo = document.getElementById('rouse-info');
+                        if (rouseInfo) {
+                            rouseInfo.textContent = `${parseInt(rouseSlider.value)} Rouse Dice`;
+                        }
+                        
+                        // Also activate the rouse toggle
+                        const rouseToggle = document.querySelector('.dice-toggle[data-target="rouse"]');
+                        if (rouseToggle) {
+                            rouseToggle.classList.add('active');
+                        }
+                    }
+                    
+                    this.showNotification(`Blood Surge activated: +${this.getBloodSurgeDice()} dice based on Blood Potency ${this.character.bloodPotency}`);
+                } else {
+                    newBloodSurgeToggle.classList.remove('active');
+                    this.showNotification('Blood Surge deactivated');
+                }
+            });
+        }
+    }
+    
+    getBloodSurgeDice() {
+        // No Blood Surge if not enabled
+        if (!this.bloodSurgeEnabled) {
+            return 0;
+        }
+        
+        // Blood Surge dice depend on Blood Potency
+        const bloodPotency = this.character.bloodPotency || 0;
+        
+        // Blood Surge dice progression based on Blood Potency
+        const bloodSurgeDice = [
+            1, // Blood Potency 0
+            2, // Blood Potency 1
+            2, // Blood Potency 2
+            3, // Blood Potency 3
+            3, // Blood Potency 4
+            4, // Blood Potency 5
+            4, // Blood Potency 6
+            5, // Blood Potency 7
+            5, // Blood Potency 8
+            6, // Blood Potency 9
+            6  // Blood Potency 10
+        ];
+        
+        // Return the appropriate number of dice, default to 1 for invalid Blood Potency
+        return bloodPotency >= 0 && bloodPotency < bloodSurgeDice.length ? bloodSurgeDice[bloodPotency] : 1;
+    }
+    
     // Helper method to check if a discipline gets a resonance bonus
     checkDisciplineResonanceBonus(disciplineName) {
         if (!this.character || !disciplineName) return 0;

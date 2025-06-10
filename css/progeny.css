@@ -697,6 +697,33 @@
     background-color: rgba(40,40,40,0.95);
     padding: 4px 8px;
     border-radius: 4px;
+    position: relative;
+  }
+  
+  .blood-surge-button {
+    background-color: #221111;
+    color: var(--text-color);
+    border: 1px solid var(--blood-surge-color);
+    flex-shrink: 0;
+    padding: 2px 6px;
+    cursor: pointer;
+    opacity: 0.8;
+    transition: all 0.2s ease;
+    border-radius: 3px;
+    font-size: 0.9em;
+  }
+  
+  .blood-surge-button:hover {
+    background-color: var(--blood-surge-color);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+  
+  .blood-surge-button.active {
+    background-color: var(--blood-surge-color);
+    border-color: #ff3333;
+    color: white;
+    box-shadow: 0 0 5px var(--blood-surge-color);
   }
     
   /* Keep the stat-row styles for skills with specialties */
