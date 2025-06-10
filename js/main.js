@@ -186,11 +186,27 @@ function dice_initialize(container) {
             canvas.style.bottom = '0';
             
             // Update box dimensions
-            if (box) {
-                box.reinit(canvas, { 
-                    w: window.innerWidth, 
-                    h: canvasHeight
-                });
+            if (box && typeof box.reinit === 'function') {
+                try {
+                    // Make sure canvas exists and is properly attached to DOM
+                    if (canvas && canvas.parentNode && document.body.contains(canvas)) {
+                        box.reinit(canvas, { 
+                            w: window.innerWidth, 
+                            h: canvasHeight
+                        });
+                    } else {
+                        console.warn('Canvas not ready for dice box initialization');
+                    }
+                } catch (e) {
+                    console.warn('Error reinitializing dice box:', e);
+                    // If we get an error, try to recreate the box from scratch
+                    try {
+                        if (typeof box.clear === 'function') box.clear();
+                        initDiceBox();
+                    } catch (reinitError) {
+                        console.error('Failed to recover dice box:', reinitError);
+                    }
+                }
             }
         } catch (error) {
             console.error('Failed to update canvas size:', error);
@@ -815,6 +831,30 @@ function dice_initialize(container) {
 
     function notation_getter() {
         const rouseValue = parseInt(rousePool.value);
+        
+        // Debug output
+        console.log(`Dice values - Regular: ${regularPool.value}, Hunger: ${hungerPool.value}, Rouse: ${rouseValue}`);
+        
+        // Force the rouse control to be visible if rouse value > 0
+        if (rouseValue > 0) {
+            const rouseControl = document.querySelector('.rouse-control');
+            if (rouseControl) {
+                rouseControl.classList.remove('hidden');
+            }
+            
+            // Also make sure the rouse toggle is activated
+            const rouseToggle = document.querySelector('.dice-toggle[data-target="rouse"]');
+            if (rouseToggle) {
+                rouseToggle.classList.add('active');
+            }
+            
+            // Make sure special dice controls are visible 
+            const specialDice = document.querySelector('.special-dice-controls');
+            if (specialDice) {
+                specialDice.classList.remove('hidden');
+            }
+        }
+        
         return $t.dice.parse_notation(
             parseInt(regularPool.value),
             parseInt(hungerPool.value),
@@ -832,15 +872,25 @@ function dice_initialize(container) {
             if (!Array.isArray(result)) {
                 throw new Error('Invalid roll result format');
             }
+            
+            // Always reset Blood Surge state after any roll if progeny manager exists
+            if (window.progenyManager && window.progenyManager.bloodSurgeEnabled) {
+                window.progenyManager.resetBloodSurge();
+            }
 
             // Determine roll types
             const isHungerRoll = hungerPool.value > 0;
-            const isRouseRoll = document.querySelector('.rouse-control:not(.hidden)') !== null;
+            const isRouseRoll = parseInt(rousePool.value) > 0;
             const isRemorseRoll = document.querySelector('.remorse-control:not(.hidden)') !== null;
             const isFrenzyRoll = document.querySelector('.frenzy-control:not(.hidden)') !== null;
             
             // Handle rouse checks - Check if we have rouse dice and there's a progeny manager available
             const rouseCount = notation.rouseSet ? notation.rouseSet.length : 0;
+            
+            // Debug output to check notation and rouse dice
+            console.log('Notation:', notation);
+            console.log(`Rouse count: ${rouseCount}, isRouseRoll: ${isRouseRoll}`);
+            
             if (rouseCount > 0 && window.progenyManager) {
                 // Get the rouse dice results (offset by regular and hunger dice)
                 const rouseStartIndex = notation.set.length + notation.hungerSet.length;
@@ -852,6 +902,8 @@ function dice_initialize(container) {
                     if (window.progenyManager._currentPower && window.progenyManager._currentPower.rouseChecks > 0) {
                         window.progenyManager.handleRouseResults(rouseResults);
                     }
+                    
+                    // Handle additional logic for rouse checks if needed
                 }
             }
 
@@ -871,6 +923,7 @@ function dice_initialize(container) {
 
                 if (isRouse) {
                     // Rouse check is successful on 6 or higher (including 10/✪)
+                    // In V5, a Rouse check fails on 1-5 and succeeds on 6-10
                     if (roll >= 6) {
                         rouseSuccess = true;
                     }
@@ -948,7 +1001,23 @@ function dice_initialize(container) {
                 if (hasRegularOrHungerDice || isFrenzyRoll || isRemorseRoll) {
                     newHtml += '<br>';
                 }
-                newHtml += `<span class="${rouseSuccess ? 'success' : 'failure'}">Rouse Check: ${rouseSuccess ? 'Success' : 'Failure'}</span>`;
+                
+                // Count successes for multiple rouse checks
+                const rouseStartIndex = notation.set.length + notation.hungerSet.length;
+                const rouseEndIndex = rouseStartIndex + notation.rouseSet.length;
+                const rouseResults = result.slice(rouseStartIndex, rouseEndIndex);
+                const rouseSuccesses = rouseResults.filter(r => r >= 6).length;
+                const rouseFailures = rouseResults.length - rouseSuccesses;
+                
+                if (rouseResults.length === 1) {
+                    // Single rouse check
+                    newHtml += `<span class="${rouseSuccess ? 'success' : 'failure'}">Rouse Check: ${rouseSuccess ? 'Success' : 'Failure'}</span>`;
+                } else {
+                    // Multiple rouse checks
+                    newHtml += `<span class="${rouseSuccesses === rouseResults.length ? 'success' : 'failure'}">
+                        Rouse Checks: ${rouseSuccesses} Success${rouseSuccesses !== 1 ? 'es' : ''}, ${rouseFailures} Failure${rouseFailures !== 1 ? 's' : ''}
+                    </span>`;
+                }
             }
 
             latestElement.innerHTML = newHtml;
@@ -980,29 +1049,40 @@ function dice_initialize(container) {
             }
             
             // Dispatch custom event for roll results that can be listened to by other components
-            // For Rouse checks, we need to check if any of the Rouse dice rolled 6 or higher
-            let rouseSuccesses = 0;
+            // Prepare dice results for event
+            let rouseResults = [];
+            let rouseSuccessCount = 0;
             if (isRouseRoll && notation.rouseSet) {
                 const rouseStartIndex = notation.set.length + notation.hungerSet.length;
-                const rouseResults = result.slice(rouseStartIndex, rouseStartIndex + notation.rouseSet.length);
-                rouseSuccesses = rouseResults.some(r => r >= 6) ? 1 : 0;
+                const rouseEndIndex = rouseStartIndex + notation.rouseSet.length;
+                rouseResults = result.slice(rouseStartIndex, rouseEndIndex).map((value, i) => {
+                    const isSuccess = value >= 6;
+                    if (isSuccess) rouseSuccessCount++;
+                    return {
+                        value: value,
+                        // Rouse check success is 6 or higher (6-10)
+                        success: isSuccess
+                    };
+                });
             }
             
             window.dispatchEvent(new CustomEvent('diceRollComplete', {
                 detail: {
                     regularDice: parseInt(regularPool.value) || 0,
                     hungerDice: parseInt(hungerPool.value) || 0,
-                    rouseDice: isRouseRoll ? 1 : 0,
+                    rouseDice: parseInt(rousePool.value) || 0,
                     remorseDice: parseInt(remorsePool.value) || 0,
                     frenzyDice: parseInt(frenzyPool.value) || 0,
-                    successes: isRouseRoll ? rouseSuccesses : successes,
+                    results: rouseResults.length > 0 ? rouseResults : result,
+                    successes: isRouseRoll ? rouseSuccessCount : successes,
                     critical: critical,
                     messyCritical: messyCritical,
                     bestialFailure: bestialFailure,
                     isHunger: isHungerRoll,
                     isRouse: isRouseRoll,
                     isRemorse: isRemorseRoll,
-                    isFrenzy: isFrenzyRoll
+                    isFrenzy: isFrenzyRoll,
+                    diceType: isRouseRoll ? 'rouse' : (isRemorseRoll ? 'remorse' : (isFrenzyRoll ? 'frenzy' : 'regular'))
                 }
             }));
         } catch (error) {

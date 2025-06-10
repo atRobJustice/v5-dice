@@ -514,3 +514,7 @@
 .dice-toggle[data-target="frenzy"].active {
     background: var(--frenzy-color);
 }
+
+.dice-toggle[data-target="blood-surge"].active {
+    background: var(--blood-surge-color);
+}

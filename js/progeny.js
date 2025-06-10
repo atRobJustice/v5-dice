@@ -8,6 +8,12 @@ class ProgenyManager {
         this.createNotificationElement();
         this.loadSavedCharacter(); // Load saved character on initialization
     }
+    
+    // Helper method to capitalize the first letter of a string
+    capitalizeFirstLetter(string) {
+        if (!string) return '';
+        return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
+    }
 
     initializeEventListeners() {
         const fileInput = document.getElementById('progeny-file');
@@ -18,6 +24,7 @@ class ProgenyManager {
         const exportButton = document.getElementById('export-progeny');
         const saveButton = document.getElementById('save-progeny');
         const menuTrigger = document.getElementById('menu-trigger');
+        this.bloodSurgeEnabled = false;
 
         // Close menu when clicking outside
         document.addEventListener('click', (e) => {
@@ -204,8 +211,32 @@ class ProgenyManager {
                 this.character.humanityStains = data.humanityStains || 0;
 
                 // Resonance and Temperament
-                this.character.resonance = data.resonance || 'None';
+                // Handle the case where "Empty" might be stored with quotes
+                if (data.resonance === '"Empty"') {
+                    this.character.resonance = 'Empty';
+                } else {
+                    this.character.resonance = data.resonance || 'None';
+                }
                 this.character.temperament = data.temperament || 'None';
+                
+                // Dyscrasia details if present
+                if (data.dyscrasia && data.temperament === 'Acute') {
+                    this.character.dyscrasia = data.dyscrasia;
+                } else {
+                    this.character.dyscrasia = 'None';
+                }
+                
+                // Handle legacy data that might have Dyscrasia as a temperament
+                if (this.character.temperament === 'Dyscrasia') {
+                    this.character.temperament = 'Acute';
+                }
+                
+                // Ensure "Empty" or "Animal Blood" can't have Acute temperament (since they can't have Dyscrasia)
+                if ((this.character.resonance === 'Empty' || this.character.resonance === 'Animal Blood') && 
+                    this.character.temperament === 'Acute') {
+                    this.character.temperament = 'None';
+                    this.character.dyscrasia = 'None';
+                }
 
                 // Update all displays
                 this.displayCharacterStats();
@@ -954,6 +985,12 @@ class ProgenyManager {
                     if (standardName && this.character.disciplines[standardName]) {
                         console.log(`Matched standard discipline name: ${standardName}`);
                         dicePoolComponents.secondDie = standardName;
+                        
+                        // Check for resonance bonus when using standard discipline names
+                        const resonanceBonus = this.checkDisciplineResonanceBonus(standardName);
+                        if (resonanceBonus > 0) {
+                            console.log(`Will add +${resonanceBonus} dice from resonance bonus for standardized ${standardName}`);
+                        }
                     }
                     
                     // Try case-insensitive matching for disciplines
@@ -971,6 +1008,13 @@ class ProgenyManager {
                             // Count the number of powers in the discipline
                             secondDiceValue = powers.length;
                             console.log(`Second die (${disciplineKey} - discipline): ${secondDiceValue} (count of powers)`)
+                            
+                            // Check for resonance bonus for disciplines
+                            const resonanceBonus = this.checkDisciplineResonanceBonus(disciplineKey);
+                            if (resonanceBonus > 0) {
+                                secondDiceValue += resonanceBonus;
+                                console.log(`Adding +${resonanceBonus} dice from resonance bonus for ${disciplineKey}`);
+                            }
                         }
                     } else {
                         console.log(`Discipline not found: ${dicePoolComponents.secondDie}`);
@@ -987,6 +1031,13 @@ class ProgenyManager {
                                 // Count the number of powers in the discipline
                                 secondDiceValue = powers.length;
                                 console.log(`Second die (${partialMatch} - discipline, partial match): ${secondDiceValue} (count of powers)`)
+                                
+                                // Check for resonance bonus for disciplines
+                                const resonanceBonus = this.checkDisciplineResonanceBonus(partialMatch);
+                                if (resonanceBonus > 0) {
+                                    secondDiceValue += resonanceBonus;
+                                    console.log(`Adding +${resonanceBonus} dice from resonance bonus for ${partialMatch}`);
+                                }
                             }
                         }
                     }
@@ -997,23 +1048,68 @@ class ProgenyManager {
             
             console.log(`Total dice: ${firstDiceValue} + ${secondDiceValue} = ${totalRegularDice}`);
             
+            // Add Blood Surge dice if enabled
+            if (this.bloodSurgeEnabled) {
+                const bloodSurgeDice = this.getBloodSurgeDice();
+                if (bloodSurgeDice > 0) {
+                    totalRegularDice += bloodSurgeDice;
+                    console.log(`Adding ${bloodSurgeDice} Blood Surge dice (Blood Potency: ${this.character.bloodPotency})`);
+                    
+                    // Blood Surge always requires a Rouse Check
+                    // We'll handle this in the rouse checks section below, just note that we need a Blood Surge check
+                    const needsBloodSurgeRouse = true;
+                    
+                    // Make sure rouse control is visible
+                    const rouseControl = document.querySelector('.rouse-control');
+                    if (rouseControl) {
+                        rouseControl.classList.remove('hidden');
+                    }
+                }
+            }
+            
             // Calculate hunger dice
             const hungerDice = Math.min(totalRegularDice, this.character.hunger || 0);
             
             // Calculate final dice pools (hunger dice replace regular dice)
             const finalRegularDice = Math.max(0, totalRegularDice - hungerDice);
             
-            // Get rouse checks
-            const rouseChecks = power.rouseChecks || 0;
+            // Get rouse checks from the power
+            const powerRouseChecks = power.rouseChecks || 0;
             
             // Update the hidden input fields used by the 3D dice roller
             document.getElementById('regular_pool').value = finalRegularDice;
             document.getElementById('hunger_pool').value = hungerDice;
             
-            // Handle rouse slider
+            // Handle rouse slider - calculate total rouse checks needed
             const rouseSlider = document.getElementById('rouse_pool');
             if (rouseSlider) {
-                rouseSlider.value = rouseChecks;
+                // Calculate the total Rouse checks needed
+                let totalRouseChecks = powerRouseChecks;
+                
+                // Add 1 for Blood Surge if enabled
+                if (this.bloodSurgeEnabled) {
+                    totalRouseChecks += 1;
+                    console.log(`Total rouse checks: ${powerRouseChecks} (power) + 1 (Blood Surge) = ${totalRouseChecks}`);
+                } else {
+                    console.log(`Total rouse checks: ${powerRouseChecks} (power only)`);
+                }
+                
+                // Set the exact value needed
+                rouseSlider.value = totalRouseChecks;
+                
+                // Make sure rouse control is visible if we have rouse checks
+                if (parseInt(rouseSlider.value) > 0) {
+                    const rouseControl = document.querySelector('.rouse-control');
+                    if (rouseControl) {
+                        rouseControl.classList.remove('hidden');
+                    }
+                    
+                    // Also activate the rouse toggle
+                    const rouseToggle = document.querySelector('.dice-toggle[data-target="rouse"]');
+                    if (rouseToggle) {
+                        rouseToggle.classList.add('active');
+                    }
+                }
             }
             
             // Update display text if needed
@@ -1023,10 +1119,7 @@ class ProgenyManager {
                 regularInfo.textContent = `${finalRegularDice} Regular Dice`;
                 hungerInfo.textContent = `${hungerDice} Hunger Dice`;
             }
-            
-            // Show what we're rolling
-            this.showNotification(`Rolling ${power.name}: ${totalRegularDice} dice (${firstDiceValue} + ${secondDiceValue}) with ${hungerDice} hunger${rouseChecks > 0 ? ` and ${rouseChecks} rouse` : ''}`);
-            
+                       
             // Close the modal
             const modal = document.getElementById('progeny-modal');
             if (modal) {
@@ -1037,27 +1130,55 @@ class ProgenyManager {
             this._currentPower = {
                 discipline,
                 power,
-                rouseChecks
+                rouseChecks: powerRouseChecks
             };
             
             // Get the dice box instance from the global window object
-            const box = window.box;
+            let box = window.box;
+            
+            // If the box doesn't exist or has been disposed, we need to reinitialize it
+            if (!box || !box.renderer) {
+                console.log('Reinitializing dice box for power roll');
+                // Reinitialize the dice box - this assumes the main.js initialization pattern
+                if (typeof $t !== 'undefined' && $t.dice) {
+                    const canvas = document.getElementById('canvas');
+                    box = new $t.dice.dice_box(canvas, { 
+                        w: canvas.offsetWidth || window.innerWidth, 
+                        h: canvas.offsetHeight || window.innerHeight - document.querySelector('.control_panel').offsetHeight
+                    });
+                    box.init();
+                    window.box = box;
+                }
+            }
+            
             if (box && box.start_throw) {
                 // Call start_throw with all the dice pools
-                box.start_throw(
-                    function() {
-                        const rouseValue = parseInt(document.getElementById('rouse_pool').value);
-                        return $t.dice.parse_notation(
-                            parseInt(document.getElementById('regular_pool').value),
-                            parseInt(document.getElementById('hunger_pool').value),
-                            rouseValue,
-                            0, // No remorse dice
-                            0  // No frenzy dice
-                        );
-                    },
-                    window.before_roll,
-                    window.after_roll
-                );
+                try {
+                    box.start_throw(
+                        function() {
+                            // Calculate the rouse checks needed
+                            const powerRouseChecks = this._currentPower ? this._currentPower.rouseChecks : 0;
+                            const bloodSurgeRouseCheck = this.bloodSurgeEnabled ? 1 : 0;
+                            const totalRouseChecks = powerRouseChecks + bloodSurgeRouseCheck;
+                            
+                            console.log(`Power roll: Using ${totalRouseChecks} rouse dice (${powerRouseChecks} from power + ${bloodSurgeRouseCheck} from Blood Surge)`);
+                            
+                            return $t.dice.parse_notation(
+                                parseInt(document.getElementById('regular_pool').value) || 0,
+                                parseInt(document.getElementById('hunger_pool').value) || 0,
+                                totalRouseChecks,
+                                0, // No remorse dice
+                                0  // No frenzy dice
+                            );
+                        }.bind(this),
+                        window.before_roll,
+                        window.after_roll
+                    );
+                } catch (error) {
+                    console.error('Error starting power dice throw:', error);
+                }
+            } else {
+                console.error('Dice box not available for power rolling');
             }
             
             // Restore the original selected stats
@@ -1213,6 +1334,8 @@ class ProgenyManager {
             content.appendChild(secondDieSelect);
         }
         
+
+        
         // Buttons
         const buttonContainer = document.createElement('div');
         buttonContainer.style.display = 'flex';
@@ -1243,6 +1366,7 @@ class ProgenyManager {
                 ? document.getElementById('second-die-choice').value 
                 : secondDieChoices[0] || null;
             
+
             document.body.removeChild(modal);
             callback({
                 firstDie,
@@ -1278,24 +1402,6 @@ class ProgenyManager {
             this.character.hunger = Math.min(5, (this.character.hunger || 0) + failures);
             this.displayCharacterStats();
             this.saveCharacter();
-            
-            // Notify the user
-            setTimeout(() => {
-                if (results.length > 1) {
-                    this.showNotification(`Rouse checks (${resultList}): ${failures} failed. Hunger increased to ${this.character.hunger}.`, 4000);
-                } else {
-                    this.showNotification(`Rouse check failed (${results[0]}). Hunger increased to ${this.character.hunger}.`, 3000);
-                }
-            }, 2000);
-        } else {
-            // Success notification
-            setTimeout(() => {
-                if (results.length > 1) {
-                    this.showNotification(`All rouse checks succeeded! (${resultList})`, 3000);
-                } else {
-                    this.showNotification(`Rouse check succeeded (${results[0]})!`, 2000);
-                }
-            }, 2000);
         }
         
         // Clear the current power
@@ -1686,6 +1792,7 @@ class ProgenyManager {
                             <span>${this.character.bloodPotency || 0}</span>
                         </div>
                         <button class="edit-button" data-field="bloodPotency" data-type="number">✎</button>
+                        <button id="blood-surge-toggle" class="blood-surge-button ${this.bloodSurgeEnabled ? 'active' : ''}" title="Blood Surge (add dice based on Blood Potency, requires Rouse Check)">Surge</button>
                     </div>
                     <div class="info-stat-row">
                         <span class="stat-label">Hunger</span>
@@ -2019,6 +2126,9 @@ class ProgenyManager {
         });
 
         meritsFlawsList.appendChild(flawsDiv);
+        
+        // Initialize Blood Surge button
+        this.initBloodSurgeButton();
     }
 
     formatName(name) {
@@ -2291,8 +2401,61 @@ class ProgenyManager {
         if (!firstPool) return;
 
         // Calculate total regular dice
-        const totalRegularDice = firstPool.regular + (secondPool ? secondPool.regular : 0);
+        let totalRegularDice = firstPool.regular + (secondPool ? secondPool.regular : 0);
         const hungerDice = firstPool.hunger;
+        
+        // Add Blood Surge dice if enabled
+        if (this.bloodSurgeEnabled) {
+            const bloodSurgeDice = this.getBloodSurgeDice();
+            if (bloodSurgeDice > 0) {
+                totalRegularDice += bloodSurgeDice;
+                console.log(`Adding ${bloodSurgeDice} Blood Surge dice (Blood Potency: ${this.character.bloodPotency})`);
+                
+                // Add a Rouse Check when Blood Surge is used
+                // This requires several steps to ensure the UI and internal state are in sync
+                
+                // 1. Update the rouse slider value - always set to exactly 1 for Blood Surge
+                const rouseSlider = document.getElementById('rouse_pool');
+                if (rouseSlider) {
+                    // Blood Surge always costs exactly 1 Rouse die
+                    const newRouseValue = 1;
+                    rouseSlider.value = newRouseValue;
+                    console.log(`Blood Surge: Setting rouse value to ${newRouseValue}`);
+                    
+                    // 2. Make sure rouse control is visible
+                    const rouseControl = document.querySelector('.rouse-control');
+                    if (rouseControl) {
+                        rouseControl.classList.remove('hidden');
+                        console.log('Blood Surge: Made rouse control visible');
+                    }
+                    
+                    // 3. Make sure special dice controls are visible 
+                    const specialDice = document.querySelector('.special-dice-controls');
+                    if (specialDice) {
+                        specialDice.classList.remove('hidden');
+                        console.log('Blood Surge: Made special dice controls visible');
+                    }
+                    
+                    // 4. Update the rouse info text
+                    const rouseInfo = document.getElementById('rouse-info');
+                    if (rouseInfo) {
+                        rouseInfo.textContent = `${newRouseValue} Rouse Dice`;
+                        console.log(`Blood Surge: Updated rouse info text to ${newRouseValue} Rouse Dice`);
+                    }
+                    
+                    // 5. Activate the rouse toggle
+                    const rouseToggle = document.querySelector('.dice-toggle[data-target="rouse"]');
+                    if (rouseToggle) {
+                        rouseToggle.classList.add('active');
+                        console.log('Blood Surge: Activated rouse toggle');
+                    }
+                    
+                    // 6. Apply the slider style property
+                    rouseSlider.style.setProperty('--slider-value', newRouseValue);
+                    console.log('Blood Surge: Updated slider visual display');
+                }
+            }
+        }
 
         // Calculate final dice pools (hunger dice replace regular dice)
         const finalRegularDice = Math.max(0, totalRegularDice - hungerDice);
@@ -2304,9 +2467,44 @@ class ProgenyManager {
         // Update the display text
         const regularInfo = document.getElementById('regular-info');
         const hungerInfo = document.getElementById('hunger-info');
+        const rouseInfo = document.getElementById('rouse-info');
+        
         if (regularInfo && hungerInfo) {
             regularInfo.textContent = `${finalRegularDice} Regular Dice`;
             hungerInfo.textContent = `${hungerDice} Hunger Dice`;
+        }
+        
+        // Make sure rouse info is updated if Blood Surge is enabled
+        if (this.bloodSurgeEnabled && rouseInfo) {
+            const rouseSlider = document.getElementById('rouse_pool');
+            if (rouseSlider) {
+                const rouseChecks = parseInt(rouseSlider.value) || 0;
+                rouseInfo.textContent = `${rouseChecks} Rouse Dice`;
+                
+                // Ensure the slider's visual style is updated
+                rouseSlider.style.setProperty('--slider-value', rouseChecks);
+                
+                // Show the rouse control in the main UI
+                const rouseControl = document.querySelector('.rouse-control');
+                if (rouseControl) {
+                    rouseControl.classList.remove('hidden');
+                    console.log('Made rouse control visible before roll');
+                }
+                
+                // Also make sure the rouse toggle in the main UI is active
+                const rouseToggle = document.querySelector('.dice-toggle[data-target="rouse"]');
+                if (rouseToggle) {
+                    rouseToggle.classList.add('active');
+                    console.log('Activated rouse toggle before roll');
+                    
+                    // Also show the special dice controls
+                    const specialDice = document.querySelector('.special-dice-controls');
+                    if (specialDice) {
+                        specialDice.classList.remove('hidden');
+                        console.log('Made special dice controls visible before roll');
+                    }
+                }
+            }
         }
 
         // Close the modal
@@ -2316,19 +2514,45 @@ class ProgenyManager {
         }
 
         // Get the dice box instance from the global window object
-        const box = window.box;
+        let box = window.box;
+        
+        // If the box doesn't exist or has been disposed, we need to reinitialize it
+        if (!box || !box.renderer) {
+            console.log('Reinitializing dice box for progeny roll');
+            // Reinitialize the dice box - this assumes the main.js initialization pattern
+            if (typeof $t !== 'undefined' && $t.dice) {
+                box = new $t.dice.dice_box(document.getElementById('canvas'), { w: window.innerWidth, h: window.innerHeight });
+                box.init();
+                window.box = box;
+            }
+        }
+        
         if (box && box.start_throw) {
             // Call start_throw with the proper notation getter
-            box.start_throw(
-                function() {
-                    return $t.dice.parse_notation(
-                        document.getElementById('regular_pool').value,
-                        document.getElementById('hunger_pool').value
-                    );
-                },
-                window.before_roll,
-                window.after_roll
-            );
+            try {
+                box.start_throw(
+                    function() {
+                        // Include exactly 1 rouse die if Blood Surge is enabled
+                        const rouseValue = this.bloodSurgeEnabled ? 1 : 0;
+                            
+                        console.log(`Creating notation with rouse value: ${rouseValue}`);
+                        
+                        return $t.dice.parse_notation(
+                            document.getElementById('regular_pool').value,
+                            document.getElementById('hunger_pool').value,
+                            rouseValue,  // Include rouse dice
+                            0,  // No remorse dice
+                            0   // No frenzy dice
+                        );
+                    }.bind(this),
+                    window.before_roll,
+                    window.after_roll
+                );
+            } catch (error) {
+                console.error('Error starting dice throw:', error);
+            }
+        } else {
+            console.error('Dice box not available for rolling');
         }
     }
 
@@ -2336,6 +2560,7 @@ class ProgenyManager {
         let regularDice = 0;
         let hungerDice = 0;
         let specialtyBonus = 0;
+        let resonanceBonus = 0;
 
         console.log('Getting dice pool for stat:', stat);
         console.log('Stat type:', {
@@ -2363,19 +2588,75 @@ class ProgenyManager {
             }
         }
 
+        // Disciplines might be accessed with different cases, so let's check case-insensitively
+        const disciplineKey = Object.keys(this.character.disciplines || {}).find(
+            key => key.toLowerCase() === stat.toLowerCase()
+        );
+        
         // Check if the stat exists in disciplines
-        if (this.character.disciplines[stat]) {
+        if (disciplineKey && this.character.disciplines[disciplineKey]) {
             // Count the number of powers in the discipline
-            const powers = this.character.disciplines[stat];
+            const powers = this.character.disciplines[disciplineKey];
             if (powers && powers.length > 0) {
                 regularDice += powers.length; // Use count of powers instead of highest level
+                
+                // Check if the discipline matches character's resonance and if resonance is Acute or Dyscrasia
+                const resonance = this.character.resonance;
+                const temperament = this.character.temperament || '';
+                
+                console.log(`Checking resonance bonus for discipline ${disciplineKey}`);
+                console.log(`Character resonance: ${resonance}, temperament: ${temperament}`);
+                
+                // Define the mapping of resonance types to disciplines
+                const resonanceToDisciplines = {
+                    'Choleric': ['Celerity', 'Potence'],
+                    'Melancholic': ['Fortitude', 'Obfuscate'],
+                    'Phlegmatic': ['Auspex', 'Dominate'],
+                    'Sanguine': ['Blood Sorcery', 'Presence'],
+                    '"Empty"': ['Oblivion'],
+                    'Animal Blood': ['Animalism', 'Protean']
+                };
+                
+                // Support both spellings of "Melancholy/Melancholic"
+                if (!resonanceToDisciplines[resonance] && resonance === 'Melancholy') {
+                    resonance = 'Melancholic';
+                }
+                
+                // Check if the character has a resonance and it's either Acute or Dyscrasia
+                if (resonance && resonanceToDisciplines[resonance] && 
+                    (temperament === 'Acute' || temperament === 'Dyscrasia')) {
+                    
+                    // Get proper discipline name (with correct capitalization)
+                    const disciplineName = this.capitalizeFirstLetter(disciplineKey);
+                    
+                    // Check each resonance discipline with case-insensitive comparison
+                    const matchesDiscipline = resonanceToDisciplines[resonance].some(
+                        d => d.toLowerCase() === disciplineName.toLowerCase()
+                    );
+                    
+                    console.log(`Checking if ${disciplineName} matches any of: ${JSON.stringify(resonanceToDisciplines[resonance])}`);
+                    
+                    if (matchesDiscipline) {
+                        console.log(`✓ Adding +1 dice for ${resonance} ${temperament} with ${disciplineName} discipline`);
+                        resonanceBonus = 1;
+                    } else {
+                        console.log(`✗ No resonance bonus for ${disciplineName} - doesn't match ${resonance} disciplines`);
+                    }
+                } else {
+                    console.log(`No resonance bonus available: resonance=${resonance}, temperament=${temperament}`);
+                }
             }
         }
 
-        // Add specialty bonus to regular dice
-        regularDice += specialtyBonus;
-        console.log('Final dice pool:', { regular: regularDice, hunger: hungerDice, specialtyBonus });
-
+        // Add specialty and resonance bonuses to regular dice
+        regularDice += specialtyBonus + resonanceBonus;
+        console.log('Final dice pool:', { 
+            regular: regularDice, 
+            hunger: hungerDice, 
+            specialtyBonus,
+            resonanceBonus 
+        });
+        
         return regularDice > 0 ? { regular: regularDice, hunger: hungerDice } : null;
     }
 
@@ -2546,8 +2827,14 @@ class ProgenyManager {
         exportData.healthDamage = this.character.healthDamage;
         exportData.willpowerDamage = this.character.willpowerDamage;
         exportData.humanityStains = this.character.humanityStains;
+        // Make sure we're using consistent values for resonance and temperament
         exportData.resonance = this.character.resonance || 'None';
         exportData.temperament = this.character.temperament || 'None';
+        
+        // Add dyscrasia details if applicable
+        if (this.character.temperament === 'Acute' && this.character.dyscrasia) {
+            exportData.dyscrasia = this.character.dyscrasia;
+        }
 
         // Add specialties to the export data
         if (this.character.skillSpecialties && this.character.skillSpecialties.length > 0) {
@@ -2603,6 +2890,149 @@ class ProgenyManager {
         });
     }
 
+    // Reset Blood Surge state and UI
+    resetBloodSurge() {
+        console.log('Resetting Blood Surge state');
+        this.bloodSurgeEnabled = false;
+        
+        // Update the UI
+        const bloodSurgeToggle = document.getElementById('blood-surge-toggle');
+        if (bloodSurgeToggle) {
+            bloodSurgeToggle.classList.remove('active');
+        }
+    }
+    
+    // Get the number of Blood Surge dice based on Blood Potency
+    initBloodSurgeButton() {
+        // Check if Blood Surge button exists
+        const bloodSurgeToggle = document.getElementById('blood-surge-toggle');
+        if (bloodSurgeToggle) {
+            // Set initial visual state based on current state
+            if (this.bloodSurgeEnabled) {
+                bloodSurgeToggle.classList.add('active');
+            } else {
+                bloodSurgeToggle.classList.remove('active');
+            }
+            
+            // Remove any existing event listeners by cloning
+            bloodSurgeToggle.replaceWith(bloodSurgeToggle.cloneNode(true));
+            
+            // Get the fresh reference
+            const newBloodSurgeToggle = document.getElementById('blood-surge-toggle');
+            
+            // Add new event listener
+            newBloodSurgeToggle.addEventListener('click', () => {
+                this.bloodSurgeEnabled = !this.bloodSurgeEnabled;
+                
+                // Update visual state
+                if (this.bloodSurgeEnabled) {
+                    newBloodSurgeToggle.classList.add('active');
+                    
+                    // Add a Rouse Check automatically when Blood Surge is activated
+                    const rouseSlider = document.getElementById('rouse_pool');
+                    if (rouseSlider) {
+                        const currentRouseChecks = parseInt(rouseSlider.value) || 0;
+                        rouseSlider.value = currentRouseChecks + 1;
+                        
+                        // Make sure rouse control is visible
+                        const rouseControl = document.querySelector('.rouse-control');
+                        if (rouseControl) {
+                            rouseControl.classList.remove('hidden');
+                        }
+                        
+                        // Update the rouse info text
+                        const rouseInfo = document.getElementById('rouse-info');
+                        if (rouseInfo) {
+                            rouseInfo.textContent = `${parseInt(rouseSlider.value)} Rouse Dice`;
+                        }
+                        
+                        // Also activate the rouse toggle
+                        const rouseToggle = document.querySelector('.dice-toggle[data-target="rouse"]');
+                        if (rouseToggle) {
+                            rouseToggle.classList.add('active');
+                        }
+                    }
+                    
+                    this.showNotification(`Blood Surge activated: +${this.getBloodSurgeDice()} dice based on Blood Potency ${this.character.bloodPotency}`);
+                } else {
+                    newBloodSurgeToggle.classList.remove('active');
+                    this.showNotification('Blood Surge deactivated');
+                }
+            });
+        }
+    }
+    
+    getBloodSurgeDice() {
+        // No Blood Surge if not enabled
+        if (!this.bloodSurgeEnabled) {
+            return 0;
+        }
+        
+        // Blood Surge dice depend on Blood Potency
+        const bloodPotency = this.character.bloodPotency || 0;
+        
+        // Blood Surge dice progression based on Blood Potency
+        const bloodSurgeDice = [
+            1, // Blood Potency 0
+            2, // Blood Potency 1
+            2, // Blood Potency 2
+            3, // Blood Potency 3
+            3, // Blood Potency 4
+            4, // Blood Potency 5
+            4, // Blood Potency 6
+            5, // Blood Potency 7
+            5, // Blood Potency 8
+            6, // Blood Potency 9
+            6  // Blood Potency 10
+        ];
+        
+        // Return the appropriate number of dice, default to 1 for invalid Blood Potency
+        return bloodPotency >= 0 && bloodPotency < bloodSurgeDice.length ? bloodSurgeDice[bloodPotency] : 1;
+    }
+    
+    // Helper method to check if a discipline gets a resonance bonus
+    checkDisciplineResonanceBonus(disciplineName) {
+        if (!this.character || !disciplineName) return 0;
+        
+        const resonance = this.character.resonance;
+        const temperament = this.character.temperament || '';
+        
+        // Only apply bonus for Acute or Dyscrasia temperaments
+        if (!resonance || !temperament || 
+            (temperament !== 'Acute' && temperament !== 'Dyscrasia')) {
+            return 0;
+        }
+        
+        // Define the mapping of resonance types to disciplines
+        const resonanceToDisciplines = {
+            'Choleric': ['Celerity', 'Potence'],
+            'Melancholic': ['Fortitude', 'Obfuscate'],
+            'Phlegmatic': ['Auspex', 'Dominate'],
+            'Sanguine': ['Blood Sorcery', 'Presence'],
+            '"Empty"': ['Oblivion'],
+            'Animal Blood': ['Animalism', 'Protean']
+        };
+        
+        // Support both spellings of "Melancholy/Melancholic"
+        let resonanceKey = resonance;
+        if (resonanceKey === 'Melancholy') {
+            resonanceKey = 'Melancholic';
+        }
+        
+        // Check if discipline matches any in the resonance list (case-insensitive)
+        if (resonanceToDisciplines[resonanceKey]) {
+            const matches = resonanceToDisciplines[resonanceKey].some(
+                d => d.toLowerCase() === disciplineName.toLowerCase()
+            );
+            
+            if (matches) {
+                return 1;
+            }
+        }
+        
+        return 0;
+    }
+    
     saveCharacter() {
         if (this.character && this.originalJson) {
             localStorage.setItem('progenyCharacter', JSON.stringify({
@@ -2904,6 +3334,15 @@ class ProgenyManager {
             statusText = 'Impaired';
         }
         
+        // Create mend buttons HTML only for Health
+        const superficialMendHTML = type === 'Health' ? 
+            `<button class="mend-btn superficial-mend" title="Mend Superficial damage (1 Rouse Check)">Mend</button>` 
+            : '';
+            
+        const aggravatedMendHTML = type === 'Health' ? 
+            `<button class="mend-btn aggravated-mend" title="Mend Aggravated damage (3 Rouse Checks)">Mend</button>` 
+            : '';
+            
         div.innerHTML = `
             <div class="damage-header">
                 <span class="damage-label">${type}</span>
@@ -2921,6 +3360,7 @@ class ProgenyManager {
                         <span class="damage-value">${damage.superficial}</span>
                         <button class="damage-btn plus" data-type="superficial">+</button>
                     </div>
+                    ${superficialMendHTML}
                 </div>
                 <div class="damage-type">
                     <span class="damage-label">Aggravated</span>
@@ -2929,6 +3369,7 @@ class ProgenyManager {
                         <span class="damage-value">${damage.aggravated}</span>
                         <button class="damage-btn plus" data-type="aggravated">+</button>
                     </div>
+                    ${aggravatedMendHTML}
                 </div>
             </div>
             ${statusText ? `<div class="status-warning impaired">${statusText}</div>` : ''}
@@ -2959,6 +3400,84 @@ class ProgenyManager {
                 this.displayCharacterStats();
             });
         });
+        
+        // Add event listeners for mend buttons (only for Health)
+        if (type === 'Health') {
+            // Mend Superficial damage
+            const superficialMendButton = div.querySelector('.superficial-mend');
+            if (superficialMendButton) {
+                superficialMendButton.addEventListener('click', () => {
+                    // Check if there's superficial damage to heal
+                    if (damage.superficial <= 0) {
+                        this.showNotification('No superficial damage to mend.');
+                        return;
+                    }
+                    
+                    // Perform a rouse check (set rouse dice to 1)
+                    this.rollRouseCheck(1);
+                    
+                    // Function to handle the result after the roll is complete
+                    const handleRouseResult = (event) => {
+                        // Determine how many superficial damage points to heal based on Blood Potency
+                        const bloodPotency = this.character.bloodPotency || 0;
+                        let healAmount;
+                        
+                        if (bloodPotency <= 1) healAmount = 1;
+                        else if (bloodPotency <= 3) healAmount = 2;
+                        else if (bloodPotency <= 7) healAmount = 3;
+                        else if (bloodPotency <= 9) healAmount = 4;
+                        else healAmount = 5;
+                        
+                        // Heal the character (damage is healed regardless of Rouse check result)
+                        const currentDamage = this.character.healthDamage;
+                        const actualHealAmount = Math.min(healAmount, currentDamage.superficial);
+                        currentDamage.superficial = Math.max(0, currentDamage.superficial - healAmount);
+                        
+                        // Update display and show notification
+                        this.displayCharacterStats();
+                        this.showNotification(`Mended ${actualHealAmount} points of Superficial damage.`);
+                        
+                        // Remove the event listener after handling the result
+                        document.removeEventListener('rouseCheckComplete', handleRouseResult);
+                    };
+                    
+                    // Add event listener for when the rouse check is complete
+                    document.addEventListener('rouseCheckComplete', handleRouseResult);
+                });
+            }
+            
+            // Mend Aggravated damage
+            const aggravatedMendButton = div.querySelector('.aggravated-mend');
+            if (aggravatedMendButton) {
+                aggravatedMendButton.addEventListener('click', () => {
+                    // Check if there's aggravated damage to heal
+                    if (damage.aggravated <= 0) {
+                        this.showNotification('No aggravated damage to mend.');
+                        return;
+                    }
+                    
+                    // Perform three rouse checks
+                    this.rollRouseCheck(3);
+                    
+                    // Function to handle the result after the roll is complete
+                    const handleRouseResult = (event) => {
+                        // Heal 1 point of aggravated damage (regardless of Rouse check results)
+                        const currentDamage = this.character.healthDamage;
+                        currentDamage.aggravated = Math.max(0, currentDamage.aggravated - 1);
+                        
+                        // Update display and show notification
+                        this.displayCharacterStats();
+                        this.showNotification('Mended 1 point of Aggravated damage.');
+                        
+                        // Remove the event listener after handling the result
+                        document.removeEventListener('rouseCheckComplete', handleRouseResult);
+                    };
+                    
+                    // Add event listener for when the rouse check is complete
+                    document.addEventListener('rouseCheckComplete', handleRouseResult);
+                });
+            }
+        }
 
         return div;
     }
@@ -3118,11 +3637,12 @@ class ProgenyManager {
         }
     }
     
-    rollRouseCheck() {
+    rollRouseCheck(numChecks = 1) {
         // Update the rouse checkbox in the control panel
         const rouseCheckbox = document.getElementById('rouse_pool');
         if (rouseCheckbox) {
-            rouseCheckbox.checked = true;
+            // Set the rouse pool to the number of checks (slider value)
+            rouseCheckbox.value = numChecks;
         }
         
         // Make sure the rouse control is visible
@@ -3134,7 +3654,7 @@ class ProgenyManager {
         // Update the rouse check label
         const rouseInfo = document.getElementById('rouse-info');
         if (rouseInfo) {
-            rouseInfo.textContent = `Rouse Check`;
+            rouseInfo.textContent = numChecks > 1 ? `${numChecks} Rouse Checks` : `Rouse Check`;
         }
         
         // Toggle the rouse button to active
@@ -3156,12 +3676,13 @@ class ProgenyManager {
         const box = window.box;
         if (box && box.start_throw) {
             // Call start_throw with the proper notation getter
+            const rouseChecks = numChecks;
             box.start_throw(
                 function() {
                     return $t.dice.parse_notation(
                         0, // Regular dice
                         0, // Hunger dice
-                        1, // Rouse dice (always 1)
+                        rouseChecks, // Rouse dice (variable)
                         0, // Remorse dice
                         0  // Frenzy dice
                     );
@@ -3181,17 +3702,32 @@ class ProgenyManager {
         // Remove the event listener to prevent duplicate handling
         window.removeEventListener('diceRollComplete', this.handleRouseRollResult);
         
-        // Check if the roll was successful (at least one success)
-        const successes = event.detail.successes || 0;
+        // Count failed checks (dice with value 1-5)
+        // In V5, a Rouse check fails on 1-5 and succeeds on 6-10
+        const results = event.detail.results || [];
+        const failedChecks = results.filter(die => die.value < 6).length;
         
-        if (successes === 0) {
-            // If no successes, increase hunger by 1
+        if (failedChecks > 0) {
+            // Increase hunger by the number of failed checks, up to maximum of 5
             const currentHunger = this.character.hunger || 0;
-            this.character.hunger = Math.min(5, currentHunger + 1);
-            this.showNotification('Rouse check failed: Hunger increased by 1', 3000);
-        } else {
-            this.showNotification('Rouse check passed: Hunger unchanged', 3000);
+            this.character.hunger = Math.min(5, currentHunger + failedChecks);
+            
+            // Notify the user about hunger increase
+            this.showNotification(`Failed ${failedChecks} Rouse Check${failedChecks > 1 ? 's' : ''}. Hunger increased to ${this.character.hunger}.`);
+        } else if (results.length > 0) {
+            // All checks succeeded
+            this.showNotification(`All ${results.length} Rouse Check${results.length > 1 ? 's' : ''} succeeded.`);
         }
+        
+        // Create a custom event with all the results data
+        const rouseCompleteEvent = new CustomEvent('rouseCheckComplete', {
+            detail: {
+                results: results,
+                failedChecks: failedChecks,
+                allSucceeded: failedChecks === 0 && results.length > 0
+            }
+        });
+        document.dispatchEvent(rouseCompleteEvent);
         
         // Update the character sheet to reflect changes
         this.displayCharacterStats();
@@ -3213,9 +3749,6 @@ class ProgenyManager {
         if (successes === 0) {
             // If no successes, reduce humanity by 1
             this.character.humanity = Math.max(0, this.character.humanity - 1);
-            this.showNotification('Remorse check failed: Humanity reduced by 1', 3000);
-        } else {
-            this.showNotification('Remorse check passed', 3000);
         }
         
         // Clear all stains regardless of success or failure
@@ -3426,10 +3959,61 @@ class ProgenyManager {
         const div = document.createElement('div');
         div.className = 'resonance-tracker';
         
-        const resonanceTypes = ['Sanguine', 'Choleric', 'Phlegmatic', 'Melancholic', '"Empty"'];
-        const temperamentTypes = ['Negligible', 'Fleeting', 'Intense', 'Accute'];
+        const resonanceTypes = ['Sanguine', 'Choleric', 'Phlegmatic', 'Melancholic', 'Empty', "Animal Blood"];
+        const temperamentTypes = ['Fleeting', 'Intense', 'Acute'];
         const currentResonance = this.character.resonance || 'None';
         const currentTemperament = this.character.temperament || 'None';
+        const currentDyscrasia = this.character.dyscrasia || 'None';
+        
+        // Define Dyscrasia subtypes
+        const dyscrasiaTypes = {
+            'Sanguine': [
+                'Contagious Enthusiasm',
+                'Smell Game',
+                'High on Life',
+                'Manic High',
+                'True Love',
+                'Stirring'
+            ],
+            'Choleric': [
+                'Bully',
+                'Cycle of Violence',
+                'Envy',
+                'Principled',
+                'Vengeful',
+                'Vicious',
+                'Driving'
+            ],
+            'Melancholic': [
+                'In Mourning',
+                'Lost Love',
+                'Lost Relative',
+                'Massive Failure',
+                'Nostalgic',
+                'Recalling'
+            ],
+            'Phlegmatic': [
+                'Chill',
+                'Feel no Pain',
+                'Eating your Emotions',
+                'Given Up',
+                'Lone Wolf',
+                'Procrastinate',
+                'Reflection'
+            ]
+        };
+        
+        // Check if dyscrasia section should be shown - only shown with Acute temperament
+        const showDyscrasia = currentTemperament === 'Acute' && 
+                             (currentResonance === 'Sanguine' || 
+                              currentResonance === 'Choleric' || 
+                              currentResonance === 'Phlegmatic' || 
+                              currentResonance === 'Melancholic');
+        
+        // Get appropriate dyscrasia options based on resonance
+        const dyscrasiaOptions = showDyscrasia ? (dyscrasiaTypes[currentResonance] || []) : [];
+        
+        // No longer need to add styles here - moved to CSS file
         
         div.innerHTML = `
             <div class="resonance-header">
@@ -3438,7 +4022,7 @@ class ProgenyManager {
             <div class="resonance-controls">
                 <div class="resonance-type">
                     <span class="resonance-sub-label">Type</span>
-                    <select class="resonance-select">
+                    <select class="resonance-select" id="resonance-type-select">
                         <option value="None" ${currentResonance === 'None' ? 'selected' : ''}>None</option>
                         ${resonanceTypes.map(type => 
                             `<option value="${type}" ${currentResonance === type ? 'selected' : ''}>${type}</option>`
@@ -3447,29 +4031,176 @@ class ProgenyManager {
                 </div>
                 <div class="resonance-temperament">
                     <span class="resonance-sub-label">Temperament</span>
-                    <select class="resonance-select">
+                    <select class="resonance-select" id="temperament-select">
                         <option value="None" ${currentTemperament === 'None' ? 'selected' : ''}>None</option>
-                        ${temperamentTypes.map(type => 
-                            `<option value="${type}" ${currentTemperament === type ? 'selected' : ''}>${type}</option>`
+                        ${temperamentTypes.map(type => {
+                            // Disable Acute temperament for "Empty" and "Animal Blood" since they can't have Dyscrasia
+                            const isDisabled = type === 'Acute' && 
+                                              (currentResonance === 'Empty' || currentResonance === 'Animal Blood');
+                            return `<option value="${type}" 
+                                ${currentTemperament === type ? 'selected' : ''} 
+                                ${isDisabled ? 'disabled' : ''}>${type}${isDisabled ? ' (Not Available)' : ''}</option>`;
+                        }).join('')}
+                    </select>
+                </div>
+            </div>
+            ${showDyscrasia ? `
+            <div class="resonance-controls dyscrasia-section">
+                <div class="dyscrasia-type">
+                    <span class="resonance-sub-label">${currentResonance} Dyscrasia</span>
+                    <select class="resonance-select" id="dyscrasia-select">
+                        <option value="None" ${currentDyscrasia === 'None' ? 'selected' : ''}>Select a Dyscrasia</option>
+                        ${dyscrasiaOptions.map(type => 
+                            `<option value="${type}" ${currentDyscrasia === type ? 'selected' : ''}>${type}</option>`
                         ).join('')}
                     </select>
                 </div>
+            </div>` : ''}
             </div>
         `;
 
         // Add event listeners for resonance and temperament selection
         div.querySelectorAll('.resonance-select').forEach(select => {
             select.addEventListener('change', (e) => {
-                if (e.target.parentElement.classList.contains('resonance-type')) {
+                if (e.target.id === 'resonance-type-select') {
                     this.character.resonance = e.target.value;
-                } else {
+                    console.log(`Changed resonance to: ${e.target.value}`);
+                    
+                    // If switching to "Empty" or "Animal Blood", reset temperament if it was Acute
+                    if ((e.target.value === 'Empty' || e.target.value === 'Animal Blood') && 
+                        this.character.temperament === 'Acute') {
+                        this.character.temperament = 'None';
+                        this.character.dyscrasia = 'None';
+                    }
+                    
+                    // Save the character before re-rendering
+                    this.saveCharacter();
+                    
+                    // Force a re-render to update disabled status and dyscrasia options
+                    const newTracker = this.createResonanceTracker();
+                    div.parentNode.replaceChild(newTracker, div);
+                    return;
+                } else if (e.target.id === 'temperament-select') {
                     this.character.temperament = e.target.value;
+                    console.log(`Changed temperament to: ${e.target.value}`);
+                    
+                    // Reset dyscrasia if temperament is not Acute
+                    if (e.target.value !== 'Acute') {
+                        this.character.dyscrasia = 'None';
+                    }
+                    
+                    // Save the character before re-rendering
+                    this.saveCharacter();
+                    
+                    // Force a re-render to update dyscrasia options
+                    const newTracker = this.createResonanceTracker();
+                    div.parentNode.replaceChild(newTracker, div);
+                    return;
+                } else if (e.target.id === 'dyscrasia-select') {
+                    this.character.dyscrasia = e.target.value;
+                    console.log(`Changed dyscrasia to: ${e.target.value}`);
                 }
+                
+                // Save the character after updating resonance or temperament
+                this.saveCharacter();
                 this.displayCharacterStats();
+                
+                // Update bonus indicator
+                //this.updateResonanceBonusIndicator(div);
             });
         });
+        
+        // Initialize the bonus indicator
+        //this.updateResonanceBonusIndicator(div);
 
         return div;
+    }
+    
+    // Helper method to update the resonance bonus indicator
+    updateResonanceBonusIndicator(container) {
+        if (!this.character) return;
+        
+        // Remove any existing indicator
+        const existingIndicator = container.querySelector('.resonance-bonus-indicator');
+        if (existingIndicator) {
+            existingIndicator.remove();
+        }
+        
+        const resonance = this.character.resonance;
+        const temperament = this.character.temperament || '';
+        
+        // Only show indicator for Acute temperament
+        if (!resonance || resonance === 'None' || !temperament || temperament !== 'Acute') {
+            return;
+        }
+        
+        // Create the indicator element
+        const indicator = document.createElement('div');
+        indicator.className = 'resonance-bonus-indicator';
+        indicator.innerHTML = `
+            <div class="indicator-content">
+                <span class="bonus-label">+1 Die Bonus</span>
+                <span class="bonus-details">
+                    When using these disciplines:
+                    <ul class="discipline-list">
+                        ${this.getResonanceDisciplines(resonance).map(d => 
+                            `<li>${d}</li>`
+                        ).join('')}
+                    </ul>
+                </span>
+            </div>
+        `;
+        
+        // Add some styling
+        const style = document.createElement('style');
+        if (!document.querySelector('#resonance-bonus-styles')) {
+            style.id = 'resonance-bonus-styles';
+            style.innerHTML = `
+                .resonance-bonus-indicator {
+                    margin-top: 10px;
+                    padding: 5px;
+                    background-color: rgba(0, 128, 0, 0.1);
+                    border-left: 3px solid green;
+                    border-radius: 3px;
+                    font-size: 0.9em;
+                }
+                .bonus-label {
+                    font-weight: bold;
+                    color: green;
+                    display: block;
+                }
+                .discipline-list {
+                    margin: 5px 0 0 15px;
+                    padding: 0;
+                }
+                .discipline-list li {
+                    margin-bottom: 2px;
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        // Add to the container
+        container.appendChild(indicator);
+    }
+    
+    // Helper to get disciplines for a resonance type
+    getResonanceDisciplines(resonance) {
+        const resonanceToDisciplines = {
+            'Choleric': ['Celerity', 'Potence'],
+            'Melancholic': ['Fortitude', 'Obfuscate'],
+            'Phlegmatic': ['Auspex', 'Dominate'],
+            'Sanguine': ['Blood Sorcery', 'Presence'],
+            '"Empty"': ['Oblivion'],
+            'Animal Blood': ['Animalism', 'Protean']
+        };
+        
+        // Support both spellings
+        if (resonance === 'Melancholy') {
+            resonance = 'Melancholic';
+        }
+        
+        return resonanceToDisciplines[resonance] || [];
     }
 }
 
