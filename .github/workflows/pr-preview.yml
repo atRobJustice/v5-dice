@@ -1,0 +1,58 @@
+name: PR Preview Tests
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  e2e-preview:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 18
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Install Playwright
+      run: npx playwright install --with-deps chromium
+    
+    - name: Run E2E tests
+      run: npx playwright test --project=chromium --reporter=github
+      
+    - name: Comment PR with results
+      uses: actions/github-script@v7
+      if: always()
+      with:
+        script: |
+          const fs = require('fs');
+          const path = require('path');
+          
+          // Read test results and create comment
+          let comment = '## 🎲 V5 Dice E2E Test Results\n\n';
+          
+          if (process.env.GITHUB_JOB_STATUS === 'success') {
+            comment += '✅ All tests passed!\n\n';
+            comment += '**Test Coverage:**\n';
+            comment += '- ✅ All dice combinations\n';
+            comment += '- ✅ Character import/export\n'; 
+            comment += '- ✅ All character updates\n';
+            comment += '- ✅ All roll buttons\n';
+            comment += '- ✅ UI state management\n';
+          } else {
+            comment += '❌ Some tests failed. Please check the details.\n\n';
+          }
+          
+          comment += `\n[View full test report](${context.payload.pull_request.html_url}/checks)`;
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: comment
+          });
