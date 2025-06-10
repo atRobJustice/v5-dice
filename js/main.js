@@ -807,13 +807,17 @@ function dice_initialize(container) {
             
             // Handle rouse checks - Check if we have rouse dice and there's a progeny manager available
             const rouseCount = notation.rouseSet ? notation.rouseSet.length : 0;
-            if (rouseCount > 0 && window.progenyManager && typeof window.progenyManager.handleRouseResults === 'function') {
+            if (rouseCount > 0 && window.progenyManager) {
                 // Get the rouse dice results (offset by regular and hunger dice)
                 const rouseStartIndex = notation.set.length + notation.hungerSet.length;
                 if (result.length > rouseStartIndex) {
                     // Extract all rouse dice results
                     const rouseResults = result.slice(rouseStartIndex, rouseStartIndex + rouseCount);
-                    window.progenyManager.handleRouseResults(rouseResults);
+                    
+                    // Only use handleRouseResults for Discipline power rolls
+                    if (window.progenyManager._currentPower && window.progenyManager._currentPower.rouseChecks > 0) {
+                        window.progenyManager.handleRouseResults(rouseResults);
+                    }
                 }
             }
 
@@ -821,23 +825,35 @@ function dice_initialize(container) {
             let hungerDoubleAnkhs = 0;
             let regularDoubleAnhks = 0;
             let bestialFailureCandidate = false;
+            let rouseSuccess = false;
             
             result.forEach((roll, i) => {
                 if (typeof roll !== 'number') {
                     throw new Error('Invalid roll value');
                 }
                 const isHunger = i >= notation.set.length && i < notation.set.length + notation.hungerSet.length;
-                if (6 <= roll && roll <= 9) {
-                    simpleAnkhs += 1;
-                }
-                if (isHunger && roll == 1) {
-                    bestialFailureCandidate = true;
-                }
-                if (roll == 0) {
-                    if (isHunger) {
-                        hungerDoubleAnkhs += 1;
-                    } else {
-                        regularDoubleAnhks += 1;
+                const isRouse = i >= notation.set.length + notation.hungerSet.length && 
+                               i < notation.set.length + notation.hungerSet.length + notation.rouseSet.length;
+                
+                if (isRouse) {
+                    // Rouse check is successful on 6 or higher (including ✪ which is 0)
+                    if (roll >= 6 || roll === 0) {
+                        rouseSuccess = true;
+                    }
+                } else {
+                    // Only count successes for non-Rouse dice
+                    if (6 <= roll && roll <= 9) {
+                        simpleAnkhs += 1;
+                    }
+                    if (isHunger && roll == 1) {
+                        bestialFailureCandidate = true;
+                    }
+                    if (roll == 0) {
+                        if (isHunger) {
+                            hungerDoubleAnkhs += 1;
+                        } else {
+                            regularDoubleAnhks += 1;
+                        }
                     }
                 }
             });
@@ -865,20 +881,32 @@ function dice_initialize(container) {
 
             // Update interface with animation
             let newHtml = '';
-            if (successes > 0) {
-                newHtml += `${successes} Success`;
-                if (successes > 1) { newHtml += 'es'; }
-                if (messyCritical) {
-                    newHtml += ', <span class="messy-critical critical">Messy Critical</span>'
-                } else if (critical) {
-                    newHtml += ', <span class="critical">Critical</span>'
-                }
-            } else {
-                if (bestialFailure) {
-                    newHtml += '<span class="bestial-failure failure">Bestial Failure</span>';
+            const hasRegularOrHungerDice = notation.set.length > 0 || notation.hungerSet.length > 0;
+            
+            if (hasRegularOrHungerDice) {
+                if (successes > 0) {
+                    newHtml += `${successes} Success`;
+                    if (successes > 1) { newHtml += 'es'; }
+                    if (messyCritical) {
+                        newHtml += ', <span class="messy-critical critical">Messy Critical</span>'
+                    } else if (critical) {
+                        newHtml += ', <span class="critical">Critical</span>'
+                    }
                 } else {
-                    newHtml += '<span class="failure">Failure</span>';
+                    if (bestialFailure) {
+                        newHtml += '<span class="bestial-failure failure">Bestial Failure</span>';
+                    } else {
+                        newHtml += '<span class="failure">Failure</span>';
+                    }
                 }
+            }
+
+            // Add Rouse check result if present
+            if (notation.rouseSet && notation.rouseSet.length > 0) {
+                if (hasRegularOrHungerDice) {
+                    newHtml += '<br>';
+                }
+                newHtml += `<span class="${rouseSuccess ? 'success' : 'failure'}">Rouse Check: ${rouseSuccess ? 'Success' : 'Failure'}</span>`;
             }
 
             latestElement.innerHTML = newHtml;
@@ -915,6 +943,14 @@ function dice_initialize(container) {
             const isRemorseRoll = document.querySelector('.remorse-control:not(.hidden)') !== null;
             const isFrenzyRoll = document.querySelector('.frenzy-control:not(.hidden)') !== null;
             
+            // For Rouse checks, we need to check if any of the Rouse dice rolled 6 or higher
+            let rouseSuccesses = 0;
+            if (isRouseRoll && notation.rouseSet) {
+                const rouseStartIndex = notation.set.length + notation.hungerSet.length;
+                const rouseResults = result.slice(rouseStartIndex, rouseStartIndex + notation.rouseSet.length);
+                rouseSuccesses = rouseResults.some(r => r >= 6) ? 1 : 0;
+            }
+            
             window.dispatchEvent(new CustomEvent('diceRollComplete', {
                 detail: {
                     regularDice: parseInt(regularPool.value) || 0,
@@ -922,7 +958,7 @@ function dice_initialize(container) {
                     rouseDice: isRouseRoll ? 1 : 0,
                     remorseDice: parseInt(remorsePool.value) || 0,
                     frenzyDice: parseInt(frenzyPool.value) || 0,
-                    successes: successes,
+                    successes: isRouseRoll ? rouseSuccesses : successes,
                     critical: critical,
                     messyCritical: messyCritical,
                     bestialFailure: bestialFailure,

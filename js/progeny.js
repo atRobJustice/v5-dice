@@ -1259,7 +1259,7 @@ class ProgenyManager {
     // This method should be called from main.js after dice are rolled
     handleRouseResults(results) {
         // Only process if we have a current power with rouse checks
-        if (!this._currentPower || !this._currentPower.rouseChecks <= 0) return;
+        if (!this._currentPower || this._currentPower.rouseChecks <= 0) return;
         
         // If results isn't an array, make it one
         if (!Array.isArray(results)) {

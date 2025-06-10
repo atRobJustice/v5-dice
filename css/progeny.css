@@ -922,7 +922,7 @@
   }
   
   .roll-power {
-    background-color: #5a3a22;
+    background-color: var(--primary-color);
     color: white;
     border: none;
     padding: 3px 8px;
