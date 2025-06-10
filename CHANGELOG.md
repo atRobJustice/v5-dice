@@ -1,6 +1,40 @@
 # Changelog
 All notable changes to the Vampire Dice Roller will be documented in this file.
 
+## [0.5.9]
+### Added
+- Blood Surge system
+  - Added ability to gain additional dice based on Blood Potency
+  - Implemented Rouse Check requirement for Blood Surge activation
+  - Enhanced UI with Blood Surge button and visual state management
+- Health damage management
+  - Added 'Mend' buttons for superficial and aggravated damage
+  - Implemented healing mechanics based on Blood Potency and Rouse Checks
+- Enhanced Resonance system
+  - Added special handling for "Empty" and "Animal Blood" resonances
+  - Implemented Dyscrasia system based on character's temperament
+  - Added resonance bonuses based on character disciplines
+
+### Changed
+- Improved UI for blood-related abilities
+  - Enhanced visual feedback for Blood Surge state
+  - Updated CSS styles for better user experience with resonance features
+- Refined character sheet integration
+  - Better event handling for resonance and temperament changes
+  - Enhanced reactivity for health status changes
+  - Improved dice pool calculations with Blood Surge mechanics
+
+### Fixed
+- Resolved issues with health damage tracking and management
+- Fixed state management for multiple Rouse Checks
+- Improved validation for resonance and temperament selections
+
+### Technical Changes
+- Removed deprecated E2E testing files and GitHub workflow configurations
+- Refactored event handling for better state management
+- Enhanced dice initialization logic for complex game mechanics
+- Streamlined project structure by removing unused scripts and configurations
+
 ## [0.5.8]
 ### Added
 - Enhanced Discipline power management
