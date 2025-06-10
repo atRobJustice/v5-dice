@@ -186,11 +186,15 @@ function dice_initialize(container) {
             canvas.style.bottom = '0';
             
             // Update box dimensions
-            if (box) {
-                box.reinit(canvas, { 
-                    w: window.innerWidth, 
-                    h: canvasHeight
-                });
+            if (box && typeof box.reinit === 'function') {
+                try {
+                    box.reinit(canvas, { 
+                        w: window.innerWidth, 
+                        h: canvasHeight
+                    });
+                } catch (e) {
+                    console.warn('Error reinitializing dice box:', e);
+                }
             }
         } catch (error) {
             console.error('Failed to update canvas size:', error);

@@ -365,7 +365,7 @@
 
   .resonance-select {
     width: 100%;
-    min-width: 120px;
+    min-width: 110px;
     padding: 4px 24px 4px 8px;
     background-color: var(--input-bg);
     color: var(--text-color);
@@ -1456,6 +1456,38 @@
   .menu-icon {
     font-size: 1.2em;
     line-height: 1;
+  }
+
+  /* Styles for the resonance/dyscrasia system */
+  #temperament-select option:disabled {
+    color: #ff6b6b;
+    font-style: italic;
+    background-color: #2c2c2c;
+  }
+
+  .resonance-warning {
+    margin-top: 5px;
+    color: #ff6b6b;
+    font-size: 0.85em;
+    font-style: italic;
+    padding: 5px;
+    border-radius: 3px;
+    background-color: rgba(255, 107, 107, 0.1);
+    border-left: 3px solid #ff6b6b;
+  }
+
+  .dyscrasia-section {
+    margin-top: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 10px;
+  }
+
+  .dyscrasia-type {
+    width: 100%;
+  }
+
+  #dyscrasia-select {
+    width: 100%;
   }
 
   .menu-content {

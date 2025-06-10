@@ -8,6 +8,12 @@ class ProgenyManager {
         this.createNotificationElement();
         this.loadSavedCharacter(); // Load saved character on initialization
     }
+    
+    // Helper method to capitalize the first letter of a string
+    capitalizeFirstLetter(string) {
+        if (!string) return '';
+        return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
+    }
 
     initializeEventListeners() {
         const fileInput = document.getElementById('progeny-file');
@@ -204,8 +210,32 @@ class ProgenyManager {
                 this.character.humanityStains = data.humanityStains || 0;
 
                 // Resonance and Temperament
-                this.character.resonance = data.resonance || 'None';
+                // Handle the case where "Empty" might be stored with quotes
+                if (data.resonance === '"Empty"') {
+                    this.character.resonance = 'Empty';
+                } else {
+                    this.character.resonance = data.resonance || 'None';
+                }
                 this.character.temperament = data.temperament || 'None';
+                
+                // Dyscrasia details if present
+                if (data.dyscrasia && data.temperament === 'Acute') {
+                    this.character.dyscrasia = data.dyscrasia;
+                } else {
+                    this.character.dyscrasia = 'None';
+                }
+                
+                // Handle legacy data that might have Dyscrasia as a temperament
+                if (this.character.temperament === 'Dyscrasia') {
+                    this.character.temperament = 'Acute';
+                }
+                
+                // Ensure "Empty" or "Animal Blood" can't have Acute temperament (since they can't have Dyscrasia)
+                if ((this.character.resonance === 'Empty' || this.character.resonance === 'Animal Blood') && 
+                    this.character.temperament === 'Acute') {
+                    this.character.temperament = 'None';
+                    this.character.dyscrasia = 'None';
+                }
 
                 // Update all displays
                 this.displayCharacterStats();
@@ -954,6 +984,12 @@ class ProgenyManager {
                     if (standardName && this.character.disciplines[standardName]) {
                         console.log(`Matched standard discipline name: ${standardName}`);
                         dicePoolComponents.secondDie = standardName;
+                        
+                        // Check for resonance bonus when using standard discipline names
+                        const resonanceBonus = this.checkDisciplineResonanceBonus(standardName);
+                        if (resonanceBonus > 0) {
+                            console.log(`Will add +${resonanceBonus} dice from resonance bonus for standardized ${standardName}`);
+                        }
                     }
                     
                     // Try case-insensitive matching for disciplines
@@ -971,6 +1007,13 @@ class ProgenyManager {
                             // Count the number of powers in the discipline
                             secondDiceValue = powers.length;
                             console.log(`Second die (${disciplineKey} - discipline): ${secondDiceValue} (count of powers)`)
+                            
+                            // Check for resonance bonus for disciplines
+                            const resonanceBonus = this.checkDisciplineResonanceBonus(disciplineKey);
+                            if (resonanceBonus > 0) {
+                                secondDiceValue += resonanceBonus;
+                                console.log(`Adding +${resonanceBonus} dice from resonance bonus for ${disciplineKey}`);
+                            }
                         }
                     } else {
                         console.log(`Discipline not found: ${dicePoolComponents.secondDie}`);
@@ -987,6 +1030,13 @@ class ProgenyManager {
                                 // Count the number of powers in the discipline
                                 secondDiceValue = powers.length;
                                 console.log(`Second die (${partialMatch} - discipline, partial match): ${secondDiceValue} (count of powers)`)
+                                
+                                // Check for resonance bonus for disciplines
+                                const resonanceBonus = this.checkDisciplineResonanceBonus(partialMatch);
+                                if (resonanceBonus > 0) {
+                                    secondDiceValue += resonanceBonus;
+                                    console.log(`Adding +${resonanceBonus} dice from resonance bonus for ${partialMatch}`);
+                                }
                             }
                         }
                     }
@@ -1023,10 +1073,7 @@ class ProgenyManager {
                 regularInfo.textContent = `${finalRegularDice} Regular Dice`;
                 hungerInfo.textContent = `${hungerDice} Hunger Dice`;
             }
-            
-            // Show what we're rolling
-            this.showNotification(`Rolling ${power.name}: ${totalRegularDice} dice (${firstDiceValue} + ${secondDiceValue}) with ${hungerDice} hunger${rouseChecks > 0 ? ` and ${rouseChecks} rouse` : ''}`);
-            
+                       
             // Close the modal
             const modal = document.getElementById('progeny-modal');
             if (modal) {
@@ -1041,23 +1088,45 @@ class ProgenyManager {
             };
             
             // Get the dice box instance from the global window object
-            const box = window.box;
+            let box = window.box;
+            
+            // If the box doesn't exist or has been disposed, we need to reinitialize it
+            if (!box || !box.renderer) {
+                console.log('Reinitializing dice box for power roll');
+                // Reinitialize the dice box - this assumes the main.js initialization pattern
+                if (typeof $t !== 'undefined' && $t.dice) {
+                    const canvas = document.getElementById('canvas');
+                    box = new $t.dice.dice_box(canvas, { 
+                        w: canvas.offsetWidth || window.innerWidth, 
+                        h: canvas.offsetHeight || window.innerHeight - document.querySelector('.control_panel').offsetHeight
+                    });
+                    box.init();
+                    window.box = box;
+                }
+            }
+            
             if (box && box.start_throw) {
                 // Call start_throw with all the dice pools
-                box.start_throw(
-                    function() {
-                        const rouseValue = parseInt(document.getElementById('rouse_pool').value);
-                        return $t.dice.parse_notation(
-                            parseInt(document.getElementById('regular_pool').value),
-                            parseInt(document.getElementById('hunger_pool').value),
-                            rouseValue,
-                            0, // No remorse dice
-                            0  // No frenzy dice
-                        );
-                    },
-                    window.before_roll,
-                    window.after_roll
-                );
+                try {
+                    box.start_throw(
+                        function() {
+                            const rouseValue = parseInt(document.getElementById('rouse_pool').value) || 0;
+                            return $t.dice.parse_notation(
+                                parseInt(document.getElementById('regular_pool').value) || 0,
+                                parseInt(document.getElementById('hunger_pool').value) || 0,
+                                rouseValue,
+                                0, // No remorse dice
+                                0  // No frenzy dice
+                            );
+                        },
+                        window.before_roll,
+                        window.after_roll
+                    );
+                } catch (error) {
+                    console.error('Error starting power dice throw:', error);
+                }
+            } else {
+                console.error('Dice box not available for power rolling');
             }
             
             // Restore the original selected stats
@@ -1278,24 +1347,6 @@ class ProgenyManager {
             this.character.hunger = Math.min(5, (this.character.hunger || 0) + failures);
             this.displayCharacterStats();
             this.saveCharacter();
-            
-            // Notify the user
-            setTimeout(() => {
-                if (results.length > 1) {
-                    this.showNotification(`Rouse checks (${resultList}): ${failures} failed. Hunger increased to ${this.character.hunger}.`, 4000);
-                } else {
-                    this.showNotification(`Rouse check failed (${results[0]}). Hunger increased to ${this.character.hunger}.`, 3000);
-                }
-            }, 2000);
-        } else {
-            // Success notification
-            setTimeout(() => {
-                if (results.length > 1) {
-                    this.showNotification(`All rouse checks succeeded! (${resultList})`, 3000);
-                } else {
-                    this.showNotification(`Rouse check succeeded (${results[0]})!`, 2000);
-                }
-            }, 2000);
         }
         
         // Clear the current power
@@ -2316,19 +2367,37 @@ class ProgenyManager {
         }
 
         // Get the dice box instance from the global window object
-        const box = window.box;
+        let box = window.box;
+        
+        // If the box doesn't exist or has been disposed, we need to reinitialize it
+        if (!box || !box.renderer) {
+            console.log('Reinitializing dice box for progeny roll');
+            // Reinitialize the dice box - this assumes the main.js initialization pattern
+            if (typeof $t !== 'undefined' && $t.dice) {
+                box = new $t.dice.dice_box(document.getElementById('canvas'), { w: window.innerWidth, h: window.innerHeight });
+                box.init();
+                window.box = box;
+            }
+        }
+        
         if (box && box.start_throw) {
             // Call start_throw with the proper notation getter
-            box.start_throw(
-                function() {
-                    return $t.dice.parse_notation(
-                        document.getElementById('regular_pool').value,
-                        document.getElementById('hunger_pool').value
-                    );
-                },
-                window.before_roll,
-                window.after_roll
-            );
+            try {
+                box.start_throw(
+                    function() {
+                        return $t.dice.parse_notation(
+                            document.getElementById('regular_pool').value,
+                            document.getElementById('hunger_pool').value
+                        );
+                    },
+                    window.before_roll,
+                    window.after_roll
+                );
+            } catch (error) {
+                console.error('Error starting dice throw:', error);
+            }
+        } else {
+            console.error('Dice box not available for rolling');
         }
     }
 
@@ -2336,6 +2405,7 @@ class ProgenyManager {
         let regularDice = 0;
         let hungerDice = 0;
         let specialtyBonus = 0;
+        let resonanceBonus = 0;
 
         console.log('Getting dice pool for stat:', stat);
         console.log('Stat type:', {
@@ -2363,19 +2433,75 @@ class ProgenyManager {
             }
         }
 
+        // Disciplines might be accessed with different cases, so let's check case-insensitively
+        const disciplineKey = Object.keys(this.character.disciplines || {}).find(
+            key => key.toLowerCase() === stat.toLowerCase()
+        );
+        
         // Check if the stat exists in disciplines
-        if (this.character.disciplines[stat]) {
+        if (disciplineKey && this.character.disciplines[disciplineKey]) {
             // Count the number of powers in the discipline
-            const powers = this.character.disciplines[stat];
+            const powers = this.character.disciplines[disciplineKey];
             if (powers && powers.length > 0) {
                 regularDice += powers.length; // Use count of powers instead of highest level
+                
+                // Check if the discipline matches character's resonance and if resonance is Acute or Dyscrasia
+                const resonance = this.character.resonance;
+                const temperament = this.character.temperament || '';
+                
+                console.log(`Checking resonance bonus for discipline ${disciplineKey}`);
+                console.log(`Character resonance: ${resonance}, temperament: ${temperament}`);
+                
+                // Define the mapping of resonance types to disciplines
+                const resonanceToDisciplines = {
+                    'Choleric': ['Celerity', 'Potence'],
+                    'Melancholic': ['Fortitude', 'Obfuscate'],
+                    'Phlegmatic': ['Auspex', 'Dominate'],
+                    'Sanguine': ['Blood Sorcery', 'Presence'],
+                    '"Empty"': ['Oblivion'],
+                    'Animal Blood': ['Animalism', 'Protean']
+                };
+                
+                // Support both spellings of "Melancholy/Melancholic"
+                if (!resonanceToDisciplines[resonance] && resonance === 'Melancholy') {
+                    resonance = 'Melancholic';
+                }
+                
+                // Check if the character has a resonance and it's either Acute or Dyscrasia
+                if (resonance && resonanceToDisciplines[resonance] && 
+                    (temperament === 'Acute' || temperament === 'Dyscrasia')) {
+                    
+                    // Get proper discipline name (with correct capitalization)
+                    const disciplineName = this.capitalizeFirstLetter(disciplineKey);
+                    
+                    // Check each resonance discipline with case-insensitive comparison
+                    const matchesDiscipline = resonanceToDisciplines[resonance].some(
+                        d => d.toLowerCase() === disciplineName.toLowerCase()
+                    );
+                    
+                    console.log(`Checking if ${disciplineName} matches any of: ${JSON.stringify(resonanceToDisciplines[resonance])}`);
+                    
+                    if (matchesDiscipline) {
+                        console.log(`✓ Adding +1 dice for ${resonance} ${temperament} with ${disciplineName} discipline`);
+                        resonanceBonus = 1;
+                    } else {
+                        console.log(`✗ No resonance bonus for ${disciplineName} - doesn't match ${resonance} disciplines`);
+                    }
+                } else {
+                    console.log(`No resonance bonus available: resonance=${resonance}, temperament=${temperament}`);
+                }
             }
         }
 
-        // Add specialty bonus to regular dice
-        regularDice += specialtyBonus;
-        console.log('Final dice pool:', { regular: regularDice, hunger: hungerDice, specialtyBonus });
-
+        // Add specialty and resonance bonuses to regular dice
+        regularDice += specialtyBonus + resonanceBonus;
+        console.log('Final dice pool:', { 
+            regular: regularDice, 
+            hunger: hungerDice, 
+            specialtyBonus,
+            resonanceBonus 
+        });
+        
         return regularDice > 0 ? { regular: regularDice, hunger: hungerDice } : null;
     }
 
@@ -2546,8 +2672,14 @@ class ProgenyManager {
         exportData.healthDamage = this.character.healthDamage;
         exportData.willpowerDamage = this.character.willpowerDamage;
         exportData.humanityStains = this.character.humanityStains;
+        // Make sure we're using consistent values for resonance and temperament
         exportData.resonance = this.character.resonance || 'None';
         exportData.temperament = this.character.temperament || 'None';
+        
+        // Add dyscrasia details if applicable
+        if (this.character.temperament === 'Acute' && this.character.dyscrasia) {
+            exportData.dyscrasia = this.character.dyscrasia;
+        }
 
         // Add specialties to the export data
         if (this.character.skillSpecialties && this.character.skillSpecialties.length > 0) {
@@ -2603,6 +2735,49 @@ class ProgenyManager {
         });
     }
 
+    // Helper method to check if a discipline gets a resonance bonus
+    checkDisciplineResonanceBonus(disciplineName) {
+        if (!this.character || !disciplineName) return 0;
+        
+        const resonance = this.character.resonance;
+        const temperament = this.character.temperament || '';
+        
+        // Only apply bonus for Acute or Dyscrasia temperaments
+        if (!resonance || !temperament || 
+            (temperament !== 'Acute' && temperament !== 'Dyscrasia')) {
+            return 0;
+        }
+        
+        // Define the mapping of resonance types to disciplines
+        const resonanceToDisciplines = {
+            'Choleric': ['Celerity', 'Potence'],
+            'Melancholic': ['Fortitude', 'Obfuscate'],
+            'Phlegmatic': ['Auspex', 'Dominate'],
+            'Sanguine': ['Blood Sorcery', 'Presence'],
+            '"Empty"': ['Oblivion'],
+            'Animal Blood': ['Animalism', 'Protean']
+        };
+        
+        // Support both spellings of "Melancholy/Melancholic"
+        let resonanceKey = resonance;
+        if (resonanceKey === 'Melancholy') {
+            resonanceKey = 'Melancholic';
+        }
+        
+        // Check if discipline matches any in the resonance list (case-insensitive)
+        if (resonanceToDisciplines[resonanceKey]) {
+            const matches = resonanceToDisciplines[resonanceKey].some(
+                d => d.toLowerCase() === disciplineName.toLowerCase()
+            );
+            
+            if (matches) {
+                return 1;
+            }
+        }
+        
+        return 0;
+    }
+    
     saveCharacter() {
         if (this.character && this.originalJson) {
             localStorage.setItem('progenyCharacter', JSON.stringify({
@@ -3188,9 +3363,6 @@ class ProgenyManager {
             // If no successes, increase hunger by 1
             const currentHunger = this.character.hunger || 0;
             this.character.hunger = Math.min(5, currentHunger + 1);
-            this.showNotification('Rouse check failed: Hunger increased by 1', 3000);
-        } else {
-            this.showNotification('Rouse check passed: Hunger unchanged', 3000);
         }
         
         // Update the character sheet to reflect changes
@@ -3213,9 +3385,6 @@ class ProgenyManager {
         if (successes === 0) {
             // If no successes, reduce humanity by 1
             this.character.humanity = Math.max(0, this.character.humanity - 1);
-            this.showNotification('Remorse check failed: Humanity reduced by 1', 3000);
-        } else {
-            this.showNotification('Remorse check passed', 3000);
         }
         
         // Clear all stains regardless of success or failure
@@ -3426,10 +3595,61 @@ class ProgenyManager {
         const div = document.createElement('div');
         div.className = 'resonance-tracker';
         
-        const resonanceTypes = ['Sanguine', 'Choleric', 'Phlegmatic', 'Melancholic', '"Empty"'];
-        const temperamentTypes = ['Negligible', 'Fleeting', 'Intense', 'Accute'];
+        const resonanceTypes = ['Sanguine', 'Choleric', 'Phlegmatic', 'Melancholic', 'Empty', "Animal Blood"];
+        const temperamentTypes = ['Fleeting', 'Intense', 'Acute'];
         const currentResonance = this.character.resonance || 'None';
         const currentTemperament = this.character.temperament || 'None';
+        const currentDyscrasia = this.character.dyscrasia || 'None';
+        
+        // Define Dyscrasia subtypes
+        const dyscrasiaTypes = {
+            'Sanguine': [
+                'Contagious Enthusiasm',
+                'Smell Game',
+                'High on Life',
+                'Manic High',
+                'True Love',
+                'Stirring'
+            ],
+            'Choleric': [
+                'Bully',
+                'Cycle of Violence',
+                'Envy',
+                'Principled',
+                'Vengeful',
+                'Vicious',
+                'Driving'
+            ],
+            'Melancholic': [
+                'In Mourning',
+                'Lost Love',
+                'Lost Relative',
+                'Massive Failure',
+                'Nostalgic',
+                'Recalling'
+            ],
+            'Phlegmatic': [
+                'Chill',
+                'Feel no Pain',
+                'Eating your Emotions',
+                'Given Up',
+                'Lone Wolf',
+                'Procrastinate',
+                'Reflection'
+            ]
+        };
+        
+        // Check if dyscrasia section should be shown - only shown with Acute temperament
+        const showDyscrasia = currentTemperament === 'Acute' && 
+                             (currentResonance === 'Sanguine' || 
+                              currentResonance === 'Choleric' || 
+                              currentResonance === 'Phlegmatic' || 
+                              currentResonance === 'Melancholic');
+        
+        // Get appropriate dyscrasia options based on resonance
+        const dyscrasiaOptions = showDyscrasia ? (dyscrasiaTypes[currentResonance] || []) : [];
+        
+        // No longer need to add styles here - moved to CSS file
         
         div.innerHTML = `
             <div class="resonance-header">
@@ -3438,7 +3658,7 @@ class ProgenyManager {
             <div class="resonance-controls">
                 <div class="resonance-type">
                     <span class="resonance-sub-label">Type</span>
-                    <select class="resonance-select">
+                    <select class="resonance-select" id="resonance-type-select">
                         <option value="None" ${currentResonance === 'None' ? 'selected' : ''}>None</option>
                         ${resonanceTypes.map(type => 
                             `<option value="${type}" ${currentResonance === type ? 'selected' : ''}>${type}</option>`
@@ -3447,29 +3667,176 @@ class ProgenyManager {
                 </div>
                 <div class="resonance-temperament">
                     <span class="resonance-sub-label">Temperament</span>
-                    <select class="resonance-select">
+                    <select class="resonance-select" id="temperament-select">
                         <option value="None" ${currentTemperament === 'None' ? 'selected' : ''}>None</option>
-                        ${temperamentTypes.map(type => 
-                            `<option value="${type}" ${currentTemperament === type ? 'selected' : ''}>${type}</option>`
+                        ${temperamentTypes.map(type => {
+                            // Disable Acute temperament for "Empty" and "Animal Blood" since they can't have Dyscrasia
+                            const isDisabled = type === 'Acute' && 
+                                              (currentResonance === 'Empty' || currentResonance === 'Animal Blood');
+                            return `<option value="${type}" 
+                                ${currentTemperament === type ? 'selected' : ''} 
+                                ${isDisabled ? 'disabled' : ''}>${type}${isDisabled ? ' (Not Available)' : ''}</option>`;
+                        }).join('')}
+                    </select>
+                </div>
+            </div>
+            ${showDyscrasia ? `
+            <div class="resonance-controls dyscrasia-section">
+                <div class="dyscrasia-type">
+                    <span class="resonance-sub-label">${currentResonance} Dyscrasia</span>
+                    <select class="resonance-select" id="dyscrasia-select">
+                        <option value="None" ${currentDyscrasia === 'None' ? 'selected' : ''}>Select a Dyscrasia</option>
+                        ${dyscrasiaOptions.map(type => 
+                            `<option value="${type}" ${currentDyscrasia === type ? 'selected' : ''}>${type}</option>`
                         ).join('')}
                     </select>
                 </div>
+            </div>` : ''}
             </div>
         `;
 
         // Add event listeners for resonance and temperament selection
         div.querySelectorAll('.resonance-select').forEach(select => {
             select.addEventListener('change', (e) => {
-                if (e.target.parentElement.classList.contains('resonance-type')) {
+                if (e.target.id === 'resonance-type-select') {
                     this.character.resonance = e.target.value;
-                } else {
+                    console.log(`Changed resonance to: ${e.target.value}`);
+                    
+                    // If switching to "Empty" or "Animal Blood", reset temperament if it was Acute
+                    if ((e.target.value === 'Empty' || e.target.value === 'Animal Blood') && 
+                        this.character.temperament === 'Acute') {
+                        this.character.temperament = 'None';
+                        this.character.dyscrasia = 'None';
+                    }
+                    
+                    // Save the character before re-rendering
+                    this.saveCharacter();
+                    
+                    // Force a re-render to update disabled status and dyscrasia options
+                    const newTracker = this.createResonanceTracker();
+                    div.parentNode.replaceChild(newTracker, div);
+                    return;
+                } else if (e.target.id === 'temperament-select') {
                     this.character.temperament = e.target.value;
+                    console.log(`Changed temperament to: ${e.target.value}`);
+                    
+                    // Reset dyscrasia if temperament is not Acute
+                    if (e.target.value !== 'Acute') {
+                        this.character.dyscrasia = 'None';
+                    }
+                    
+                    // Save the character before re-rendering
+                    this.saveCharacter();
+                    
+                    // Force a re-render to update dyscrasia options
+                    const newTracker = this.createResonanceTracker();
+                    div.parentNode.replaceChild(newTracker, div);
+                    return;
+                } else if (e.target.id === 'dyscrasia-select') {
+                    this.character.dyscrasia = e.target.value;
+                    console.log(`Changed dyscrasia to: ${e.target.value}`);
                 }
+                
+                // Save the character after updating resonance or temperament
+                this.saveCharacter();
                 this.displayCharacterStats();
+                
+                // Update bonus indicator
+                //this.updateResonanceBonusIndicator(div);
             });
         });
+        
+        // Initialize the bonus indicator
+        //this.updateResonanceBonusIndicator(div);
 
         return div;
+    }
+    
+    // Helper method to update the resonance bonus indicator
+    updateResonanceBonusIndicator(container) {
+        if (!this.character) return;
+        
+        // Remove any existing indicator
+        const existingIndicator = container.querySelector('.resonance-bonus-indicator');
+        if (existingIndicator) {
+            existingIndicator.remove();
+        }
+        
+        const resonance = this.character.resonance;
+        const temperament = this.character.temperament || '';
+        
+        // Only show indicator for Acute temperament
+        if (!resonance || resonance === 'None' || !temperament || temperament !== 'Acute') {
+            return;
+        }
+        
+        // Create the indicator element
+        const indicator = document.createElement('div');
+        indicator.className = 'resonance-bonus-indicator';
+        indicator.innerHTML = `
+            <div class="indicator-content">
+                <span class="bonus-label">+1 Die Bonus</span>
+                <span class="bonus-details">
+                    When using these disciplines:
+                    <ul class="discipline-list">
+                        ${this.getResonanceDisciplines(resonance).map(d => 
+                            `<li>${d}</li>`
+                        ).join('')}
+                    </ul>
+                </span>
+            </div>
+        `;
+        
+        // Add some styling
+        const style = document.createElement('style');
+        if (!document.querySelector('#resonance-bonus-styles')) {
+            style.id = 'resonance-bonus-styles';
+            style.innerHTML = `
+                .resonance-bonus-indicator {
+                    margin-top: 10px;
+                    padding: 5px;
+                    background-color: rgba(0, 128, 0, 0.1);
+                    border-left: 3px solid green;
+                    border-radius: 3px;
+                    font-size: 0.9em;
+                }
+                .bonus-label {
+                    font-weight: bold;
+                    color: green;
+                    display: block;
+                }
+                .discipline-list {
+                    margin: 5px 0 0 15px;
+                    padding: 0;
+                }
+                .discipline-list li {
+                    margin-bottom: 2px;
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        // Add to the container
+        container.appendChild(indicator);
+    }
+    
+    // Helper to get disciplines for a resonance type
+    getResonanceDisciplines(resonance) {
+        const resonanceToDisciplines = {
+            'Choleric': ['Celerity', 'Potence'],
+            'Melancholic': ['Fortitude', 'Obfuscate'],
+            'Phlegmatic': ['Auspex', 'Dominate'],
+            'Sanguine': ['Blood Sorcery', 'Presence'],
+            '"Empty"': ['Oblivion'],
+            'Animal Blood': ['Animalism', 'Protean']
+        };
+        
+        // Support both spellings
+        if (resonance === 'Melancholy') {
+            resonance = 'Melancholic';
+        }
+        
+        return resonanceToDisciplines[resonance] || [];
     }
 }
 

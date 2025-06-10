@@ -449,7 +449,9 @@
         this.aspect = Math.min(this.cw / this.w, this.ch / this.h);
         that.scale = Math.sqrt(this.w * this.w + this.h * this.h) / 13;
 
-        this.renderer.setSize(this.cw * 2, this.ch * 2);
+        if (this.renderer) {
+            this.renderer.setSize(this.cw * 2, this.ch * 2);
+        }
 
         this.wh = this.ch / this.aspect / Math.tan(10 * Math.PI / 180);
         if (this.camera) this.scene.remove(this.camera);
@@ -801,9 +803,15 @@
             }
             this.scene.remove(this.pane);
         }
-        this.renderer.render(this.scene, this.camera);
-        var box = this;
-        setTimeout(function() { box.renderer.render(box.scene, box.camera); }, 100);
+        if (this.renderer && this.scene && this.camera) {
+            this.renderer.render(this.scene, this.camera);
+            var box = this;
+            setTimeout(function() { 
+                if (box.renderer && box.scene && box.camera) {
+                    box.renderer.render(box.scene, box.camera);
+                }
+            }, 100);
+        }
     }
 
     self.dice_box.prototype.dispose = function() {
